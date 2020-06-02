@@ -24,7 +24,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-- `Cargo run --release`
+- `Cargo +nightly run --release`
 
 ## Footnotes
 

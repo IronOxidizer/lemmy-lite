@@ -1,0 +1,12 @@
+# rustup toolchain install nightly
+# cargo +nightly run --release
+
+[package]
+name = "lemmy-lite"
+version = "0.1.0"
+authors = ["Iron Oxidizer"]
+edition = "2018"
+
+[dependencies]
+actix-web = "*"
+maud = { version = "*", features = ["actix-web"] } 
