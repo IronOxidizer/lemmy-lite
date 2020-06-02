@@ -1,6 +1,8 @@
 # rustup toolchain install nightly
 # cargo +nightly run --release
 
+# Fastest templating options: askama, horrowshow, maud
+
 [package]
 name = "lemmy-lite"
 version = "0.1.0"
@@ -9,4 +11,7 @@ edition = "2018"
 
 [dependencies]
 actix-web = "*"
+serde = "*"
 maud = { version = "*", features = ["actix-web"] } 
+reqwest = { version = "*", features = ["json"] }
+tokio = { version = "*", features = ["full"] }
