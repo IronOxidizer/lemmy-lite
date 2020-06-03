@@ -10,8 +10,7 @@ authors = ["Iron Oxidizer"]
 edition = "2018"
 
 [dependencies]
-actix-web = "*"
-serde = "*"
-maud = { version = "*", features = ["actix-web"] } 
-reqwest = { version = "*", features = ["json"] }
-tokio = { version = "*", features = ["full"] }
+actix-rt = "1.1.1"
+actix-web = "2.0.0"
+serde = "1.0.111"
+maud = { git="https://github.com/lambda-fairy/maud", features = ["actix-web"] }
