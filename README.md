@@ -3,6 +3,8 @@ A static, nojs, touch-friendly Lemmy frontend built for legacy web clients and m
 
 This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy
 
+***NOTE:*** Putting this project on pause until Maud has a new release with actix 2.0.0 and async / await support as it will result in breaking changes that I want to avoid re-writing. These changes are already in the master branch, however there has not been a new release that includes it. I expect this release will come out in the upcoming weeks. I might try to work around it by using maud-git(master) however it's unlikely I'll push this work as it would be completely unstable.
+
 ### Built With
 
 - [Rust](https://www.rust-lang.org)
