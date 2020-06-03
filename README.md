@@ -17,7 +17,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - Cross-instance support, get a lite version of any Lemmy instance.
 - NoJS using pre-rendered HTML and CSS only.
 - Touch-friendly.
-- Internet Exporer 11 compatible.
+- Internet Exporer 11, NetSurf, and Dillo compatible.
 - High performance.
   - Written in rust.
   - Static, only one<sup>1</sup> request per page.
