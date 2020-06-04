@@ -20,8 +20,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - Internet Exporer 11, NetSurf, and Dillo compatible.
 - High performance.
   - Written in rust.
-  - Static, only one<sup>1</sup> request per page.
-  - Tiny, highly compressed pages.
+  - Static, only one<sup>1</sup> tiny request per page.
   - Supports arm64 / Raspberry Pi.
   
 ## Installation

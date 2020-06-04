@@ -1,5 +1,7 @@
 use maud::{html, Markup};
 
+use crate::lemmy_api::{PostList};
+
 pub fn root() -> Markup {
     html! {
         form {
@@ -15,8 +17,24 @@ pub fn redirect(instance: String) -> Markup {
     }
 }
 
-pub fn list_view() -> Markup {
-    html!{}
+pub fn post_list_view(post_list: PostList) -> Markup {
+    html! {
+        @for post in post_list.posts {
+            div {
+                @match post.url {
+                    Some(url) => {
+                        a href={ (url) } { (post.name) }
+                    }, None => {
+                        a { (post.name) }
+                    }
+                }
+
+                " by "
+
+                (post.creator_name)
+            }
+        }
+    }
 }
 
 pub fn post_view() -> Markup {
