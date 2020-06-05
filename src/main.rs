@@ -1,6 +1,10 @@
 /*
+rustup toolchain install nightly
+cargo +nightly run --release
+
+Fastest templating options: askama, horrowshow, maud
+
 TODO:
-- Setup nginx to serve index, css, favicon, logo
 - Make page dynamic using css. Collapsable example: https://jsfiddle.net/gSPqX/1/
 
 Endpoints:
@@ -16,6 +20,9 @@ dev.lemmy.ml
 enterprise.lemmy.ml
 voyager.lemmy.ml
 ds9.lemmy.ml
+
+CSS Table is ~10% faster than CSS FlexBox
+https://benfrain.com/css-performance-test-flexbox-v-css-table-fight/
 */
 
 use maud::{html, Markup};
@@ -26,7 +33,7 @@ use serde::Deserialize;
 mod templates;
 mod lemmy_api;
 
-use crate::templates::{root, redirect, post_list_view};
+use crate::templates::{redirect, post_list_view};
 use crate::lemmy_api::{get_post_list};
 
 #[derive(Deserialize)]
@@ -42,15 +49,15 @@ struct ListParams {
 
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
     Ok(redirect(
-        query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is nginx running?"))?
+        query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is Nginx running?"))?
     ))
 }
 
-async fn instance(path: web::Path<String>, query: web::Query<ListParams>) -> Result<Markup> {
+async fn lvl0(path: web::Path<String>, query: web::Query<ListParams>) -> Result<Markup> {
     let client = Client::default();
-
-    let post_list = get_post_list(path.to_string(), client).await?;
-    Ok(post_list_view(post_list))
+    let inst = &path.to_string();
+    let post_list = get_post_list(inst, client).await?;
+    Ok(post_list_view(inst, post_list))
 }
 
 async fn lvl1(path: web::Path<(String, String)>) -> Result<Markup> {
@@ -75,15 +82,15 @@ async fn main() -> std::io::Result<()> {
         .service(
             web::resource("/").route(web::get().to(index))
         ).route(
-            "/{instance}", web::get().to(instance)
+            "/{lvl0}", web::get().to(lvl0)
         ).route(
-            "/{instance}/{lvl1}", web::get().to(lvl1)
+            "/{lvl0}/{lvl1}", web::get().to(lvl1)
         ).route(
-            "/{instance}/{lvl1}/{lvl2}", web::get().to(lvl2)
+            "/{lvl0}/{lvl1}/{lvl2}", web::get().to(lvl2)
         ).route(
-            "/{instance}/{lvl1}/{lvl2}/{lvl3}", web::get().to(lvl3)
+            "/{lvl0}/{lvl1}/{lvl2}/{lvl3}", web::get().to(lvl3)
         ).route(
-            "/{instance}/{lvl1}/{lvl2}/{lvl3}/{lvl4}", web::get().to(lvl4)
+            "/{lvl0}/{lvl1}/{lvl2}/{lvl3}/{lvl4}", web::get().to(lvl4)
         )
     })
     .bind("127.0.0.1:1131")?

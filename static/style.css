@@ -1,1 +1,42 @@
-body {background-color: gray}
+body {
+    background-color: #222;
+    text-decoration: none;
+    color: #dedede;
+    font-family: sans-serif
+}
+
+a {
+    color: inherit;
+    text-decoration: inherit
+}
+
+h3 {
+    margin: 0
+}
+
+.preview {
+    width: 64px;
+    height: 64px
+}
+
+.cell {
+    display: table-cell;
+    vertical-align: middle
+}
+
+.score {
+    width: 32px;
+    text-align: right
+}
+
+.post_details {
+    color: #999
+}
+
+.username {
+    color: #dedede
+}
+
+.community {
+    color: #00bc8c
+}

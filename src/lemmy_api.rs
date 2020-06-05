@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Post {
-    id: i32,
+    pub id: i32,
     pub name: String,
     pub url: Option<String>,
     body: Option<String>,
@@ -25,14 +25,14 @@ pub struct Post {
     banned_from_community: bool,
     pub creator_name: String,
     creator_avatar: Option<String>,
-    community_name: String,
+    pub community_name: String,
     community_removed: bool,
     community_deleted: bool,
     community_nsfw: bool,
     number_of_comments: i32,
-    score: i32,
-    upvotes: i32,
-    downvotes: i32,
+    pub score: i32,
+    pub upvotes: i32,
+    pub downvotes: i32,
     hot_rank: i32,
     newest_activity_time: String,
     user_id: Option<i32>,
@@ -47,7 +47,7 @@ pub struct PostList {
     pub posts: Vec<Post>
 }
 
-pub async fn get_post_list(instance: String, client: Client) -> Result<PostList> {
+pub async fn get_post_list(instance: &String, client: Client) -> Result<PostList> {
     let url = format!("https://{}/api/v1/post/list?type_=All&sort=Hot", instance);
     println!("Making request: {}", url);
 
