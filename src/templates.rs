@@ -12,6 +12,8 @@ pub fn redirect(instance: String) -> Markup {
 pub fn post_list_view(instance: &String, post_list: PostList) -> Markup {
     html! {
         meta charset="utf8" {}
+        meta name="viewport" content="width=480px, user-scalable=no" {}
+        meta name="theme-color" content="#222" {}
         link rel="stylesheet" href="/style.css" {}
         @for post in post_list.posts {
             div {
