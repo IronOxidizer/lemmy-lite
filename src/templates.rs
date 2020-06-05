@@ -20,28 +20,30 @@ pub fn post_list_view(instance: &String, post_list: PostList) -> Markup {
                     @match post.url {
                         Some(url) => {
                             a href={ (url) } {
-                                img class="preview" src="/link.svg" {}
+                                img class="preview" src={"/link.svg"} {}
                             }
                         }, None => {
                             a {
-                                img class="preview" src="/text.svg" {}
+                                img class="preview" src={"/text.svg"} {}
                             }
                         }
                     }
                 }
                 div class="cell" {
                     div {
-                        a href={"/post/" (post.id )} {
-                            (post.name)
+                        a href={(instance) "/post/" (post.id )} {
+                            h4 {
+                                (post.name)
+                            }
                         }
                     }
                     div class="post_details"{
                         "by "
-                        a class="username" href= {"/u/" (post.creator_name) }{
+                        a class="username" href= {(instance) "/u/" (post.creator_name) }{
                             (post.creator_name)
                         }
                         " to "
-                        a class="community" href= {"/c/" (post.community_name)} {
+                        a class="community" href= {(instance) "/c/" (post.community_name)} {
                             (post.community_name)
                         }
                         " • ˄ " (post.upvotes) " ˅ " (post.downvotes)
