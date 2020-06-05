@@ -25,7 +25,9 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-- `Cargo +nightly run --release`
+- `cp -r /home/main/Development/lemmy-lite/static /etc/nginx/` (Symlink won't always work since isn't root)
+- `ln -s /home/main/Development/lemmy-lite/lemmy-lite.conf /etc/nginx/sites-enabled/`
+- `systemctl start nginx && cargo +nightly run --release`
 
 ## Footnotes
 

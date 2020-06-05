@@ -19,7 +19,7 @@ ds9.lemmy.ml
 */
 
 use maud::{html, Markup};
-use actix_web::{web, App, HttpServer, Result};
+use actix_web::{web, App, HttpServer, Result, error};
 use actix_web::client::Client;
 use serde::Deserialize;
 
@@ -41,16 +41,9 @@ struct ListParams {
 }
 
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
-    Ok(match query.i { 
-        Some(i) => {
-            if i.trim().is_empty() {
-                root()
-            } else {
-                redirect(i)
-            }
-        },
-        None => root(),
-    })
+    Ok(redirect(
+        query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is nginx running?"))?
+    ))
 }
 
 async fn instance(path: web::Path<String>, query: web::Query<ListParams>) -> Result<Markup> {
