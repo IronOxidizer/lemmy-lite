@@ -25,7 +25,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-- `cp -r /home/main/Development/lemmy-lite/static /etc/nginx/` (Symlink won't always work since isn't root)
+- `cp -r /home/main/Development/lemmy-lite/static /etc/nginx/` (Symlink won't always work if it isn't root)
 - `ln -s /home/main/Development/lemmy-lite/lemmy-lite.conf /etc/nginx/sites-enabled/`
 - `systemctl start nginx && cargo +nightly run --release`
 
@@ -33,3 +33,4 @@ This project is not intended for official use, but rather as a proof-of-concept 
 
 1. First load fetches a CSS stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
 2. I use CSS Tables because it's faster and simpler than FlexBox and Grid is broken on IE11 and NetSurf.
+3. Each page refresh is limited to 1 API call to limit the impact on instances and to keep page times fast.
