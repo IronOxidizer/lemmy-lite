@@ -2,6 +2,8 @@ use maud::{html, Markup};
 
 use crate::lemmy_api::{PostList};
 
+const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
+
 pub fn redirect(instance: String) -> Markup {
     html! {
         meta content={"0;URL='" (instance) "'"} http-equiv="refresh" charset="utf8" {}
@@ -22,10 +24,16 @@ pub fn post_list_view(instance: &String, post_list: PostList) -> Markup {
                     @match post.url {
                         Some(url) => {
                             a href={ (url) } {
-                                img class="preview" src={"/link.svg"} {}
+                                img class="preview" src={
+                                    @if ends_with_any(url, MEDIA_EXT) {
+                                        "/media.svg"
+                                    } @else {
+                                        "/link.svg"
+                                    }
+                                } {}
                             }
                         }, None => {
-                            a {
+                            a href={(instance) "/post/" (post.id )} {
                                 img class="preview" src={"/text.svg"} {}
                             }
                         }
@@ -33,10 +41,8 @@ pub fn post_list_view(instance: &String, post_list: PostList) -> Markup {
                 }
                 div class="cell" {
                     div {
-                        a href={(instance) "/post/" (post.id )} {
-                            h4 {
-                                (post.name)
-                            }
+                        a class="title" href={(instance) "/post/" (post.id )} {
+                            (post.name)
                         }
                     }
                     div class="post_details"{
@@ -71,4 +77,8 @@ pub fn user_view() -> Markup {
 
 pub fn communities_view() -> Markup {
     html!{}
+}
+
+fn ends_with_any(s: String, suffixes: &'static [&'static str]) -> bool {
+    return suffixes.iter().any(|&suffix| s.to_lowercase().ends_with(suffix));
 }

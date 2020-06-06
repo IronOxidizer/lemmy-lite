@@ -10,13 +10,14 @@ a {
     text-decoration: inherit
 }
 
-h4 {
-    margin: 0
+.title {
+    font-size: 1.07em
 }
 
 .preview {
     width: 64px;
-    height: 64px
+    height: 64px;
+    padding: 0 8px
 }
 
 .cell {
@@ -30,7 +31,8 @@ h4 {
 }
 
 .post_details {
-    color: #999
+    color: #999;
+    font-size: 0.7em
 }
 
 .username {
