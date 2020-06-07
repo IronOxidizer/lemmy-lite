@@ -34,3 +34,5 @@ This project is not intended for official use, but rather as a proof-of-concept 
 1. First load fetches a CSS stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
 2. I use CSS Tables because it's faster and simpler than FlexBox and Grid is broken on IE11 and NetSurf.
 3. Each page refresh is limited to 1 API call to limit the impact on instances and to keep page times fast.
+4. Each static file contains an uncompressed equivalent in /uncompressed.
+5. 1.0.0 will is set for when account functionality is stabilized.
