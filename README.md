@@ -32,7 +32,14 @@ This project is not intended for official use, but rather as a proof-of-concept 
 ## Footnotes
 
 1. First load fetches a CSS stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
-2. I use CSS Tables because it's faster and simpler than FlexBox and Grid is broken on IE11 and NetSurf.
-3. Each page refresh is limited to 1 API call to limit the impact on instances and to keep page times fast.
+2. I use CSS Tables because it's faster and simpler than FlexBox and because Grid is broken on IE11 and NetSurf. Using CSS tables over HTML tables avoids excess DOM objects.
+3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. Each static file contains an uncompressed equivalent in /uncompressed.
 5. 1.0.0 will is set for when account functionality is stabilized.
+6. Static files will have shortened names, the originals in /uncompressed will have full name.
+7. Create macro depending on release or debug build to use compressed on uncompressed file names.
+8. Use 1 letter HTML class names.
+9. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
+10. Try combining HTML meta tags.
+11. Change MAUD to create smaller HTML (single, self closing tags).
+12. Move /etc/nginx/static to /etc/nginx/lemmy-lite/static

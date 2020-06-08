@@ -33,8 +33,8 @@ use serde::Deserialize;
 mod templates;
 mod lemmy_api;
 
-use crate::templates::{redirect, post_list_view};
-use crate::lemmy_api::{get_post_list};
+use crate::templates::{redirect_page, post_list_page, post_page};
+use crate::lemmy_api::{get_post_list, get_post_detail};
 
 #[derive(Deserialize)]
 struct RedirForm {
@@ -45,19 +45,22 @@ struct RedirForm {
 struct ListParams {
     s: Option<String>, // Sort
     p: Option<i64> // Page
+    // Page size?
+    // Enable preview? API expensive, multiple API calls per page
 }
 
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
-    Ok(redirect(
+    Ok(redirect_page(
         query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is Nginx running?"))?
     ))
 }
 
 async fn lvl0(path: web::Path<String>, query: web::Query<ListParams>) -> Result<Markup> {
-    let client = Client::default();
     let inst = &path.to_string();
-    let post_list = get_post_list(inst, client).await?;
-    Ok(post_list_view(inst, post_list))
+    let client = Client::default();
+
+    let post_list = get_post_list(client, inst).await?;
+    Ok(post_list_page(inst, post_list))
 }
 
 async fn lvl1(path: web::Path<(String, String)>) -> Result<Markup> {
@@ -65,7 +68,17 @@ async fn lvl1(path: web::Path<(String, String)>) -> Result<Markup> {
 }
 
 async fn lvl2(path: web::Path<(String, String, String)>) -> Result<Markup> {
-    Ok(html!{})
+    let inst = &path.0.to_string();
+    let command = &path.1.to_string();
+    let id =  &path.2.to_string();
+    let client = Client::default();
+
+    if command == "post" {
+        let post_detail = get_post_detail(client, inst, id).await?;
+        Ok(post_page(inst, &post_detail))
+    } else {
+        Err(error::ErrorExpectationFailed("Invalid parameters"))
+    }
 }
 
 async fn lvl3(path: web::Path<(String, String, String, String)>) -> Result<Markup> {
