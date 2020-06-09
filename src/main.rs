@@ -75,7 +75,7 @@ async fn lvl2(path: web::Path<(String, String, String)>) -> Result<Markup> {
 
     if command == "post" {
         let post_detail = get_post_detail(client, inst, id).await?;
-        Ok(post_page(inst, &post_detail))
+        Ok(post_page(inst, post_detail))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }

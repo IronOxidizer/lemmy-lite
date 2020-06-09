@@ -49,3 +49,7 @@ a {
     padding: 0 3px;
     border-radius: 3px
 }
+
+.branch {
+    padding-left: 4px;
+}

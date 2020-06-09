@@ -1,6 +1,6 @@
+use serde::Deserialize;
 use actix_web::client::Client;
 use actix_web::{Result};
-use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct PostView {
@@ -53,7 +53,7 @@ pub struct CommentView {
     pub id: i32,
     pub creator_id: i32,
     pub post_id: i32,
-    parent_id: Option<i32>,
+    pub parent_id: Option<i32>,
     pub content: String,
     removed: bool,
     read: Option<bool>,
@@ -99,3 +99,5 @@ pub async fn get_post_detail(client: Client, instance: &String, post_id: &String
         client.get(url).send().await?.json().await?
     ))
 }
+
+// zstewart#2487@discord.rust-community-server

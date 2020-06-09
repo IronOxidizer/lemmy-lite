@@ -41,5 +41,4 @@ This project is not intended for official use, but rather as a proof-of-concept 
 8. Use 1 letter HTML class names.
 9. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
 10. Try combining HTML meta tags.
-11. Change MAUD to create smaller HTML (single, self closing tags).
-12. Move /etc/nginx/static to /etc/nginx/lemmy-lite/static
+11. Move /etc/nginx/static to /etc/nginx/lemmy-lite/static
