@@ -105,7 +105,7 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
                 (comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1))
             }
         } @else {
-            .branch style={"border-left:2px solid rgb(" ({(172-32*depth)%256}) ",83,83)"}{
+            .branch style={"border-left:2px solid rgb(" ({172-32*(depth%6)}) ",83,83)"}{
                 @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
                     (comment_markup(instance, comment, post_creator_id))
                     (comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1))
@@ -128,6 +128,7 @@ pub fn post_page(instance: &String, post_detail: PostDetail) -> Markup {
         (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0))
     }
 }
+
 fn ends_with_any(s: String, suffixes: &'static [&'static str]) -> bool {
     return suffixes.iter().any(|&suffix| s.to_lowercase().ends_with(suffix));
 }
