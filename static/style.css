@@ -2,6 +2,7 @@ body {
     background-color: #222;
     text-decoration: none;
     color: #dedede;
+    overflow-x: hidden;
     font-family: sans-serif
 }
 
@@ -28,6 +29,10 @@ a {
     color: #999;
     margin-bottom: 0;
     font-size: 0.7em
+}
+
+.highlight {
+    background-color: #282828;
 }
 
 .cell {
