@@ -2,27 +2,11 @@
 rustup toolchain install nightly
 cargo +nightly run --release
 
-Fastest templating options: askama, horrowshow, maud
-
-TODO:
-- Make page dynamic using css. Collapsable example: https://jsfiddle.net/gSPqX/1/
-
-Endpoints:
-mydomain.com/test/ # Post list view for /c/all
-mydomain.com/test/post/51234 # Post view
-mydomain.com/test/community/rust # Post list view
-mydomain.com/test/post/51234/comment/1523 # Comment view
-mydomain.com/test/user/anon123 # User view
-mydomain.com/test/communities # Community list
-
-Test domains:
+Test instances:
 dev.lemmy.ml
 enterprise.lemmy.ml
 voyager.lemmy.ml
 ds9.lemmy.ml
-
-CSS Table is ~10% faster than CSS FlexBox
-https://benfrain.com/css-performance-test-flexbox-v-css-table-fight/
 */
 
 use maud::{html, Markup};
@@ -33,8 +17,8 @@ use serde::Deserialize;
 mod templates;
 mod lemmy_api;
 
-use crate::templates::{redirect_page, post_list_page, post_page, comment_page, communities_page};
-use crate::lemmy_api::{get_post_list, get_post, get_community_list, get_community};
+use crate::templates::{redirect_page, post_list_page, post_page, comment_page, communities_page, user_page};
+use crate::lemmy_api::{get_post_list, get_post, get_community_list, get_community, get_user};
 
 #[derive(Deserialize)]
 struct RedirForm {
@@ -87,16 +71,18 @@ async fn lvl2(path: web::Path<(String, String, String)>) -> Result<Markup> {
         Ok(post_page(inst, post_detail))
     } else if command == "c" {
         let communities = get_community(client, inst, id).await?;
-
         let post_list = get_post_list(client, inst, Some(&communities.community.id)).await?;
         Ok(post_list_page(inst, post_list))
+    } else if command == "u" {
+        let user = get_user(client, inst, id).await?;
+        Ok(user_page(inst, user))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
 }
 
 async fn lvl3(path: web::Path<(String, String, String, String)>) -> Result<Markup> {
-    Ok(html!{})
+    Err(error::ErrorExpectationFailed("Invalid path"))
 }
 
 async fn lvl4(path: web::Path<(String, String, String, String, String)>) -> Result<Markup> {

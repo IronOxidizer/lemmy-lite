@@ -3,7 +3,7 @@ body {
     text-decoration: none;
     color: #dedede;
     overflow-x: hidden;
-    font-family: sans-serif
+    font-family: sans-serif;
 }
 
 a {
@@ -56,5 +56,18 @@ a {
 }
 
 .branch {
-    padding-left: 4px;
+    padding-left: 4px
+}
+
+#navbar {
+    float: left;
+    background-color: #282828;
+    width: 100%;
+}
+
+#navbar>a {
+    float: left;
+    text-align: center;
+    width: 33.33%;
+    margin: 6px 0;
 }

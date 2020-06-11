@@ -1,5 +1,5 @@
 use maud::{html, Markup};
-use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList};
+use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
 
@@ -13,6 +13,7 @@ pub fn redirect_page(instance: String) -> Markup {
 pub fn communities_page(instance: &String, community_list: CommunityList) -> Markup {
     html! {
         (headers_markup())
+        (navbar_markup(instance))
         table {
             tr {
                 th {"Name"}
@@ -32,6 +33,7 @@ pub fn communities_page(instance: &String, community_list: CommunityList) -> Mar
 pub fn post_list_page(instance: &String, post_list: PostList) -> Markup {
     html! {
         (headers_markup())
+        (navbar_markup(instance))
         @for post in &post_list.posts {
             div { (post_markup(instance, post)) }
             hr;
@@ -42,6 +44,7 @@ pub fn post_list_page(instance: &String, post_list: PostList) -> Markup {
 pub fn post_page(instance: &String, post_detail: PostDetail) -> Markup {
     html! {
         (headers_markup())
+        (navbar_markup(instance))
         (post_markup(instance, &post_detail.post))
 
         @if let Some(body) = &post_detail.post.body {
@@ -74,6 +77,7 @@ pub fn comment_page(instance: &String, comment_id: &String, post_detail: PostDet
 
     html! {
         (headers_markup())
+        (navbar_markup(instance))
         (post_markup(instance, &post_detail.post))
 
         @if let Some(body) = &post_detail.post.body {
@@ -89,6 +93,19 @@ pub fn comment_page(instance: &String, comment_id: &String, post_detail: PostDet
     }
 }
 
+pub fn user_page(instance: &String, user: UserDetail) -> Markup {
+    html!{
+        (headers_markup())
+        (navbar_markup(instance))
+        @for post in user.posts {
+            div {(post_markup(instance, &post))}
+        }
+        @for comment in user.comments {
+            (comment_markup(instance, &comment, -1, None));
+        }
+    }
+}
+
 #[inline(always)]
 fn headers_markup() -> Markup {
     html! {
@@ -96,6 +113,18 @@ fn headers_markup() -> Markup {
         meta name="viewport" content="width=480px, user-scalable=no";
         meta name="theme-color" content="#222";
         link rel="stylesheet" href="/style.css";
+    }
+}
+
+fn navbar_markup(instance: &String) -> Markup {
+    html! {
+        #navbar {
+            a href= {".."} {"Back"}
+        
+            a href= {"/" (instance) } {(instance)}
+        
+            a href= {"/" (instance) "/communities"} {"Communities"}
+        }
     }
 }
 

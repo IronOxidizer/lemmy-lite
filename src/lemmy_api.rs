@@ -76,7 +76,6 @@ pub struct PostList {
     pub posts: Vec<PostView>
 }
 
-
 #[derive(Deserialize, Clone)]
 pub struct CommentView {
     pub id: i32,
@@ -149,6 +148,26 @@ pub struct CommunityDetail {
     online: i32
 }
 
+#[derive(Deserialize)]
+struct CommunityFollowerView {	
+    id: i32,
+    community_id: i32,
+    user_id: i32,
+    published: String,
+    user_name: String,
+    avatar: Option<String>,
+    community_name: String,
+}
+
+#[derive(Deserialize)]
+pub struct UserDetail {
+    user: UserView,
+    follows: Vec<CommunityFollowerView>,
+    moderates: Vec<CommunityModeratorView>,
+    pub comments: Vec<CommentView>,
+    pub posts: Vec<PostView>,
+}
+
 pub async fn get_community_list(client: &Client, instance: &String) -> Result<CommunityList> {
     let url = format!("https://{}/api/v1/community/list?sort=TopAll", instance);
     println!("Making request: {}", url);
@@ -182,7 +201,11 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
 pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> Result<PostDetail> {
     let url = format!("https://{}/api/v1/post?id={}", instance, post_id);
     println!("Making request: {}", url);
-    let mut a = client.get(url).send().await?;
-    //println!("Request successfully made"); // Breaks on msgs more than 256K https://docs.rs/actix-web/2.0.0/actix_web/client/struct.ClientResponse.html#method.json
-    Ok(PostDetail::from(a.json().await?))
+    Ok(PostDetail::from(client.get(url).send().await?.json().limit(8388608).await?)) // 8MB limit
+}
+
+pub async fn get_user(client: &Client, instance: &String, username: &String) -> Result<UserDetail> {
+    let url = format!("https://{}/api/v1/user?saved_only=false&sort=Hot&username={}", instance, username);
+    println!("Making request: {}", url);
+    Ok(UserDetail::from(client.get(url).send().await?.json().await?))
 }
