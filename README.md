@@ -29,6 +29,15 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - `ln -s /home/main/Development/lemmy-lite/lemmy-lite.conf /etc/nginx/sites-enabled/`
 - `systemctl start nginx && cargo +nightly run --release`
 
+## Pictures
+
+lemmy-lite: FireFox
+![lemmy-lite: FireFox](https://user-images.githubusercontent.com/60191958/84398555-1872a280-abce-11ea-8e87-a06b3165a77e.png)
+
+lemmy-lite: Mobile
+![lemmy-lite: Mobile](https://user-images.githubusercontent.com/60191958/84398664-39d38e80-abce-11ea-862d-d2d5cb98a89b.png)
+
+
 ## Footnotes
 
 1. First load fetches a CSS stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
