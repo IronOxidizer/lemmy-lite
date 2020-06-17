@@ -90,7 +90,7 @@ pub fn user_page(instance: &String, user: UserDetail) -> Markup {
             div {(post_markup(instance, &post))}
         }
         @for comment in user.comments {
-            (highlight_comment_markup(instance, &comment, None, None));
+            (comment_markup(instance, &comment, None));
         }
     }
 }
@@ -176,26 +176,24 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
 
 fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>) -> Markup {
     return html! {
-        .highlight {
-            p.mute {
-                a.username href={"/" (instance) "/u/" (comment.creator_name)} {
-                    (comment.creator_name)
+        p.mute {
+            a.username href={"/" (instance) "/u/" (comment.creator_name)} {
+                (comment.creator_name)
+            }
+            @if let Some(pcid) = post_creator_id {
+                @if pcid== comment.creator_id {
+                    " " span.badge { ("creator") }
                 }
-                @if let Some(pcid) = post_creator_id {
-                    @if pcid== comment.creator_id {
-                        " " span.badge { ("creator") }
-                    }
-                }
+            }
 
-                " • ϟ " (comment.score) 
-                a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                    " • ⚓"
-                }
+            " • ϟ " (comment.score) 
+            a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
+                " • ⚓"
             }
-            
-            div {
-                (comment.content)
-            }
+        }
+        
+        div {
+            (comment.content)
         }
     }
 }
@@ -203,7 +201,9 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
 pub fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>) -> Markup {
     if let Some(hid) = highlight_id {
         if comment.id == hid {
-            return comment_markup(instance, comment, post_creator_id)
+            return html! { .highlight {
+                (comment_markup(instance, comment, post_creator_id))
+            } }
         }
     }
 
