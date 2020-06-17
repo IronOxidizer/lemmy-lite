@@ -116,11 +116,11 @@ async fn main() -> std::io::Result<()> {
         .service(
             web::resource("/").route(web::get().to(index))
         ).route(
-            "/{a}", web::get().to(lvl1)
+            "/{inst}", web::get().to(lvl1)
         ).route(
-            "/{a}/{b}", web::get().to(lvl2)
+            "/{inst}/{command}", web::get().to(lvl2)
         ).route(
-            "/{a}/{b}/{c}", web::get().to(lvl3)
+            "/{inst}/{command}/{id}", web::get().to(lvl3)
         // ).route(
         //     "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
         ).route(
