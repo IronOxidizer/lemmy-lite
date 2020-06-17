@@ -25,13 +25,33 @@ struct RedirForm {
     i: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct PathParams2 {
+    inst: String,
+    command: String
+}
+#[derive(Deserialize)]
+struct PathParams3 {
+    inst: String,
+    command: String,
+    id: String
+}
+#[derive(Deserialize)]
+struct PathParams5 {
+    inst: String,
+    command: String,
+    id: String,
+    sub_command: String,
+    sub_id: String
+}
+
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
     Ok(redirect_page(
         query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is Nginx running?"))?
     ))
 }
 
-async fn lvl0(path: web::Path<String>, query: web::Query<PagingParams>) -> Result<Markup> {
+async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Result<Markup> {
     let inst = &path.to_string();
     let client = &Client::default();
 
@@ -39,55 +59,43 @@ async fn lvl0(path: web::Path<String>, query: web::Query<PagingParams>) -> Resul
     Ok(post_list_page(inst, post_list))
 }
 
-async fn lvl1(path: web::Path<(String, String)>, query: web::Query<PagingParams>) -> Result<Markup> {
-    let inst = &path.0.to_string();
-    let command = &path.1.to_string();
+async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
-
-    if command == "communities" {
-        let communities = get_community_list(client, inst, None).await?;
-        Ok(communities_page(inst, communities))
+    if p.command == "communities" {
+        let communities = get_community_list(client, &p.inst, None).await?;
+        Ok(communities_page(&p.inst, communities))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
 }
 
-async fn lvl2(path: web::Path<(String, String, String)>, query: web::Query<PagingParams>) -> Result<Markup> {
-    let inst = &path.0.to_string();
-    let command = &path.1.to_string();
-    let id =  &path.2.to_string();
+async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
-
-    if command == "post" {
-        let post_detail = get_post(client, inst, id, None).await?;
-        Ok(post_page(inst, post_detail))
-    } else if command == "c" {
-        let communities = get_community(client, inst, id).await?;
-        let post_list = get_post_list(client, inst, Some(&communities.community.id), None).await?;
-        Ok(post_list_page(inst, post_list))
-    } else if command == "u" {
-        let user = get_user(client, inst, id, None).await?;
-        Ok(user_page(inst, user))
+    if p.command == "post" {
+        let post_detail = get_post(client, &p.inst, &p.id, None).await?;
+        Ok(post_page(&p.inst, post_detail))
+    } else if p.command == "c" {
+        let communities = get_community(client, &p.inst, &p.id).await?;
+        let post_list = get_post_list(client, &p.inst, Some(&communities.community.id), None).await?;
+        Ok(post_list_page(&p.inst, post_list))
+    } else if p.command == "u" {
+        let user = get_user(client, &p.inst, &p.id, None).await?;
+        Ok(user_page(&p.inst, user))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
 }
 
-// async fn lvl3(path: web::Path<(String, String, String, String)>, query: web::Query<PagingParams>) -> Result<Markup> {
+// async fn lvl4(path: web::Path<PathParams4>, query: web::Query<PagingParams>) -> Result<Markup> {
 //     Err(error::ErrorExpectationFailed("Invalid path"))
 // }
 
-async fn lvl4(path: web::Path<(String, String, String, String, String)>, query: web::Query<PagingParams>) -> Result<Markup> {
-    let inst = &path.0.to_string();
-    let command = &path.1.to_string();
-    let id =  &path.2.to_string();
-    let sub_command = &path.3.to_string();
-    let sub_id =  &path.4.to_string();
+async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
 
-    if command == "post" && sub_command == "comment" {
-        let post_detail = get_post(client, inst, id, None).await?;
-        let comment_id = match sub_id.parse::<i32>() {
+    if p.command == "post" && p.sub_command == "comment" {
+        let post_detail = get_post(client, &p.inst, &p.id, None).await?;
+        let comment_id = match p.sub_id.parse::<i32>() {
             Ok(cid) => cid,
             Err(_) => return Err(error::ErrorExpectationFailed("Comment ID is invalid"))
         };
@@ -95,7 +103,7 @@ async fn lvl4(path: web::Path<(String, String, String, String, String)>, query: 
             Some(c) => c.clone(),
             _ => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
         };
-        Ok(comment_page(inst, comment, post_detail))
+        Ok(comment_page(&p.inst, comment, post_detail))
         
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
@@ -108,15 +116,15 @@ async fn main() -> std::io::Result<()> {
         .service(
             web::resource("/").route(web::get().to(index))
         ).route(
-            "/{}", web::get().to(lvl0)
+            "/{a}", web::get().to(lvl1)
         ).route(
-            "/{}/{}", web::get().to(lvl1)
+            "/{a}/{b}", web::get().to(lvl2)
         ).route(
-            "/{}/{}/{}", web::get().to(lvl2)
+            "/{a}/{b}/{c}", web::get().to(lvl3)
         // ).route(
-        //    "/{}/{}/{}/{}", web::get().to(lvl3)
+        //     "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
         ).route(
-            "/{}/{}/{}/{}/{}", web::get().to(lvl4)
+            "/{inst}/{command}/{id}/{sub_command}/{sub_id}", web::get().to(lvl5)
         )
     })
     .bind("127.0.0.1:1131")?

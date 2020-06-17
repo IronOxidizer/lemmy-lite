@@ -3,10 +3,11 @@ use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityVie
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
 
+// Pure HTML redirect
 pub fn redirect_page(instance: String) -> Markup {
     html! {
         (headers_markup())
-        meta content={"0;URL='" "/" (instance) "'"} http-equiv="refresh" {}
+        meta content={"0;URL='/" (instance) "'"} http-equiv="refresh";
     }
 }
 
@@ -70,7 +71,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
         (post_markup(instance, &post_detail.post))
 
         @if let Some(body) = &post_detail.post.body {
-            p { (body)}
+            p {(body)}
         }
         hr;
         
