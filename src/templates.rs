@@ -56,23 +56,12 @@ pub fn post_page(instance: &String, post_detail: PostDetail) -> Markup {
     }
 }
 
-pub fn comment_page(instance: &String, comment_id: &String, post_detail: PostDetail) -> Markup {
-    let cid = comment_id.parse::<i32>().unwrap_or_else(|_| -1);
-    if cid < 0 {
-        return html! {"Invalid comment ID"}
-    }
+pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDetail) -> Markup {
     let mut comments = post_detail.comments;
-
-    let opt_com = comments.iter().find(|c| c.id == cid);
-    if opt_com.is_none() {
-        return html!{"No such comment ID belongs to this post ID"}
-    }
-    let comment = (*opt_com.unwrap()).clone();
-
+    let comment_id = comment.id;
     comments.retain(|c| Some(c.id) == comment.parent_id ||
-        c.id == cid ||
+        c.id == comment_id ||
         c.parent_id == Some(comment.id));
-
     let parent = comments.iter().find(|c| Some(c.id) == comment.parent_id);
 
     html! {
@@ -86,10 +75,9 @@ pub fn comment_page(instance: &String, comment_id: &String, post_detail: PostDet
         hr;
         
         @match parent {
-            Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(cid))),
-            None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(cid)))
+            Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id))),
+            None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id)))
         }
-        
     }
 }
 
@@ -101,7 +89,7 @@ pub fn user_page(instance: &String, user: UserDetail) -> Markup {
             div {(post_markup(instance, &post))}
         }
         @for comment in user.comments {
-            (comment_markup(instance, &comment, None, None));
+            (highlight_comment_markup(instance, &comment, None, None));
         }
     }
 }
@@ -185,57 +173,40 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
     }
 }
 
-pub fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>) -> Markup {
-    if let Some(hid) = highlight_id {
-        if comment.id == hid {
-            return html! {
-                .highlight {
-                    p.mute {
-                        a.username href={"/" (instance) "/u/" (comment.creator_name)} {
-                            (comment.creator_name)
-                        }
-                        @if let Some(pcid) = post_creator_id {
-                            @if pcid== comment.creator_id {
-                                " " span.badge { ("creator") }
-                            }
-                        }
-        
-                        " • ϟ " (comment.score) 
-                        a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                            " • ⚓"
-                        }
-                    }
-                    
-                    div {
-                        (comment.content)
+fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>) -> Markup {
+    return html! {
+        .highlight {
+            p.mute {
+                a.username href={"/" (instance) "/u/" (comment.creator_name)} {
+                    (comment.creator_name)
+                }
+                @if let Some(pcid) = post_creator_id {
+                    @if pcid== comment.creator_id {
+                        " " span.badge { ("creator") }
                     }
                 }
-            }
-        }
-    }
 
-    html! {
-        p.mute {
-            a.username href={"/" (instance) "/u/" (comment.creator_name)} {
-                (comment.creator_name)
+                " • ϟ " (comment.score) 
+                a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
+                    " • ⚓"
+                }
             }
             
-            @if let Some(pcid) = post_creator_id {
-                @if pcid== comment.creator_id {
-                    " " span.badge { ("creator") }
-                }
+            div {
+                (comment.content)
             }
-
-            " • ϟ " (comment.score) 
-            a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                " • ⚓"
-            }
-        }
-        
-        div {
-            (comment.content)
         }
     }
+}
+
+pub fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>) -> Markup {
+    if let Some(hid) = highlight_id {
+        if comment.id == hid {
+            return comment_markup(instance, comment, post_creator_id)
+        }
+    }
+
+    comment_markup(instance, comment, post_creator_id)
 }
 
 // zstewart#2487@discord.rust-community-server
@@ -245,13 +216,13 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
     html! {
         @if depth == 0 {
             @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                (comment_markup(instance, comment, Some(post_creator_id), highlight_id))
+                (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id))
                 (comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))
             }
         } @else {
             .branch style={"border-left:2px solid rgb(" ({172-64*((depth-1)%3)}) ",83,83)"}{
                 @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                    (comment_markup(instance, comment, Some(post_creator_id), highlight_id))
+                    (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id))
                     (comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))
                 }
             }

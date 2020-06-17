@@ -52,3 +52,5 @@ lemmy-lite: Mobile
 10. Try combining HTML meta tags.
 11. Move /etc/nginx/static to /etc/nginx/lemmy-lite/static
 12. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
+13. Implment paging, page size, list sorting
+14. Implment post search

@@ -11,6 +11,10 @@ a {
     text-decoration: inherit
 }
 
+table {
+    border-spacing: 0 .5em;
+}
+
 .title {
     font-size: 1.07em
 }

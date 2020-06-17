@@ -3,6 +3,14 @@ use actix_web::client::Client;
 use actix_web::{Result};
 
 #[derive(Deserialize)]
+pub struct PagingParams {
+    s: Option<String>, // Sort
+    n: Option<i32>, // Page
+    p: Option<i32> // Page size
+    // Enable preview? API expensive, multiple API calls per page
+}
+
+#[derive(Deserialize)]
 pub struct CommunityView {
     pub id: i32,
     pub name: String,
@@ -168,7 +176,7 @@ pub struct UserDetail {
     pub posts: Vec<PostView>,
 }
 
-pub async fn get_community_list(client: &Client, instance: &String) -> Result<CommunityList> {
+pub async fn get_community_list(client: &Client, instance: &String, paging_params: Option<PagingParams>) -> Result<CommunityList> {
     let url = format!("https://{}/api/v1/community/list?sort=TopAll", instance);
     println!("Making request: {}", url);
 
@@ -186,7 +194,7 @@ pub async fn get_community(client: &Client, instance: &String, community: &Strin
     ))
 }
 
-pub async fn get_post_list(client: &Client, instance: &String, community: Option<&i32>) -> Result<PostList> {
+pub async fn get_post_list(client: &Client, instance: &String, community: Option<&i32>, paging_params: Option<PagingParams>) -> Result<PostList> {
     let url = match community {
         Some(c) => format!("https://{}/api/v1/post/list?type_=All&sort=Hot&community_id={}", instance, c),
         None => format!("https://{}/api/v1/post/list?type_=All&sort=Hot", instance)
@@ -198,14 +206,14 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
     ))
 }
 
-pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> Result<PostDetail> {
+pub async fn get_post(client: &Client, instance: &String, post_id: &String, paging_params: Option<PagingParams>) -> Result<PostDetail> {
     let url = format!("https://{}/api/v1/post?id={}", instance, post_id);
     println!("Making request: {}", url);
     Ok(PostDetail::from(client.get(url).send().await?.json().limit(8388608).await?)) // 8MB limit
 }
 
-pub async fn get_user(client: &Client, instance: &String, username: &String) -> Result<UserDetail> {
-    let url = format!("https://{}/api/v1/user?saved_only=false&sort=Hot&username={}", instance, username);
+pub async fn get_user(client: &Client, instance: &String, username: &String, paging_params: Option<PagingParams>) -> Result<UserDetail> {
+    let url = format!("https://{}/api/v1/user?saved_only=false&username={}&sort=Hot", instance, username);
     println!("Making request: {}", url);
     Ok(UserDetail::from(client.get(url).send().await?.json().await?))
 }
