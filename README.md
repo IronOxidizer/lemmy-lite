@@ -25,9 +25,12 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-- `cp -r /home/main/Development/lemmy-lite/static /etc/nginx/` (Symlink won't always work if it isn't root)
-- `ln -s /home/main/Development/lemmy-lite/lemmy-lite.conf /etc/nginx/sites-enabled/`
-- `systemctl start nginx && cargo +nightly run --release`
+Symlink won't always work if it isn't root
+```
+cp -r /home/main/Development/lemmy-lite/static /etc/nginx/lemmy-lite
+ln -s /home/main/Development/lemmy-lite/lemmy-lite.conf /etc/nginx/sites-enabled/
+systemctl start nginx && cargo +nightly run --release
+```
 
 ## Pictures
 
@@ -50,7 +53,6 @@ lemmy-lite: Mobile
 8. Use 1 letter HTML class names.
 9. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
 10. Try combining HTML meta tags.
-11. Move /etc/nginx/static to /etc/nginx/lemmy-lite/static
-12. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
-13. Implment paging, page size, list sorting
-14. Implment post search
+11. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
+12. Implement paging, page size, list sorting
+13. Implement post search
