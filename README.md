@@ -1,9 +1,7 @@
 # lemmy-lite
 A static, nojs, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
 
-This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy
-
-***NOTE:*** This project uses Maud-git(master) as it depends on actix 2.0.0. The necessary features are in Maud's master branch but are not yet in any official Maud release. Maud also uses Rust nightly. As such, this project is very unstable and is subject to breaking / major changes.
+This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy. Eventually it will transition to a server that is ran alongside Lemmy, for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine rmoving any extra latency in API calls.
 
 ### Built With
 
@@ -47,7 +45,7 @@ lemmy-lite: Mobile
 2. I use CSS Tables because it's [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight) and simpler than FlexBox and because Grid is broken on IE11 and NetSurf. Using CSS tables over HTML tables avoids excess DOM objects.
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. Each static file contains an uncompressed equivalent in /uncompressed.
-5. 1.0.0 will is set for when account functionality is stabilized.
+5. 1.0.0 is set for when account functionality is stabilized.
 6. Static files will have shortened names, the originals in /uncompressed will have full name.
 7. Create macro depending on release or debug build to use compressed on uncompressed file names.
 8. Use 1 letter HTML class names.

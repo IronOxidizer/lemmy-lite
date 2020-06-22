@@ -9,4 +9,4 @@ actix-rt = "1.1.1"
 actix-web = { version = "2.0.0", features=["rustls"] }
 rustls = "0.17.0"
 serde = "1.0.111"
-maud = { git="https://github.com/lambda-fairy/maud", features = ["actix-web"] }
+maud = { version = "0.22.0", features = ["actix-web"] }
