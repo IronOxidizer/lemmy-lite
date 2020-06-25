@@ -1,13 +1,13 @@
 # lemmy-lite
 A static, nojs, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
 
-This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy. Eventually it will transition to a server that is ran alongside Lemmy, for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine rmoving any extra latency in API calls.
+This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy. Eventually it will transition into a microservice that is ran alongside Lemmy, for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine removing any extra latency in API calls.
 
 ### Built With
 
 - [Rust](https://www.rust-lang.org)
-- [Actix](https://actix.rs)
-- [Maud](https://maud.lambda.xyz)
+- [Actix](https://actix.rs) - [Benchmarks](https://www.techempower.com/benchmarks/#test=composite)
+- [Maud](https://maud.lambda.xyz) - [Benchmarks](https://ironoxidizer.github.io/ironoxidizer/blog/20200623-fastest-templating-engine)
 
 ## Features
 
@@ -23,7 +23,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-Symlink won't always work if it isn't root
+Symlink won't always work since nginx user (root) requires ownership of linked file
 ```
 gzip -kr9 static
 cp -rf static /etc/nginx/lemmy-lite
@@ -50,5 +50,5 @@ lemmy-lite: Mobile
 6. Implement post search
 7. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
 8. Use 1 letter HTML class names.
-9. Use 1 letter file names except for favicon and index.
+9. Use 1 letter static file names except for favicon and index.
 10. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
