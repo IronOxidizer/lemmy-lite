@@ -98,8 +98,7 @@ pub fn user_page(instance: &String, user: UserDetail) -> Markup {
 #[inline(always)]
 fn headers_markup() -> Markup {
     html! {
-        meta charset="utf8";
-        meta name="viewport" content="width=480px, user-scalable=no";
+        meta charset="utf8" name="viewport" content="width=480px, user-scalable=no";
         meta name="theme-color" content="#222";
         link rel="stylesheet" href="/style.css";
     }

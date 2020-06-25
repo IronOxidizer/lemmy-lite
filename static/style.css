@@ -64,14 +64,14 @@ table {
 }
 
 #navbar {
-    float: left;
+    display: table;
+    table-layout: fixed;
     background-color: #282828;
     width: 100%;
 }
 
 #navbar>a {
-    float: left;
+    display: table-cell;
     text-align: center;
-    width: 33.33%;
-    margin: 6px 0;
+    padding: 6px 0
 }

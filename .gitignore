@@ -1,3 +1,5 @@
+/static/*.gz
+
 # Custom ignores
 /test/
 
