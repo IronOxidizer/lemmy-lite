@@ -29,10 +29,10 @@ table {
     text-align: right
 }
 
-.mute {
+.mute,.ch {
     color: #999;
     margin-bottom: 0;
-    font-size: 0.7em
+    font-size: 0.7em;
 }
 
 .highlight {
@@ -59,10 +59,6 @@ table {
     border-radius: 3px
 }
 
-.branch {
-    padding-left: 4px
-}
-
 #navbar {
     display: table;
     table-layout: fixed;
@@ -74,4 +70,34 @@ table {
     display: table-cell;
     text-align: center;
     padding: 6px 0
+}
+
+/* Comment header and Comment collapsable */
+.ch {
+    display: inline-block
+}
+.cc:checked + div { 
+    display: none
+}
+
+.b0, .b1, .b2, .b3, .b4, .b5 {
+    padding-left: 4px
+}
+.b0 {
+    border-left:2px solid #ac5353
+}
+.b1 {
+    border-left:2px solid #8eac53
+}
+.b2 {
+    border-left:2px solid #53ac80
+}
+.b3 {
+    border-left:2px solid #538eac
+}
+.b4 {
+    border-left:2px solid #6253ac
+}
+.b5 {
+    border-left:2px solid #ac53ac
 }

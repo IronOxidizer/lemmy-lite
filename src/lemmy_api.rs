@@ -1,14 +1,12 @@
 use serde::Deserialize;
 use actix_web::client::Client;
-use actix_web::{Result};
-use std::fmt::Write;
+use actix_web::Result;
 
 #[derive(Deserialize)]
 pub struct PagingParams {
     s: Option<String>, // Sort
     p: Option<i32>, // Page
     l: Option<i32> // Limit size
-    // Enable preview? API expensive, multiple API calls per page
 }
 
 #[derive(Deserialize)]
@@ -222,6 +220,7 @@ pub async fn get_user(client: &Client, instance: &String, username: &String, pag
     Ok(UserDetail::from(client.get(url).send().await?.json().await?))
 }
 
+// Benchmark faster solutions, too many allocations
 fn format_url(instance: &String, endpoint: &str, paging_params: Option<PagingParams>, extra_params: Option<String>) -> String{
     format!("https://{}/api/{}?{}{}", instance, endpoint,
         match paging_params {

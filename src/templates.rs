@@ -2,6 +2,10 @@ use maud::{html, Markup};
 use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
+const STYLESHEET: &str = "/style.css";
+const LINK_IMG: &str = "/link.svg";
+const MEDIA_IMG: &str = "/media.svg";
+const TEXT_IMG: &str = "/text.svg";
 
 // Pure HTML redirect
 pub fn redirect_page(instance: String) -> Markup {
@@ -90,17 +94,16 @@ pub fn user_page(instance: &String, user: UserDetail) -> Markup {
             div {(post_markup(instance, &post))}
         }
         @for comment in user.comments {
-            (comment_markup(instance, &comment, None));
+            (comment_markup(instance, &comment, None, None));
         }
     }
 }
 
-#[inline(always)]
 fn headers_markup() -> Markup {
     html! {
         meta charset="utf8" name="viewport" content="width=480px, user-scalable=no";
         meta name="theme-color" content="#222";
-        link rel="stylesheet" href="/style.css";
+        link rel="stylesheet" href=(STYLESHEET);
     }
 }
 
@@ -139,15 +142,15 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
                 a.cell href={ (url) } {
                     img.preview src={
                         @if ends_with_any(url.clone(), MEDIA_EXT) {
-                            "/media.svg"
+                            (MEDIA_IMG)
                         } @else {
-                            "/link.svg"
+                            (LINK_IMG)
                         }
                     };
                 }
             }, None => {
                 a.cell href={"/" (instance) "/post/" (post.id )} {
-                    img.preview src={"/text.svg"};
+                    img.preview src={(TEXT_IMG)};
                 }
             }
         }
@@ -173,57 +176,67 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
     }
 }
 
-fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>) -> Markup {
+fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, children: Option<Markup>) -> Markup {
     return html! {
-        p.mute {
-            a.username href={"/" (instance) "/u/" (comment.creator_name)} {
-                (comment.creator_name)
+        div {
+            p.ch {
+                a.username href={"/" (instance) "/u/" (comment.creator_name)} {
+                    (comment.creator_name)
+                }
+                @if let Some(pcid) = post_creator_id {
+                    @if pcid== comment.creator_id {
+                        " " span.badge { ("creator") }
+                    }
+                }
+    
+                " • ϟ " (comment.score) 
+                a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
+                    " • ⚓"
+                }
+    
+                " • "
             }
-            @if let Some(pcid) = post_creator_id {
-                @if pcid== comment.creator_id {
-                    " " span.badge { ("creator") }
+            
+            input.cc type={"checkbox"};
+    
+            div {
+                (comment.content)
+                @if let Some(c) = children {
+                    (c) {} // Maybe replace {} with ;
                 }
             }
-
-            " • ϟ " (comment.score) 
-            a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                " • ⚓"
-            }
-        }
-        
-        div {
-            (comment.content)
         }
     }
 }
 
-fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>) -> Markup {
+fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, children: Option<Markup>) -> Markup {
     if let Some(hid) = highlight_id {
         if comment.id == hid {
             return html! { .highlight {
-                (comment_markup(instance, comment, post_creator_id))
+                (comment_markup(instance, comment, post_creator_id, children))
             } }
         }
     }
 
-    comment_markup(instance, comment, post_creator_id)
+    comment_markup(instance, comment, post_creator_id, children)
 }
 
 // zstewart#2487@discord.rust-community-server
 fn comment_tree_markup(instance: &String, comments: &[CommentView],
-    post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>) -> Markup{
+    post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>) -> Markup {
+    let branch_depth = (depth - 1)%6;
 
     html! {
         @if depth == 0 {
             @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id))
-                (comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))
+                (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
+                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
             }
         } @else {
-            .branch style={"border-left:2px solid rgb(" ({172-64*((depth-1)%3)}) ",83,83)"}{
+            .{"b" (branch_depth)} {
                 @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                    (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id))
-                    (comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))
+                    (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
+                        Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
                 }
             }
         }
