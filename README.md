@@ -23,7 +23,8 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-Symlink won't always work since nginx user (root) requires ownership of linked file
+- Symlink won't always work since nginx user (root) requires ownership of linked file
+- GZip static to allow serving of compressed files for lower bandwith usage
 ```
 gzip -kr9 static
 cp -rf static /etc/nginx/lemmy-lite
@@ -46,9 +47,8 @@ lemmy-lite: Mobile
 2. I use CSS Tables because it's [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight) and simpler than FlexBox, and because Grid is broken on IE11 and NetSurf. Using CSS tables over HTML tables avoids excess DOM objects.
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. 1.0.0 is set for when account functionality is stabilized.
-5. Implement paging, page size, list sorting
-6. Implement post search
-7. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
-8. Use 1 letter HTML class names.
-9. Use 1 letter static file names except for favicon and index.
-10. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
+5. Implement post search
+6. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
+7. Use 1 letter HTML class names.
+8. Use 1 letter static file names except for favicon and index.
+9. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.

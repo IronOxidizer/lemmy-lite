@@ -62,7 +62,7 @@ async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Resul
 async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
     if p.command == "communities" {
-        let communities = get_community_list(client, &p.inst, None).await?;
+        let communities = get_community_list(client, &p.inst, query.into_inner()).await?;
         Ok(communities_page(&p.inst, communities))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
@@ -72,11 +72,12 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Res
 async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
     if p.command == "post" {
-        let post_detail = get_post(client, &p.inst, &p.id, None).await?;
+        let post_detail = get_post(client, &p.inst, &p.id).await?;
         Ok(post_page(&p.inst, post_detail))
     } else if p.command == "c" {
-        let communities = get_community(client, &p.inst, &p.id).await?;
-        let post_list = get_post_list(client, &p.inst, Some(&communities.community.id), None).await?;
+        let community = get_community(client, &p.inst, &p.id).await?;
+        let post_list = get_post_list(client, &p.inst, 
+            Some(&community.community.id), Some(query.into_inner())).await?;
         Ok(post_list_page(&p.inst, post_list))
     } else if p.command == "u" {
         let user = get_user(client, &p.inst, &p.id, None).await?;
@@ -94,7 +95,7 @@ async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Res
     let client = &Client::default();
 
     if p.command == "post" && p.sub_command == "comment" {
-        let post_detail = get_post(client, &p.inst, &p.id, None).await?;
+        let post_detail = get_post(client, &p.inst, &p.id).await?;
         let comment_id = match p.sub_id.parse::<i32>() {
             Ok(cid) => cid,
             Err(_) => return Err(error::ErrorExpectationFailed("Comment ID is invalid"))

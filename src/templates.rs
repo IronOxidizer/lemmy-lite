@@ -197,7 +197,7 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
     }
 }
 
-pub fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>) -> Markup {
+fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>) -> Markup {
     if let Some(hid) = highlight_id {
         if comment.id == hid {
             return html! { .highlight {

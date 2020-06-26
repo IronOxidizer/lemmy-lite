@@ -1,12 +1,13 @@
 use serde::Deserialize;
 use actix_web::client::Client;
 use actix_web::{Result};
+use std::fmt::Write;
 
 #[derive(Deserialize)]
 pub struct PagingParams {
     s: Option<String>, // Sort
-    n: Option<i32>, // Page
-    p: Option<i32> // Page size
+    p: Option<i32>, // Page
+    l: Option<i32> // Limit size
     // Enable preview? API expensive, multiple API calls per page
 }
 
@@ -176,8 +177,8 @@ pub struct UserDetail {
     pub posts: Vec<PostView>,
 }
 
-pub async fn get_community_list(client: &Client, instance: &String, paging_params: Option<PagingParams>) -> Result<CommunityList> {
-    let url = format!("https://{}/api/v1/community/list?sort=TopAll", instance);
+pub async fn get_community_list(client: &Client, instance: &String, paging_params: PagingParams) -> Result<CommunityList> {
+    let url = format_url(instance, "v1/community/list", Some(paging_params), None);
     println!("Making request: {}", url);
 
     Ok(CommunityList::from(
@@ -186,7 +187,8 @@ pub async fn get_community_list(client: &Client, instance: &String, paging_param
 }
 
 pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
-    let url = format!("https://{}/api/v1/community?name={}", instance, community);
+    let url = format_url(instance,"v1/community",
+        None, Some(format!("name={}", community)));
     println!("Making request: {}", url);
 
     Ok(CommunityDetail::from(
@@ -195,10 +197,11 @@ pub async fn get_community(client: &Client, instance: &String, community: &Strin
 }
 
 pub async fn get_post_list(client: &Client, instance: &String, community: Option<&i32>, paging_params: Option<PagingParams>) -> Result<PostList> {
-    let url = match community {
-        Some(c) => format!("https://{}/api/v1/post/list?type_=All&sort=Hot&community_id={}", instance, c),
-        None => format!("https://{}/api/v1/post/list?type_=All&sort=Hot", instance)
-    };
+    let url = format_url(instance, "v1/post/list", paging_params, 
+        match community {
+            Some(c) => Some(format!("type_=All&community_id={}", c)),
+            _ => Some("type_=All".to_string())
+        });
     println!("Making request: {}", url);
 
     Ok(PostList::from(
@@ -206,14 +209,40 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
     ))
 }
 
-pub async fn get_post(client: &Client, instance: &String, post_id: &String, paging_params: Option<PagingParams>) -> Result<PostDetail> {
-    let url = format!("https://{}/api/v1/post?id={}", instance, post_id);
+pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> Result<PostDetail> {
+    let url = format_url(instance, "v1/post", None, Some(format!("id={}", post_id)));
     println!("Making request: {}", url);
     Ok(PostDetail::from(client.get(url).send().await?.json().limit(8388608).await?)) // 8MB limit
 }
 
 pub async fn get_user(client: &Client, instance: &String, username: &String, paging_params: Option<PagingParams>) -> Result<UserDetail> {
-    let url = format!("https://{}/api/v1/user?saved_only=false&username={}&sort=Hot", instance, username);
+    let url = format_url(instance, "v1/user", paging_params, 
+        Some(format!("saved_only=false&username={}", username)));
     println!("Making request: {}", url);
     Ok(UserDetail::from(client.get(url).send().await?.json().await?))
+}
+
+fn format_url(instance: &String, endpoint: &str, paging_params: Option<PagingParams>, extra_params: Option<String>) -> String{
+    format!("https://{}/api/{}?{}{}", instance, endpoint,
+        match paging_params {
+            Some(params) => format!("{}{}{}",
+                match params.s {
+                    Some(sort) => format!("sort={}&", sort),
+                    _ => "sort=Hot&".to_string()
+                },
+                match params.p {
+                    Some(page) => format!("page={}&", page),
+                    _ => String::new()
+                },
+                match params.l {
+                    Some(limit) => format!("limit={}&", limit),
+                    _ => String::new()
+                }),
+            None => "sort=Hot&".to_string()
+        },
+        match extra_params {
+            Some(x) => x,
+            _ => String::new()
+        }
+    )
 }
