@@ -178,32 +178,30 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
 
 fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, children: Option<Markup>) -> Markup {
     return html! {
-        div {
-            p.ch {
-                a.username href={"/" (instance) "/u/" (comment.creator_name)} {
-                    (comment.creator_name)
-                }
-                @if let Some(pcid) = post_creator_id {
-                    @if pcid== comment.creator_id {
-                        " " span.badge { ("creator") }
-                    }
-                }
-    
-                " • ϟ " (comment.score) 
-                a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                    " • ⚓"
-                }
-    
-                " • "
+        p.ch {
+            a.username href={"/" (instance) "/u/" (comment.creator_name)} {
+                (comment.creator_name)
             }
-            
-            input.cc type={"checkbox"};
-    
-            div {
-                (comment.content)
-                @if let Some(c) = children {
-                    (c) {} // Maybe replace {} with ;
+            @if let Some(pcid) = post_creator_id {
+                @if pcid== comment.creator_id {
+                    " " span.badge { ("creator") }
                 }
+            }
+
+            " • ϟ " (comment.score) 
+            a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
+                " • ⚓"
+            }
+
+            " •"
+        }
+        
+        input.cc type={"checkbox"};
+
+        div {
+            (comment.content)
+            @if let Some(c) = children {
+                (c);
             }
         }
     }
@@ -229,12 +227,14 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
     html! {
         @if depth == 0 {
             @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
-                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
+                div {
+                    (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
+                        Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
+                }
             }
         } @else {
-            .{"b" (branch_depth)} {
-                @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
+            @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
+                .{"b" (branch_depth)} {
                     (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
                         Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
                 }

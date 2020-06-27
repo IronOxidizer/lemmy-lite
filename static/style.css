@@ -45,7 +45,8 @@ table {
 }
 
 .username {
-    color: #dedede
+    color: #dedede;
+    font-weight: bold
 }
 
 .community {
