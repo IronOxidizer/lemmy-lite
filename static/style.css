@@ -75,14 +75,36 @@ table {
 
 /* Comment header and Comment collapsable */
 .ch {
-    display: inline-block
+    display: inline-block;
+    margin-top: 0
+}
+.cc {
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #3c3836;
+    box-sizing: content-box;
+    width: 14px;
+    height: 14px;
+    margin: 0 4px;
+    vertical-align: middle
+}
+.cc:checked {
+    background-color: #000000;
 }
 .cc:checked + div { 
     display: none
 }
 
+.br {
+    border-top: 1px solid #282828;
+    margin-top: 4px;
+    padding-top: 4px;
+}
 .b0, .b1, .b2, .b3, .b4, .b5 {
-    padding-left: 4px
+    margin-top: 4px;
+    padding: 4px 0 0 4px;
+    border-top: 1px solid #282828
 }
 .b0 {
     border-left:2px solid #ac5353

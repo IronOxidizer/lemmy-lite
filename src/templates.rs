@@ -197,7 +197,7 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
         }
         
         input.cc type={"checkbox"};
-
+        
         div {
             (comment.content)
             @if let Some(c) = children {
@@ -222,22 +222,14 @@ fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creat
 // zstewart#2487@discord.rust-community-server
 fn comment_tree_markup(instance: &String, comments: &[CommentView],
     post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>) -> Markup {
-    let branch_depth = (depth - 1)%6;
 
     html! {
-        @if depth == 0 {
-            @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                div {
-                    (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
-                        Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
-                }
-            }
-        } @else {
-            @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-                .{"b" (branch_depth)} {
-                    (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
-                        Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
-                }
+        @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
+            .{"b" (
+                if depth == 0 {"r".to_string()} else {((depth - 1)%6).to_string()}
+                )} {
+                (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
+                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
             }
         }
     }
