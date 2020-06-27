@@ -47,8 +47,15 @@ lemmy-lite: Mobile
 2. I use CSS Tables because it's [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight) and simpler than FlexBox, and because Grid is broken on IE11 and NetSurf. Using CSS tables over HTML tables avoids excess DOM objects.
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. 1.0.0 is set for when account functionality is stabilized.
-5. Implement post search
-6. Use collapsable elements without JS: https://jsfiddle.net/gSPqX/1/
+
+## TODO
+
+1. Fix user comment pages (apply div branch (depth) at single comment level)
+2. Implement paging and sort UI.
+3. Implement post search backend.
+4. Impelemnt post search UI.
+5. Refactor Navbar based on new UI
+6. Implement server side markdown rendering for comments and text post body.
 7. Use 1 letter HTML class names.
 8. Use 1 letter static file names except for favicon and index.
 9. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
