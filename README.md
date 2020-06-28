@@ -55,7 +55,7 @@ lemmy-lite: Mobile
 3. Implement post search backend.
 4. Impelemnt post search UI.
 5. Refactor Navbar based on new UI
-6. Implement server side markdown rendering for comments and text post body.
+6. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark)
 7. Use 1 letter HTML class names.
 8. Use 1 letter static file names except for favicon and index.
 9. Consider not supporting UTF-8 and only using ASCII charcters for better legacy font support.
