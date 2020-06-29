@@ -46,7 +46,6 @@ lemmy-lite: Mobile
 2. I use CSS Tables because it's [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight) and simpler than FlexBox, and because Grid is broken on IE11 and NetSurf. Using CSS tables over HTML tables avoids excess DOM objects.
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. 1.0.0 is set for when account functionality is stabilized.
-5. Div and span is abused heavily for native block/inline styling with minimum data size. [Reference](https://www.w3resource.com/html/HTML-block-level-and-inline-elements.php)
 
 ## TODO
 
@@ -60,3 +59,7 @@ lemmy-lite: Mobile
 7. Use 1 letter HTML class names.
 8. Use 1 letter static file names except for favicon and index.
 9. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
+
+## NetSurf Quirks
+
+1. `vertical-align` not implemented for `inline-block`

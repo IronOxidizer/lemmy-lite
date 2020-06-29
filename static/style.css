@@ -15,25 +15,27 @@ table {
     border-spacing: 0 .5em;
 }
 
-span, .preview, .score {
-    display: inline-block;
-    vertical-align: middle
-}
-.preview {
-    width: 64px;
-    height: 64px;
-    padding: 0 8px
-}
-.score {
-    width: 32px;
-    text-align: right
-}
-
 /* Content wrapper */
 .cw {
     min-width: 480px;
     max-width: 66%;
     margin: auto
+}
+
+.cell {
+    display: table-cell;
+    vertical-align: middle
+}
+
+.preview {
+    width: 64px;
+    height: 64px;
+    padding: 0 8px
+}
+
+.score {
+    width: 32px;
+    text-align: right
 }
 
 .username {

@@ -144,10 +144,10 @@ fn community_markup(instance: &String, community: CommunityView) -> Markup {
 
 fn post_markup(instance: &String, post: &PostView) -> Markup {
     html!{
-        p.score { (post.score) }
+        p.cell.score { (post.score) }
         @match &post.url {
             Some(url) => {
-                a href={ (url) } {
+                a.cell href={ (url) } {
                     img.preview src={
                         @if ends_with_any(url.clone(), MEDIA_EXT) {
                             (MEDIA_IMG)
@@ -157,13 +157,13 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
                     };
                 }
             }, None => {
-                a href={"/" (instance) "/post/" (post.id )} {
+                a.cell href={"/" (instance) "/post/" (post.id )} {
                     img.preview src={(TEXT_IMG)};
                 }
             }
         }
-        span {
-            a.title href={"/" (instance) "/post/" (post.id )} {
+        .cell {
+            a href={"/" (instance) "/post/" (post.id )} {
                 (post.name)
             }
             .mute{
@@ -196,9 +196,9 @@ fn comment_plain_markup(instance: &String, comment: &CommentView, post_creator_i
                 }
             }
 
-            " ϟ " (comment.score) 
+            " ϟ" (comment.score) 
             a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                "⚓"
+                " ⚓"
             }
 
         }
