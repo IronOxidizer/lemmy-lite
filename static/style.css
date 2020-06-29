@@ -15,10 +15,10 @@ table {
     border-spacing: 0 .5em;
 }
 
-.title {
-    font-size: 1.07em
+span, .preview, .score {
+    display: inline-block;
+    vertical-align: middle
 }
-
 .preview {
     width: 64px;
     height: 64px;
@@ -29,19 +29,11 @@ table {
     text-align: right
 }
 
-.mute,.ch {
-    color: #999;
-    margin-bottom: 0;
-    font-size: 0.7em;
-}
-
-.highlight {
-    background-color: #282828;
-}
-
-.cell {
-    display: table-cell;
-    vertical-align: middle
+/* Content wrapper */
+.cw {
+    min-width: 480px;
+    max-width: 66%;
+    margin: auto
 }
 
 .username {
@@ -54,10 +46,11 @@ table {
 }
 
 .badge {
-    background-color: #333;
+    background-color: #444;
     color: #dedede;
     padding: 0 3px;
-    border-radius: 3px
+    border-radius: 3px;
+    margin-left: 4px
 }
 
 #navbar {
@@ -73,9 +66,23 @@ table {
     padding: 6px 0
 }
 
+.highlight {
+    background-color: #333;
+    display: inline-block;
+    padding: 4px;
+    border-radius: 3px;
+}
+
+.mute,.ch {
+    color: #999;
+    margin-bottom: 0;
+    font-size: 0.7em;
+}
+
 /* Comment header and Comment collapsable */
 .ch {
     display: inline-block;
+    word-spacing: 1em;
     margin-top: 0
 }
 .cc {
@@ -86,8 +93,8 @@ table {
     box-sizing: content-box;
     width: 14px;
     height: 14px;
-    margin: 0 4px;
-    vertical-align: middle
+    margin-left: 17px;
+    vertical-align: middle;
 }
 .cc:checked {
     background-color: #000000;
@@ -96,6 +103,7 @@ table {
     display: none
 }
 
+/* Comment thread branch */
 .br {
     border-top: 1px solid #282828;
     margin-top: 4px;

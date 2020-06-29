@@ -19,17 +19,19 @@ pub fn communities_page(instance: &String, community_list: CommunityList) -> Mar
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        table {
-            tr {
-                th {"Name"}
-                th {"Title"}
-                th {"Category"}
-                th {"Subscribers"}
-                th {"Posts"}
-                th {"Comments"}
-            }
-            @for community in community_list.communities {
-                (community_markup(instance, community))
+        .cw {
+            table {
+                tr {
+                    th {"Name"}
+                    th {"Title"}
+                    th {"Category"}
+                    th {"Subscribers"}
+                    th {"Posts"}
+                    th {"Comments"}
+                }
+                @for community in community_list.communities {
+                    (community_markup(instance, community))
+                }
             }
         }
     }
@@ -39,9 +41,11 @@ pub fn post_list_page(instance: &String, post_list: PostList) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        @for post in &post_list.posts {
-            div { (post_markup(instance, post)) }
-            hr;
+        .cw {
+            @for post in &post_list.posts {
+                div { (post_markup(instance, post)) }
+                hr;
+            }
         }
     }
 }
@@ -50,14 +54,16 @@ pub fn post_page(instance: &String, post_detail: PostDetail) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        (post_markup(instance, &post_detail.post))
+        .cw {
+            (post_markup(instance, &post_detail.post))
 
-        @if let Some(body) = &post_detail.post.body {
-            p { (body)}
+            @if let Some(body) = &post_detail.post.body {
+                p { (body)}
+            }
+            hr;
+            
+            (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None))
         }
-        hr;
-        
-        (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None))
     }
 }
 
@@ -72,16 +78,18 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        (post_markup(instance, &post_detail.post))
+        .cw {
+            (post_markup(instance, &post_detail.post))
 
-        @if let Some(body) = &post_detail.post.body {
-            p {(body)}
-        }
-        hr;
-        
-        @match parent {
-            Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id))),
-            None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id)))
+            @if let Some(body) = &post_detail.post.body {
+                p {(body)}
+            }
+            hr;
+            
+            @match parent {
+                Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id))),
+                None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id)))
+            }
         }
     }
 }
@@ -94,7 +102,7 @@ pub fn user_page(instance: &String, user: UserDetail) -> Markup {
             div {(post_markup(instance, &post))}
         }
         @for comment in user.comments {
-            (comment_markup(instance, &comment, None, None));
+            (comment_plain_markup(instance, &comment, None));
         }
     }
 }
@@ -136,10 +144,10 @@ fn community_markup(instance: &String, community: CommunityView) -> Markup {
 
 fn post_markup(instance: &String, post: &PostView) -> Markup {
     html!{
-        p.cell.score { (post.score) }
+        p.score { (post.score) }
         @match &post.url {
             Some(url) => {
-                a.cell href={ (url) } {
+                a href={ (url) } {
                     img.preview src={
                         @if ends_with_any(url.clone(), MEDIA_EXT) {
                             (MEDIA_IMG)
@@ -149,12 +157,12 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
                     };
                 }
             }, None => {
-                a.cell href={"/" (instance) "/post/" (post.id )} {
+                a href={"/" (instance) "/post/" (post.id )} {
                     img.preview src={(TEXT_IMG)};
                 }
             }
         }
-        .cell {
+        span {
             a.title href={"/" (instance) "/post/" (post.id )} {
                 (post.name)
             }
@@ -176,27 +184,44 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
     }
 }
 
-fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, children: Option<Markup>) -> Markup {
+fn comment_plain_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>) -> Markup {
     return html! {
         p.ch {
             a.username href={"/" (instance) "/u/" (comment.creator_name)} {
                 (comment.creator_name)
             }
             @if let Some(pcid) = post_creator_id {
-                @if pcid== comment.creator_id {
-                    " " span.badge { ("creator") }
+                @if pcid == comment.creator_id {
+                    span.badge { ("creator") }
                 }
             }
 
-            " • ϟ " (comment.score) 
+            " ϟ " (comment.score) 
             a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                " • ⚓"
+                "⚓"
             }
 
-            " •"
+        }
+    }
+}
+
+fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, children: Option<Markup>) -> Markup {
+    html! {
+        @if let Some(hid) = highlight_id {
+            @if comment.id == hid {
+                .highlight {
+                    (comment_plain_markup(instance, comment, post_creator_id))
+                }
+            } @else {
+                (comment_plain_markup(instance, comment, post_creator_id))
+            }
+        } @else {
+            (comment_plain_markup(instance, comment, post_creator_id))
         }
         
-        input.cc type={"checkbox"};
+        @if children.is_some() {
+            input.cc type={"checkbox"};
+        }
         
         div {
             (comment.content)
@@ -205,18 +230,6 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
             }
         }
     }
-}
-
-fn highlight_comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, children: Option<Markup>) -> Markup {
-    if let Some(hid) = highlight_id {
-        if comment.id == hid {
-            return html! { .highlight {
-                (comment_markup(instance, comment, post_creator_id, children))
-            } }
-        }
-    }
-
-    comment_markup(instance, comment, post_creator_id, children)
 }
 
 // zstewart#2487@discord.rust-community-server
@@ -228,7 +241,7 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
             .{"b" (
                 if depth == 0 {"r".to_string()} else {((depth - 1)%6).to_string()}
                 )} {
-                (highlight_comment_markup(instance, comment, Some(post_creator_id), highlight_id,
+                (comment_markup(instance, comment, Some(post_creator_id), highlight_id,
                     Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
             }
         }
