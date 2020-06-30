@@ -5,8 +5,9 @@ authors = ["Iron Oxidizer"]
 edition = "2018"
 
 [dependencies]
+chrono = { version = "0.4.11", features = ["serde"] }
 serde = "1.0.111"
 rustls = "0.17.0"
 actix-rt = "1.1.1"
-actix-web = { version = "2.0.0", features=["rustls"] }
+actix-web = { version = "2.0.0", features = ["rustls"] }
 maud = { version = "0.22.0", features = ["actix-web"] }

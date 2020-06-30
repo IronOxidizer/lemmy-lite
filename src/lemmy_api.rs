@@ -1,3 +1,4 @@
+use chrono::naive::NaiveDateTime;
 use serde::Deserialize;
 use actix_web::client::Client;
 use actix_web::Result;
@@ -18,8 +19,8 @@ pub struct CommunityView {
     category_id: i32,
     creator_id: i32,
     removed: bool,
-    published: String,
-    updated: Option<String>,
+    published: NaiveDateTime,
+    updated: Option<NaiveDateTime>,
     deleted: bool,
     nsfw: bool,
     creator_name: String,
@@ -48,7 +49,7 @@ pub struct PostView {
     community_id: i32,
     removed: bool,
     locked: bool,
-    published: String,
+    pub published: NaiveDateTime,
     updated: Option<String>,
     deleted: bool,
     nsfw: bool,
@@ -92,8 +93,8 @@ pub struct CommentView {
     pub content: String,
     removed: bool,
     read: Option<bool>,
-    published: Option<String>,
-    updated: Option<String>,
+    pub published: NaiveDateTime,
+    updated: Option<NaiveDateTime>,
     deleted: Option<bool>,
     community_id: i32,
     community_name: String,
@@ -140,7 +141,7 @@ pub struct UserView {
     banned: bool,
     show_avatars: bool,
     send_notifications_to_email: bool,
-    published: String,
+    published: NaiveDateTime,
     number_of_posts: i32,
     post_score: i32,
     number_of_comments: i32,
@@ -160,7 +161,7 @@ struct CommunityFollowerView {
     id: i32,
     community_id: i32,
     user_id: i32,
-    published: String,
+    published: NaiveDateTime,
     user_name: String,
     avatar: Option<String>,
     community_name: String,

@@ -49,13 +49,13 @@ lemmy-lite: Mobile
 
 ## TODO
 
-1. Render time on server
-2. Implement paging and sort UI.
-3. Implement post search backend.
-4. Fix highlighting
+0. Fix content overflow on mobile.
+1. Implement paging and sort UI.
+2. Implement post search backend.
+3. Fix highlighting.
 4. Impelemnt post search UI.
-5. Refactor Navbar based on new UI
-6. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark)
+5. Refactor Navbar based on new UI.
+6. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
 7. Use 1 letter HTML class names.
 8. Use 1 letter static file names except for favicon and index.
 9. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.

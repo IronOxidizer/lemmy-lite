@@ -9,10 +9,11 @@ voyager.lemmy.ml
 ds9.lemmy.ml
 */
 
-use maud::{Markup};
+use chrono::offset::Utc;
+use serde::Deserialize;
 use actix_web::{web, App, HttpServer, Result, error};
 use actix_web::client::Client;
-use serde::Deserialize;
+use maud::{Markup};
 
 mod templates;
 mod lemmy_api;
@@ -54,9 +55,10 @@ async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
 async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Result<Markup> {
     let inst = &path.to_string();
     let client = &Client::default();
+    let now= &Utc::now().naive_utc();
 
     let post_list = get_post_list(client, inst, None, None).await?;
-    Ok(post_list_page(inst, post_list))
+    Ok(post_list_page(inst, post_list, now))
 }
 
 async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Result<Markup> {
@@ -71,17 +73,19 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Res
 
 async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
+    let now= &Utc::now().naive_utc();
+
     if p.command == "post" {
         let post_detail = get_post(client, &p.inst, &p.id).await?;
-        Ok(post_page(&p.inst, post_detail))
+        Ok(post_page(&p.inst, post_detail, now))
     } else if p.command == "c" {
         let community = get_community(client, &p.inst, &p.id).await?;
         let post_list = get_post_list(client, &p.inst, 
             Some(&community.community.id), Some(query.into_inner())).await?;
-        Ok(post_list_page(&p.inst, post_list))
+        Ok(post_list_page(&p.inst, post_list, now))
     } else if p.command == "u" {
         let user = get_user(client, &p.inst, &p.id, None).await?;
-        Ok(user_page(&p.inst, user))
+        Ok(user_page(&p.inst, user, now))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
@@ -93,6 +97,7 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
 
 async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
+    let now = &Utc::now().naive_utc();
 
     if p.command == "post" && p.sub_command == "comment" {
         let post_detail = get_post(client, &p.inst, &p.id).await?;
@@ -104,7 +109,7 @@ async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Res
             Some(c) => c.clone(),
             _ => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
         };
-        Ok(comment_page(&p.inst, comment, post_detail))
+        Ok(comment_page(&p.inst, comment, post_detail, now))
         
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))

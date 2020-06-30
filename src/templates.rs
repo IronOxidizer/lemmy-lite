@@ -1,3 +1,4 @@
+use chrono::naive::NaiveDateTime;
 use maud::{html, Markup};
 use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail};
 
@@ -37,37 +38,37 @@ pub fn communities_page(instance: &String, community_list: CommunityList) -> Mar
     }
 }
 
-pub fn post_list_page(instance: &String, post_list: PostList) -> Markup {
+pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance))
         .cw {
             @for post in &post_list.posts {
-                div { (post_markup(instance, post)) }
+                div { (post_markup(instance, post, now)) }
                 hr;
             }
         }
     }
 }
 
-pub fn post_page(instance: &String, post_detail: PostDetail) -> Markup {
+pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance))
         .cw {
-            (post_markup(instance, &post_detail.post))
+            (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
                 p { (body)}
             }
             hr;
             
-            (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None))
+            (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None, now))
         }
     }
 }
 
-pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDetail) -> Markup {
+pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     let mut comments = post_detail.comments;
     let comment_id = comment.id;
     comments.retain(|c| Some(c.id) == comment.parent_id ||
@@ -79,7 +80,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
         (headers_markup())
         (navbar_markup(instance))
         .cw {
-            (post_markup(instance, &post_detail.post))
+            (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
                 p {(body)}
@@ -87,22 +88,22 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
             hr;
             
             @match parent {
-                Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id))),
-                None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id)))
+                Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id), now)),
+                None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id), now))
             }
         }
     }
 }
 
-pub fn user_page(instance: &String, user: UserDetail) -> Markup {
+pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime) -> Markup {
     html!{
         (headers_markup())
         (navbar_markup(instance))
         @for post in user.posts {
-            div {(post_markup(instance, &post))}
+            div {(post_markup(instance, &post, now))}
         }
         @for comment in user.comments {
-            (comment_plain_markup(instance, &comment, None));
+            (comment_plain_markup(instance, &comment, None, now));
         }
     }
 }
@@ -142,7 +143,7 @@ fn community_markup(instance: &String, community: CommunityView) -> Markup {
     }
 }
 
-fn post_markup(instance: &String, post: &PostView) -> Markup {
+fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Markup {
     html!{
         p.cell.score { (post.score) }
         @match &post.url {
@@ -179,12 +180,13 @@ fn post_markup(instance: &String, post: &PostView) -> Markup {
                 a href={"/" (instance) "/post/" (post.id )} {
                     " • ✉ " (post.number_of_comments)
                 }
+                " • " (simple_duration(now, post.published))
             }
         }
     }
 }
 
-fn comment_plain_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>) -> Markup {
+fn comment_plain_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, now: &NaiveDateTime) -> Markup {
     return html! {
         p.ch {
             a.username href={"/" (instance) "/u/" (comment.creator_name)} {
@@ -198,25 +200,27 @@ fn comment_plain_markup(instance: &String, comment: &CommentView, post_creator_i
 
             " ϟ" (comment.score) 
             a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
-                " ⚓"
+                " ⚓ "
             }
+            
+            (simple_duration(now, comment.published))
 
         }
     }
 }
 
-fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, children: Option<Markup>) -> Markup {
+fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime, children: Option<Markup>) -> Markup {
     html! {
         @if let Some(hid) = highlight_id {
             @if comment.id == hid {
                 .highlight {
-                    (comment_plain_markup(instance, comment, post_creator_id))
+                    (comment_plain_markup(instance, comment, post_creator_id, now))
                 }
             } @else {
-                (comment_plain_markup(instance, comment, post_creator_id))
+                (comment_plain_markup(instance, comment, post_creator_id, now))
             }
         } @else {
-            (comment_plain_markup(instance, comment, post_creator_id))
+            (comment_plain_markup(instance, comment, post_creator_id, now))
         }
         
         @if children.is_some() {
@@ -234,15 +238,15 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
 
 // zstewart#2487@discord.rust-community-server
 fn comment_tree_markup(instance: &String, comments: &[CommentView],
-    post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>) -> Markup {
+    post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
 
     html! {
         @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
             .{"b" (
                 if depth == 0 {"r".to_string()} else {((depth - 1)%6).to_string()}
                 )} {
-                (comment_markup(instance, comment, Some(post_creator_id), highlight_id,
-                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id))))
+                (comment_markup(instance, comment, Some(post_creator_id), highlight_id, now,
+                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id, now))))
             }
         }
     }
@@ -250,4 +254,26 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
 
 fn ends_with_any(s: String, suffixes: &'static [&'static str]) -> bool {
     return suffixes.iter().any(|&suffix| s.to_lowercase().ends_with(suffix));
+}
+
+fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
+    let seconds = now.signed_duration_since(record).num_seconds();
+    if seconds < 60 {
+        format!("{}s", seconds)
+    } else if seconds < 3600 {
+        format!("{}m",
+            now.signed_duration_since(record).num_minutes())
+    } else if seconds < 86400 {
+        format!("{}h",
+            now.signed_duration_since(record).num_hours())
+    } else if seconds < 2629746 {
+        format!("{}d",
+            now.signed_duration_since(record).num_days())
+    } else if seconds < 31556952 {
+        format!("{}mo",
+            now.signed_duration_since(record).num_weeks() / 4)
+    } else {
+        format!("{}y",
+            now.signed_duration_since(record).num_weeks() / 52)
+    }
 }
