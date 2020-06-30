@@ -62,4 +62,4 @@ lemmy-lite: Mobile
 
 ## NetSurf Quirks
 
-1. `vertical-align` not implemented for `inline-block`
+1. `checked` is not implemented for `input[checkbox]` causing comment thread collapse to not work
