@@ -110,7 +110,7 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime) -> Ma
 
 fn headers_markup() -> Markup {
     html! {
-        meta charset="utf8" name="viewport" content="width=480px, user-scalable=no";
+        meta charset="utf8" name="viewport" content="width=device-width, user-scalable=no, initial-scale=1";
         meta name="theme-color" content="#222";
         link rel="stylesheet" href=(STYLESHEET);
     }

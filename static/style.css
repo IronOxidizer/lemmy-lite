@@ -2,8 +2,8 @@ body {
     background-color: #222;
     text-decoration: none;
     color: #dedede;
-    overflow-x: hidden;
     font-family: sans-serif;
+    overflow-x: hidden;
 }
 
 a {
@@ -17,7 +17,7 @@ table {
 
 /* Content wrapper */
 .cw {
-    min-width: 480px;
+    min-width: 344px;
     max-width: 66%;
     margin: auto
 }

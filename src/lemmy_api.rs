@@ -136,7 +136,7 @@ pub struct UserView {
     avatar: Option<String>,
     email: Option<String>,
     matrix_user_id: Option<String>,
-    fedi_name: String,
+    fedi_name: Option<String>,
     admin: bool,
     banned: bool,
     show_avatars: bool,

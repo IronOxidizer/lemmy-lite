@@ -49,7 +49,6 @@ lemmy-lite: Mobile
 
 ## TODO
 
-0. Fix content overflow on mobile.
 1. Implement paging and sort UI.
 2. Implement post search backend.
 3. Fix highlighting.
