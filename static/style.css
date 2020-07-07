@@ -4,6 +4,8 @@ body {
     color: #dedede;
     font-family: sans-serif;
     overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 a {
