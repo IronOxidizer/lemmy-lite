@@ -46,6 +46,7 @@ lemmy-lite: Mobile
 2. I use CSS Tables because it's [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight) and simpler than FlexBox, and because Grid is broken on IE11 and NetSurf. Using CSS tables over HTML tables avoids excess DOM objects.
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. 1.0.0 is set for when account functionality is stabilized.
+5. Ideally, static content is served through a CDN to further improve server performance and response times.
 
 ## TODO
 
