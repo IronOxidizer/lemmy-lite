@@ -16,11 +16,12 @@ pub fn redirect_page(instance: String) -> Markup {
     }
 }
 
-pub fn communities_page(instance: &String, community_list: CommunityList) -> Markup {
+pub fn communities_page(instance: &String, community_list: CommunityList, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance))
         .cw {
+            (pagebar_markup(paging_params))
             table {
                 tr {
                     th {"Name"}
@@ -34,6 +35,7 @@ pub fn communities_page(instance: &String, community_list: CommunityList) -> Mar
                     (community_markup(instance, community))
                 }
             }
+            (pagebar_markup(paging_params))
         }
     }
 }
@@ -97,15 +99,21 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
     }
 }
 
-pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime) -> Markup {
+pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html!{
         (headers_markup())
         (navbar_markup(instance))
-        @for post in user.posts {
-            div {(post_markup(instance, &post, now))}
-        }
-        @for comment in user.comments {
-            (comment_plain_markup(instance, &comment, None, now));
+        .cw {
+            div { (pagebar_markup(paging_params)) }
+            @for post in user.posts {
+                (post_markup(instance, &post, now))
+                hr;
+            }
+            @for comment in user.comments {
+                (comment_markup(instance, &comment, None, None, now, None))
+                hr;
+            }
+            (pagebar_markup(paging_params))
         }
     }
 }

@@ -69,7 +69,7 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Res
 
     if p.command == "communities" {
         let communities = get_community_list(client, &p.inst, Some(paging_params)).await?;
-        Ok(communities_page(&p.inst, communities))
+        Ok(communities_page(&p.inst, communities, Some(paging_params)))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
@@ -78,8 +78,8 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Res
 async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
     let now= &Utc::now().naive_utc();
-
     let paging_params = &query.into_inner();
+
     if p.command == "post" {
         let post_detail = get_post(client, &p.inst, &p.id).await?;
         Ok(post_page(&p.inst, post_detail, now))
@@ -88,8 +88,8 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
             Some(&p.id), Some(paging_params)).await?;
         Ok(post_list_page(&p.inst, post_list, now, Some(paging_params)))
     } else if p.command == "u" {
-        let user = get_user(client, &p.inst, &p.id, None).await?;
-        Ok(user_page(&p.inst, user, now))
+        let user = get_user(client, &p.inst, &p.id, Some(paging_params)).await?;
+        Ok(user_page(&p.inst, user, now, Some(paging_params)))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }

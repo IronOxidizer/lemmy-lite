@@ -225,7 +225,7 @@ pub async fn get_user(client: &Client, instance: &String, username: &String, pag
     let url = format_url(instance, "v1/user", paging_params, 
         Some(format!("saved_only=false&username={}", username)));
     println!("Making request: {}", url);
-    Ok(UserDetail::from(client.get(url).send().await?.json().await?))
+    Ok(UserDetail::from(client.get(url).send().await?.json().limit(8388608).await?)) // 8MB limit
 }
 
 // Benchmark faster solutions, too many allocations

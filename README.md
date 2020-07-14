@@ -50,7 +50,7 @@ lemmy-lite: Mobile
 
 ## TODO
 
-1. Implement paging and sort UI.
+1. Implement pagination and sort UI.
 2. Implement post search backend.
 3. Impelemnt post search UI.
 4. Refactor Navbar based on new UI.
