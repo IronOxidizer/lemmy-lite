@@ -1,6 +1,6 @@
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup};
-use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail};
+use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail, PagingParams};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
 const STYLESHEET: &str = "/style.css";
@@ -38,15 +38,17 @@ pub fn communities_page(instance: &String, community_list: CommunityList) -> Mar
     }
 }
 
-pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime) -> Markup {
+pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance))
         .cw {
+            (pagebar_markup(paging_params))
             @for post in &post_list.posts {
                 div { (post_markup(instance, post, now)) }
                 hr;
             }
+            (pagebar_markup(paging_params))
         }
     }
 }
@@ -110,7 +112,7 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime) -> Ma
 
 fn headers_markup() -> Markup {
     html! {
-        meta charset="utf8" name="viewport" content="width=device-width, user-scalable=no, initial-scale=1";
+        meta charset="utf8" name="viewport" content="width=device-width,user-scalable=no,initial-scale=1";
         meta name="theme-color" content="#222";
         link rel="stylesheet" href=(STYLESHEET);
     }
@@ -119,11 +121,42 @@ fn headers_markup() -> Markup {
 fn navbar_markup(instance: &String) -> Markup {
     html! {
         #navbar {
-            a href= {".."} {"Back"}
+            a href=".." {"Back"}
         
-            a href= {"/" (instance) } {(instance)}
+            a href={"/" (instance) } {(instance)}
         
-            a href= {"/" (instance) "/communities"} {"Communities"}
+            a href={"/" (instance) "/communities"} {"Communities"}
+        }
+    }
+}
+
+fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        @match paging_params {
+            Some(params) => {   
+                @match params.p {
+                    Some(page) => {
+                        @if page > 1 {
+                            form.cell {
+                                input type="hidden" name="p" value=((page-1));
+                                input type="submit" value="Prev";
+                            }
+                        }
+                        form.cell {
+                            input type="hidden" name="p" value=((page+1));
+                            input type="submit" value="Next";
+                        }
+                    },
+                    None => form.cell {
+                        input type="hidden" name="p" value="2";
+                        input type="submit" value="Next";
+                    }
+                }
+            },
+            None => form.cell {
+                input type="hidden" name="p" value="2";
+                input type="submit" value="Next";
+            }
         }
     }
 }
@@ -148,7 +181,7 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
         p.cell.score { (post.score) }
         @match &post.url {
             Some(url) => {
-                a.cell href={ (url) } {
+                a.cell href=(url) {
                     img.preview src={
                         @if ends_with_any(url.clone(), MEDIA_EXT) {
                             (MEDIA_IMG)
@@ -159,7 +192,7 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                 }
             }, None => {
                 a.cell href={"/" (instance) "/post/" (post.id )} {
-                    img.preview src={(TEXT_IMG)};
+                    img.preview src=(TEXT_IMG);
                 }
             }
         }
@@ -169,7 +202,7 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
             }
             .mute{
                 "by "
-                a.username href={"/" (instance) "/u/" (post.creator_name) }{
+                a.username href={"/" (instance) "/u/" (post.creator_name) } {
                     (post.creator_name)
                 }
                 " to "
@@ -224,7 +257,7 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
         }
         
         @if children.is_some() {
-            input.cc type={"checkbox"};
+            input.cc type="checkbox";
         }
         
         div {

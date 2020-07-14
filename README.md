@@ -52,14 +52,20 @@ lemmy-lite: Mobile
 
 1. Implement paging and sort UI.
 2. Implement post search backend.
-3. Fix highlighting.
-4. Impelemnt post search UI.
-5. Refactor Navbar based on new UI.
-6. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
+3. Impelemnt post search UI.
+4. Refactor Navbar based on new UI.
+5. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
+6. Add instance info column that moves to the bottom when there's no space like `Lemmy` in mobile view.
 7. Use 1 letter HTML class names.
 8. Use 1 letter static file names except for favicon and index.
 9. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
+10. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
 ## NetSurf Quirks
 
-1. `checked` is not implemented for `input[checkbox]` causing comment thread collapse to not work
+1. CSS `checked` is not implemented for `input[checkbox]` causing comment thread collapse to not work
+2. CSS `word-spacing` is not implemented
+
+## iOS Quirks
+
+1. Highlights break with non-default CSS `word-spacing`

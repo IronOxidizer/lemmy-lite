@@ -19,7 +19,7 @@ mod templates;
 mod lemmy_api;
 
 use crate::templates::{redirect_page, post_list_page, post_page, comment_page, communities_page, user_page};
-use crate::lemmy_api::{PagingParams, get_post_list, get_post, get_community_list, get_community, get_user};
+use crate::lemmy_api::{PagingParams, get_post_list, get_post, get_community_list, get_user};
 
 #[derive(Deserialize)]
 struct RedirForm {
@@ -54,17 +54,21 @@ async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
 
 async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Result<Markup> {
     let inst = &path.to_string();
+
     let client = &Client::default();
     let now= &Utc::now().naive_utc();
+    let paging_params = &query.into_inner();
 
-    let post_list = get_post_list(client, inst, None, None).await?;
-    Ok(post_list_page(inst, post_list, now))
+    let post_list = get_post_list(client, inst, None, None, Some(paging_params)).await?;
+    Ok(post_list_page(inst, post_list, now, Some(paging_params)))
 }
 
 async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
+    let paging_params = &query.into_inner();
+
     if p.command == "communities" {
-        let communities = get_community_list(client, &p.inst, query.into_inner()).await?;
+        let communities = get_community_list(client, &p.inst, Some(paging_params)).await?;
         Ok(communities_page(&p.inst, communities))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
@@ -75,14 +79,14 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
     let client = &Client::default();
     let now= &Utc::now().naive_utc();
 
+    let paging_params = &query.into_inner();
     if p.command == "post" {
         let post_detail = get_post(client, &p.inst, &p.id).await?;
         Ok(post_page(&p.inst, post_detail, now))
     } else if p.command == "c" {
-        let community = get_community(client, &p.inst, &p.id).await?;
-        let post_list = get_post_list(client, &p.inst, 
-            Some(&community.community.id), Some(query.into_inner())).await?;
-        Ok(post_list_page(&p.inst, post_list, now))
+        let post_list = get_post_list(client, &p.inst, None,
+            Some(&p.id), Some(paging_params)).await?;
+        Ok(post_list_page(&p.inst, post_list, now, Some(paging_params)))
     } else if p.command == "u" {
         let user = get_user(client, &p.inst, &p.id, None).await?;
         Ok(user_page(&p.inst, user, now))
@@ -107,7 +111,7 @@ async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Res
         };
         let comment = match post_detail.comments.iter().find(|c| c.id == comment_id) {
             Some(c) => c.clone(),
-            _ => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
+            None => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
         };
         Ok(comment_page(&p.inst, comment, post_detail, now))
         
