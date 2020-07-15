@@ -50,6 +50,8 @@ lemmy-lite: Mobile
 
 ## TODO
 
+-1. Have community list sort by TopAll by default if no search param is given.
+0. Show comments before posts in user page.
 1. Implement pagination and sort UI.
 2. Implement post search backend.
 3. Impelemnt post search UI.
