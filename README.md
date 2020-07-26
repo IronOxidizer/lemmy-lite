@@ -1,5 +1,5 @@
 # lemmy-lite
-A static, nojs, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
+A static, JSless, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
 
 This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy. Eventually it will transition into a microservice that is ran alongside Lemmy, for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine removing any extra latency in API calls.
 
@@ -13,7 +13,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 
 - Open source, [AGPL License](/LICENSE).
 - Cross-instance support, get a lite version of any Lemmy instance.
-- NoJS using pre-rendered HTML and CSS only.
+- JSless using pre-rendered HTML and CSS only.
 - Touch-friendly.
 - Internet Exporer and NetSurf compatible.
 - High performance.
