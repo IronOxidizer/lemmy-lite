@@ -26,10 +26,12 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - Symlink won't always work since nginx user (root) requires ownership of linked file
 - GZip static to allow serving of compressed files for lower bandwith usage
 ```
+cd lemmy-lite
 gzip -kr9 static
 cp -rf static /etc/nginx/lemmy-lite
 ln -sf lemmy-lite.conf /etc/nginx/sites-enabled/
-systemctl start nginx && cargo +nightly run --release
+systemctl start nginx
+cargo +nightly run --release
 ```
 
 ## Pictures
@@ -50,7 +52,7 @@ lemmy-lite: Mobile
 
 ## TODO
 
-1. Implement pagination and sort UI.
+1. Implement pagination and sort UI. Try putting sort in same form as page to send multiple params.
 2. Implement post search backend.
 3. Impelemnt post search UI.
 4. Refactor Navbar based on new UI.

@@ -138,6 +138,7 @@ fn navbar_markup(instance: &String) -> Markup {
     }
 }
 
+// Try putting sort in same form as page to send multiple params
 fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
         @match paging_params {
@@ -165,6 +166,36 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                 input type="hidden" name="p" value="2";
                 input type="submit" value="Next";
             }
+        }
+
+        p.cell {"Sort:"}
+        form.cell {
+            input type="hidden" name="s" value="Hot";
+            input type="submit" value="Hot";
+        }
+        form.cell {
+            input type="hidden" name="s" value="New";
+            input type="submit" value="New";
+        }
+        form.cell {
+            input type="hidden" name="s" value="TopDay";
+            input type="submit" value="TopDay";
+        }
+        form.cell {
+            input type="hidden" name="s" value="TopWeek";
+            input type="submit" value="TopWeek";
+        }
+        form.cell {
+            input type="hidden" name="s" value="TopMonth";
+            input type="submit" value="TopMonth";
+        }
+        form.cell {
+            input type="hidden" name="s" value="TopYear";
+            input type="submit" value="TopYear";
+        }
+        form.cell {
+            input type="hidden" name="s" value="TopAll";
+            input type="submit" value="TopAll";
         }
     }
 }
