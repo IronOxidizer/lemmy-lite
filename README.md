@@ -49,6 +49,7 @@ lemmy-lite: Mobile
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. 1.0.0 is set for when account functionality is stabilized.
 5. Ideally, static content is served through a CDN to further improve server performance and response times.
+6. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
 
 ## TODO
 
