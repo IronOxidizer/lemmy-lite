@@ -129,7 +129,7 @@ fn headers_markup() -> Markup {
 fn navbar_markup(instance: &String) -> Markup {
     html! {
         #navbar {
-            a href=".." {"Back"}
+            a href=".." {"Directory Up"}
         
             a href={"/" (instance) } {(instance)}
         
@@ -138,67 +138,86 @@ fn navbar_markup(instance: &String) -> Markup {
     }
 }
 
+fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+            input type="hidden" name="s" value=((sort));
+        }
+    }
+}
+
+fn default_page_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+            input type="hidden" name="p" value=((page));
+        }
+    }
+}
+
 // Try putting sort in same form as page to send multiple params
 fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
-        .row {
-            @match paging_params {
-                Some(params) => {   
-                    @match params.p {
-                        Some(page) => {
-                            @if page > 1 {
-                                form {
-                                    input type="hidden" name="p" value=((page-1));
-                                    input type="submit" value="Prev";
-                                }
-                            }
-                            form {
-                                input type="hidden" name="p" value=((page+1));
-                                input type="submit" value="Next";
-                            }
-                        },
-                        None => form {
-                            input type="hidden" name="p" value="2";
-                            input type="submit" value="Next";
-                        }
-                    }
-                },
-                None => form {
-                    input type="hidden" name="p" value="2";
-                    input type="submit" value="Next";
-                }
-            }
-    
-            p {"Sort:"}
+        .hc.row {
             form {
                 input type="hidden" name="s" value="Hot";
+                (default_page_markup(paging_params))
                 input type="submit" value="Hot";
             }
             form {
                 input type="hidden" name="s" value="New";
+                (default_page_markup(paging_params))
                 input type="submit" value="New";
             }
             form {
                 input type="hidden" name="s" value="TopDay";
-                input type="submit" value="TopDay";
+                (default_page_markup(paging_params))
+                input type="submit" value="Day";
             }
             form {
                 input type="hidden" name="s" value="TopWeek";
-                input type="submit" value="TopWeek";
+                (default_page_markup(paging_params))
+                input type="submit" value="Week";
             }
             form {
                 input type="hidden" name="s" value="TopMonth";
-                input type="submit" value="TopMonth";
+                (default_page_markup(paging_params))
+                input type="submit" value="Month";
             }
             form {
                 input type="hidden" name="s" value="TopYear";
-                input type="submit" value="TopYear";
+                (default_page_markup(paging_params))
+                input type="submit" value="Year";
             }
             form {
                 input type="hidden" name="s" value="TopAll";
-                input type="submit" value="TopAll";
+                (default_page_markup(paging_params))
+                input type="submit" value="All";
             }
         }
+
+        .hc.row {
+            @if let Some(&PagingParams {p: Some(page), ..}) = paging_params {
+                @if page > 1 {
+                    form {
+                        (default_sort_markup(paging_params))
+                        input type="hidden" name="p" value=((page-1));
+                        input type="submit" value="Prev";
+                    }
+                }
+                form {
+                    (default_sort_markup(paging_params))
+                    input type="hidden" name="p" value=((page+1));
+                    input type="submit" value="Next";
+                }
+            } @else {
+                form {
+                    (default_sort_markup(paging_params))
+                    input type="hidden" name="p" value="2";
+                    input type="submit" value="Next";
+                }
+            }
+        }
+        
     }
 }
 

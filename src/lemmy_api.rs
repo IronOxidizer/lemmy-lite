@@ -9,7 +9,7 @@ const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 pub struct PagingParams {
     pub s: Option<String>, // Sort
     pub p: Option<i32>, // Page
-    l: Option<i32> // Limit size
+    pub l: Option<i32> // Limit size
 }
 
 #[derive(Deserialize)]
@@ -179,25 +179,7 @@ pub struct UserDetail {
 }
 
 pub async fn get_community_list(client: &Client, instance: &String, paging_params: Option<&PagingParams>) -> Result<CommunityList> {
-    let default_params = match paging_params {
-        Some(params) => {
-            if params.s.is_none() {
-                PagingParams {
-                    s: Some("TopAll".to_string()),
-                    p: params.p,
-                    l: params.l
-                }
-            } else {
-                (*params).clone()
-            }
-        }, None => PagingParams {
-            s: Some("TopAll".to_string()),
-            p: None,
-            l: None
-        }
-    };
-
-    let url = format_url(instance, "v1/community/list", Some(&default_params), None);
+    let url = format_url(instance, "v1/community/list", paging_params, None);
     println!("Making request: {}", url);
 
     Ok(CommunityList::from(

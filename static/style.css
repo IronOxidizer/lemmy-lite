@@ -63,12 +63,26 @@ table {
     table-layout: fixed;
     background-color: #282828;
     width: 100%;
+    margin-bottom: 1px
 }
 
 #navbar>a {
     display: table-cell;
     text-align: center;
     padding: 6px 0
+}
+
+input[type=submit] {
+    background-color: #282828;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    margin: 1px
+}
+
+.hc {
+    display: table;
+    margin: 0 auto
 }
 
 .highlight {

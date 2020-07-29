@@ -68,8 +68,17 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Res
     let paging_params = &query.into_inner();
 
     if p.command == "communities" {
-        let communities = get_community_list(client, &p.inst, Some(paging_params)).await?;
-        Ok(communities_page(&p.inst, communities, Some(paging_params)))
+        let modified_params = &match paging_params.s {
+            Some(_) => (*paging_params).clone(),
+            None => PagingParams {
+                s: Some("TopAll".to_string()),
+                p: paging_params.p,
+                l: paging_params.l
+            }
+        };
+
+        let communities = get_community_list(client, &p.inst, Some(modified_params)).await?;
+        Ok(communities_page(&p.inst, communities, Some(modified_params)))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
