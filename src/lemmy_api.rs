@@ -3,7 +3,9 @@ use serde::Deserialize;
 use actix_web::client::Client;
 use actix_web::Result;
 
-#[derive(Deserialize)]
+const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
+
+#[derive(Deserialize, Clone)]
 pub struct PagingParams {
     pub s: Option<String>, // Sort
     pub p: Option<i32>, // Page
@@ -177,7 +179,25 @@ pub struct UserDetail {
 }
 
 pub async fn get_community_list(client: &Client, instance: &String, paging_params: Option<&PagingParams>) -> Result<CommunityList> {
-    let url = format_url(instance, "v1/community/list", paging_params, None);
+    let default_params = match paging_params {
+        Some(params) => {
+            if params.s.is_none() {
+                PagingParams {
+                    s: Some("TopAll".to_string()),
+                    p: params.p,
+                    l: params.l
+                }
+            } else {
+                (*params).clone()
+            }
+        }, None => PagingParams {
+            s: Some("TopAll".to_string()),
+            p: None,
+            l: None
+        }
+    };
+
+    let url = format_url(instance, "v1/community/list", Some(&default_params), None);
     println!("Making request: {}", url);
 
     Ok(CommunityList::from(
@@ -218,14 +238,14 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
 pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> Result<PostDetail> {
     let url = format_url(instance, "v1/post", None, Some(format!("id={}", post_id)));
     println!("Making request: {}", url);
-    Ok(PostDetail::from(client.get(url).send().await?.json().limit(8388608).await?)) // 8MB limit
+    Ok(PostDetail::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
 
 pub async fn get_user(client: &Client, instance: &String, username: &String, paging_params: Option<&PagingParams>) -> Result<UserDetail> {
     let url = format_url(instance, "v1/user", paging_params, 
         Some(format!("saved_only=false&username={}", username)));
     println!("Making request: {}", url);
-    Ok(UserDetail::from(client.get(url).send().await?.json().limit(8388608).await?)) // 8MB limit
+    Ok(UserDetail::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
 
 // Benchmark faster solutions, too many allocations
