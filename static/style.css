@@ -18,14 +18,14 @@ table {
 }
 
 /* Content wrapper */
-.cw {
+#cw {
     min-width: 344px;
     max-width: 66%;
     /* max-width: 1012px; /* Default for Jeckyll and GitHub Pages */
     margin: auto
 }
 
-.cell {
+.row > * {
     display: table-cell;
     vertical-align: middle
 }

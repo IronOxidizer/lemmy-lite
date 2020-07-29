@@ -20,7 +20,7 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        .cw {
+        #cw {
             (pagebar_markup(paging_params))
             table {
                 tr {
@@ -44,7 +44,7 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        .cw {
+        #cw {
             (pagebar_markup(paging_params))
             @for post in &post_list.posts {
                 div { (post_markup(instance, post, now)) }
@@ -59,7 +59,7 @@ pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        .cw {
+        #cw {
             (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
@@ -83,7 +83,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
     html! {
         (headers_markup())
         (navbar_markup(instance))
-        .cw {
+        #cw {
             (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
@@ -103,7 +103,7 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
     html!{
         (headers_markup())
         (navbar_markup(instance))
-        .cw {
+        #cw {
             div { (pagebar_markup(paging_params)) }
             @for comment in user.comments {
                 (comment_markup(instance, &comment, None, None, now, None))
@@ -141,61 +141,63 @@ fn navbar_markup(instance: &String) -> Markup {
 // Try putting sort in same form as page to send multiple params
 fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
-        @match paging_params {
-            Some(params) => {   
-                @match params.p {
-                    Some(page) => {
-                        @if page > 1 {
-                            form.cell {
-                                input type="hidden" name="p" value=((page-1));
-                                input type="submit" value="Prev";
+        .row {
+            @match paging_params {
+                Some(params) => {   
+                    @match params.p {
+                        Some(page) => {
+                            @if page > 1 {
+                                form {
+                                    input type="hidden" name="p" value=((page-1));
+                                    input type="submit" value="Prev";
+                                }
                             }
-                        }
-                        form.cell {
-                            input type="hidden" name="p" value=((page+1));
+                            form {
+                                input type="hidden" name="p" value=((page+1));
+                                input type="submit" value="Next";
+                            }
+                        },
+                        None => form {
+                            input type="hidden" name="p" value="2";
                             input type="submit" value="Next";
                         }
-                    },
-                    None => form.cell {
-                        input type="hidden" name="p" value="2";
-                        input type="submit" value="Next";
                     }
+                },
+                None => form {
+                    input type="hidden" name="p" value="2";
+                    input type="submit" value="Next";
                 }
-            },
-            None => form.cell {
-                input type="hidden" name="p" value="2";
-                input type="submit" value="Next";
             }
-        }
-
-        p.cell {"Sort:"}
-        form.cell {
-            input type="hidden" name="s" value="Hot";
-            input type="submit" value="Hot";
-        }
-        form.cell {
-            input type="hidden" name="s" value="New";
-            input type="submit" value="New";
-        }
-        form.cell {
-            input type="hidden" name="s" value="TopDay";
-            input type="submit" value="TopDay";
-        }
-        form.cell {
-            input type="hidden" name="s" value="TopWeek";
-            input type="submit" value="TopWeek";
-        }
-        form.cell {
-            input type="hidden" name="s" value="TopMonth";
-            input type="submit" value="TopMonth";
-        }
-        form.cell {
-            input type="hidden" name="s" value="TopYear";
-            input type="submit" value="TopYear";
-        }
-        form.cell {
-            input type="hidden" name="s" value="TopAll";
-            input type="submit" value="TopAll";
+    
+            p {"Sort:"}
+            form {
+                input type="hidden" name="s" value="Hot";
+                input type="submit" value="Hot";
+            }
+            form {
+                input type="hidden" name="s" value="New";
+                input type="submit" value="New";
+            }
+            form {
+                input type="hidden" name="s" value="TopDay";
+                input type="submit" value="TopDay";
+            }
+            form {
+                input type="hidden" name="s" value="TopWeek";
+                input type="submit" value="TopWeek";
+            }
+            form {
+                input type="hidden" name="s" value="TopMonth";
+                input type="submit" value="TopMonth";
+            }
+            form {
+                input type="hidden" name="s" value="TopYear";
+                input type="submit" value="TopYear";
+            }
+            form {
+                input type="hidden" name="s" value="TopAll";
+                input type="submit" value="TopAll";
+            }
         }
     }
 }
@@ -217,42 +219,44 @@ fn community_markup(instance: &String, community: CommunityView) -> Markup {
 
 fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Markup {
     html!{
-        p.cell.score { (post.score) }
-        @match &post.url {
-            Some(url) => {
-                a.cell href=(url) {
-                    img.preview src={
-                        @if ends_with_any(url.clone(), MEDIA_EXT) {
-                            (MEDIA_IMG)
-                        } @else {
-                            (LINK_IMG)
-                        }
-                    };
-                }
-            }, None => {
-                a.cell href={"/" (instance) "/post/" (post.id )} {
-                    img.preview src=(TEXT_IMG);
+        .row {
+            p.score { (post.score) }
+            @match &post.url {
+                Some(url) => {
+                    a href=(url) {
+                        img.preview src={
+                            @if ends_with_any(url.clone(), MEDIA_EXT) {
+                                (MEDIA_IMG)
+                            } @else {
+                                (LINK_IMG)
+                            }
+                        };
+                    }
+                }, None => {
+                    a href={"/" (instance) "/post/" (post.id )} {
+                        img.preview src=(TEXT_IMG);
+                    }
                 }
             }
-        }
-        .cell {
-            a href={"/" (instance) "/post/" (post.id )} {
-                (post.name)
-            }
-            .mute{
-                "by "
-                a.username href={"/" (instance) "/u/" (post.creator_name) } {
-                    (post.creator_name)
-                }
-                " to "
-                a.community href= {"/" (instance) "/c/" (post.community_name)} {
-                    (post.community_name)
-                }
-                " • ˄ " (post.upvotes) " ˅ " (post.downvotes)
+            div {
                 a href={"/" (instance) "/post/" (post.id )} {
-                    " • ✉ " (post.number_of_comments)
+                    (post.name)
                 }
-                " • " (simple_duration(now, post.published))
+                .mute{
+                    "by "
+                    a.username href={"/" (instance) "/u/" (post.creator_name) } {
+                        (post.creator_name)
+                    }
+                    " to "
+                    a.community href= {"/" (instance) "/c/" (post.community_name)} {
+                        (post.community_name)
+                    }
+                    " • ˄ " (post.upvotes) " ˅ " (post.downvotes)
+                    a href={"/" (instance) "/post/" (post.id )} {
+                        " • ✉ " (post.number_of_comments)
+                    }
+                    " • " (simple_duration(now, post.published))
+                }
             }
         }
     }
