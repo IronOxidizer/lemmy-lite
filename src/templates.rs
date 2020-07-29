@@ -105,12 +105,12 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
         (navbar_markup(instance))
         .cw {
             div { (pagebar_markup(paging_params)) }
-            @for post in user.posts {
-                (post_markup(instance, &post, now))
-                hr;
-            }
             @for comment in user.comments {
                 (comment_markup(instance, &comment, None, None, now, None))
+                hr;
+            }
+            @for post in user.posts {
+                (post_markup(instance, &post, now))
                 hr;
             }
             (pagebar_markup(paging_params))

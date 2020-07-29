@@ -50,17 +50,17 @@ lemmy-lite: Mobile
 
 ## TODO
 
-0. Show comments before posts in user page.
 1. Implement pagination and sort UI.
 2. Implement post search backend.
 3. Impelemnt post search UI.
 4. Refactor Navbar based on new UI.
 5. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
 6. Add instance info column that moves to the bottom when there's no space like `Lemmy` in mobile view.
-7. Use 1 letter HTML class names.
-8. Use 1 letter static file names except for favicon and index.
-9. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
-10. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
+7. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
+8. Use 1 letter HTML class names.
+9. Use 1 letter static file names except for favicon and index.
+10. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
+11. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
 ## NetSurf Quirks
 
