@@ -138,86 +138,47 @@ fn navbar_markup(instance: &String) -> Markup {
     }
 }
 
-fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
-    html! {
-        @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-            input type="hidden" name="s" value=((sort));
-        }
-    }
-}
-
-fn default_page_markup(paging_params: Option<&PagingParams>) -> Markup {
-    html! {
-        @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-            input type="hidden" name="p" value=((page));
-        }
-    }
-}
-
-// Try putting sort in same form as page to send multiple params
 fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
-        .hc.row {
-            form {
-                input type="hidden" name="s" value="Hot";
-                (default_page_markup(paging_params))
-                input type="submit" value="Hot";
+        .pb {
+            p {
+                @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+                    a.ss[sort == &"Hot".to_string()] href=(format!("?s=Hot{}",
+                        default_page_string(paging_params))) {"Hot"} " "
+                    a.ss[sort == &"New".to_string()] href=(format!("?s=New{}",
+                        default_page_string(paging_params))) {"New"} " "
+                    a.ss[sort == &"TopDay".to_string()] href=(format!("?s=TopDay{}",
+                        default_page_string(paging_params))) {"Day"} " "
+                    a.ss[sort == &"TopWeek".to_string()] href=(format!("?s=TopWeek{}",
+                        default_page_string(paging_params))) {"Week"} " "
+                    a.ss[sort == &"TopMonth".to_string()] href=(format!("?s=TopMonth{}",
+                        default_page_string(paging_params))) {"Month"} " "
+                    a.ss[sort == &"TopYear".to_string()] href=(format!("?s=TopYear{}",
+                        default_page_string(paging_params))) {"Year"} " "
+                    a.ss[sort == &"TopAll".to_string()] href=(format!("?s=TopAll{}",
+                        default_page_string(paging_params))) {"All"}
+                } @else {
+                    a.ss href=(format!("?s=Hot{}", default_page_string(paging_params))) {"Hot"} " "
+                    a href=(format!("?s=New{}", default_page_string(paging_params))) {"New"} " "
+                    a href=(format!("?s=TopDay{}", default_page_string(paging_params))) {"Day"} " "
+                    a href=(format!("?s=TopWeek{}", default_page_string(paging_params))) {"Week"} " "
+                    a href=(format!("?s=TopMonth{}", default_page_string(paging_params))) {"Month"} " "
+                    a href=(format!("?s=TopYear{}", default_page_string(paging_params))) {"Year"} " "
+                    a href=(format!("?s=TopAll{}", default_page_string(paging_params))) {"All"}
+                }
             }
-            form {
-                input type="hidden" name="s" value="New";
-                (default_page_markup(paging_params))
-                input type="submit" value="New";
-            }
-            form {
-                input type="hidden" name="s" value="TopDay";
-                (default_page_markup(paging_params))
-                input type="submit" value="Day";
-            }
-            form {
-                input type="hidden" name="s" value="TopWeek";
-                (default_page_markup(paging_params))
-                input type="submit" value="Week";
-            }
-            form {
-                input type="hidden" name="s" value="TopMonth";
-                (default_page_markup(paging_params))
-                input type="submit" value="Month";
-            }
-            form {
-                input type="hidden" name="s" value="TopYear";
-                (default_page_markup(paging_params))
-                input type="submit" value="Year";
-            }
-            form {
-                input type="hidden" name="s" value="TopAll";
-                (default_page_markup(paging_params))
-                input type="submit" value="All";
-            }
-        }
 
-        .hc.row {
-            @if let Some(&PagingParams {p: Some(page), ..}) = paging_params {
-                @if page > 1 {
-                    form {
-                        (default_sort_markup(paging_params))
-                        input type="hidden" name="p" value=((page-1));
-                        input type="submit" value="Prev";
+            p {
+                @if let Some(&PagingParams {p: Some(page), ..}) = paging_params {
+                    @if page > 1 {
+                        a href=(format!("?{}p={}", default_sort_string(paging_params), page-1)) {"Prev"} " "
                     }
-                }
-                form {
-                    (default_sort_markup(paging_params))
-                    input type="hidden" name="p" value=((page+1));
-                    input type="submit" value="Next";
-                }
-            } @else {
-                form {
-                    (default_sort_markup(paging_params))
-                    input type="hidden" name="p" value="2";
-                    input type="submit" value="Next";
+                    a href=(format!("?{}p={}", default_sort_string(paging_params), page+1)) {"Next"}
+                } @else {
+                    a href=(format!("?{}p=2", default_sort_string(paging_params))) {"Next"}
                 }
             }
         }
-        
     }
 }
 
@@ -281,7 +242,7 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
     }
 }
 
-fn comment_plain_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, now: &NaiveDateTime) -> Markup {
+fn comment_details_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, now: &NaiveDateTime) -> Markup {
     return html! {
         p.ch {
             a.username href={"/" (instance) "/u/" (comment.creator_name)} {
@@ -309,13 +270,13 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
         @if let Some(hid) = highlight_id {
             @if comment.id == hid {
                 .highlight {
-                    (comment_plain_markup(instance, comment, post_creator_id, now))
+                    (comment_details_markup(instance, comment, post_creator_id, now))
                 }
             } @else {
-                (comment_plain_markup(instance, comment, post_creator_id, now))
+                (comment_details_markup(instance, comment, post_creator_id, now))
             }
         } @else {
-            (comment_plain_markup(instance, comment, post_creator_id, now))
+            (comment_details_markup(instance, comment, post_creator_id, now))
         }
         
         @if children.is_some() {
@@ -370,5 +331,21 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
     } else {
         format!("{}y",
             now.signed_duration_since(record).num_weeks() / 52)
+    }
+}
+
+fn default_page_string(paging_params: Option<&PagingParams>) -> String {
+    if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+        format!("&p={}", page)
+    } else {
+        String::new()
+    }
+}
+
+fn default_sort_string(paging_params: Option<&PagingParams>) -> String {
+    if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+        format!("s={}&", sort)
+    } else {
+        String::new()
     }
 }

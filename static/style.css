@@ -72,17 +72,21 @@ table {
     padding: 6px 0
 }
 
-input[type=submit] {
-    background-color: #282828;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    margin: 1px
+.pb {
+    text-align: center
 }
-
-.hc {
-    display: table;
-    margin: 0 auto
+.pb>p {
+    margin: 4px 0 0 0;
+}
+.pb>p>a {
+    background-color: #282828;
+    border-radius: 3px;
+    padding: 0 4px
+}
+.pb>p>.ss {
+    background-color: #444;
+    border-radius: 3px;
+    padding: 0 4px
 }
 
 .highlight {
