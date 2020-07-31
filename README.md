@@ -25,8 +25,8 @@ This project is not intended for official use, but rather as a proof-of-concept 
 
 - Symlink won't always work since nginx user (root) requires ownership of linked file
 - GZip static to allow serving of compressed files for lower bandwith usage
+- Rust nightly is required, use `rustup`
 ```
-rustup toolchain install nightly
 cd lemmy-lite
 gzip -kr9 static
 cp -rf static /etc/nginx/lemmy-lite
