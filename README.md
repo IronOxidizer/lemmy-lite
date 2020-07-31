@@ -23,14 +23,14 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-- Symlink won't always work since nginx user (root) requires ownership of linked file
+- Symlink won't work since nginx user (root) requires ownership of linked file
 - GZip static to allow serving of compressed files for lower bandwith usage
 - Rust nightly is required, use `rustup`
 ```
 cd lemmy-lite
 gzip -kr9 static
 cp -rf static /etc/nginx/lemmy-lite
-ln -sf lemmy-lite.conf /etc/nginx/sites-enabled/
+cp -f lemmy-lite.conf /etc/nginx/sites-enabled/
 systemctl start nginx
 cargo +nightly run --release
 ```
