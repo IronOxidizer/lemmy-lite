@@ -152,7 +152,7 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                         option selected?[sort==&"TopYear".to_string()] value="TopYear" {"Year"}
                         option selected?[sort==&"TopAll".to_string()] value="TopAll" {"All"}
                     } @else {
-                        option selected? value="Hot" {"Hot"}
+                        option value="Hot" {"Hot"}
                         option value="New" {"New"}
                         option value="TopDay" {"Day"}
                         option value="TopWeek" {"Week"}
@@ -164,10 +164,20 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                 @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
                     input type="hidden" name="p" value=(page);
                 }
-                @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
-                    input type="hidden" name="l" value=(limit);
+                select name="l" {
+                    @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+                        option selected?[limit==&10] value="10" {"10"}
+                        option selected?[limit==&25] value="25" {"25"}
+                        option selected?[limit==&50] value="50" {"50"}
+                        option selected?[limit==&100] value="100" {"100"}
+                    } @else {
+                        option value="10" {"10"}
+                        option value="25" {"25"}
+                        option value="50" {"50"}
+                        option value="100" {"100"}
+                    }
                 }
-                input type="submit" value="Sort";
+                input type="submit" value="Apply";
             }
 
             div {
@@ -190,29 +200,6 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                     default_limit_string(paging_params)))
                     {"Next"}
                 }
-            }
-
-            form {
-                select name="l" {
-                    @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
-                        option selected?[limit==&10] value="10" {"10"}
-                        option selected?[limit==&25] value="25" {"25"}
-                        option selected?[limit==&50] value="50" {"50"}
-                        option selected?[limit==&100] value="100" {"100"}
-                    } @else {
-                        option selected? value="10" {"10"}
-                        option value="25" {"25"}
-                        option value="50" {"50"}
-                        option value="100" {"100"}
-                    }
-                }
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-                    input type="hidden" name="p" value=(page);
-                }
-                @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-                    input type="hidden" name="p" value=(sort);
-                }
-                input type="submit" value="Resize";
             }
         }
     }
