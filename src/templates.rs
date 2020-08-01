@@ -212,7 +212,7 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                 @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
                     input type="hidden" name="p" value=(sort);
                 }
-                input type="submit" value="Sort";
+                input type="submit" value="Resize";
             }
         }
     }
