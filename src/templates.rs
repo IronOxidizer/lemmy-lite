@@ -164,28 +164,55 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                 @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
                     input type="hidden" name="p" value=(page);
                 }
+                @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+                    input type="hidden" name="l" value=(limit);
+                }
                 input type="submit" value="Sort";
             }
 
             div {
                 @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
                     @if page > &1 {
-                        a href=(format!("?{}p={}", default_sort_string(paging_params), page-1)) {"Prev"}
+                        a href=(format!("?{}p={}{}",
+                            default_sort_string(paging_params),
+                            page-1,
+                            default_limit_string(paging_params)))
+                            {"Prev"}
                     }
-                    a href=(format!("?{}p={}", default_sort_string(paging_params), page+1)) {"Next"}
+                    a href=(format!("?{}p={}{}",
+                        default_sort_string(paging_params),
+                        page+1,
+                        default_limit_string(paging_params)))
+                        {"Next"}
                 } @else {
-                    a href=(format!("?{}p=2", default_sort_string(paging_params))) {"Next"}
+                    a href=(format!("?{}p=2{}",
+                    default_sort_string(paging_params),
+                    default_limit_string(paging_params)))
+                    {"Next"}
                 }
             }
 
             form {
-                select name="s" {
-                    option {"10"}
-                    option {"25"}
-                    option {"50"}
-                    option {"100"}
+                select name="l" {
+                    @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+                        option selected?[limit==&10] value="10" {"10"}
+                        option selected?[limit==&25] value="25" {"25"}
+                        option selected?[limit==&50] value="50" {"50"}
+                        option selected?[limit==&100] value="100" {"100"}
+                    } @else {
+                        option selected? value="10" {"10"}
+                        option value="25" {"25"}
+                        option value="50" {"50"}
+                        option value="100" {"100"}
+                    }
                 }
-                input type="button" value="Size";
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    input type="hidden" name="p" value=(page);
+                }
+                @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+                    input type="hidden" name="p" value=(sort);
+                }
+                input type="submit" value="Sort";
             }
         }
     }
@@ -343,17 +370,17 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
     }
 }
 
-fn default_page_string(paging_params: Option<&PagingParams>) -> String {
-    if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-        format!("&p={}", page)
+fn default_sort_string(paging_params: Option<&PagingParams>) -> String {
+    if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+        format!("s={}&", sort)
     } else {
         String::new()
     }
 }
 
-fn default_sort_string(paging_params: Option<&PagingParams>) -> String {
-    if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-        format!("s={}&", sort)
+fn default_limit_string(paging_params: Option<&PagingParams>) -> String {
+    if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+        format!("&l={}", limit)
     } else {
         String::new()
     }

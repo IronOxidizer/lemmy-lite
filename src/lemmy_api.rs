@@ -183,7 +183,7 @@ pub async fn get_community_list(client: &Client, instance: &String, paging_param
     println!("Making request: {}", url);
 
     Ok(CommunityList::from(
-        client.get(url).send().await?.json().await?
+        client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
     ))
 }
 
@@ -193,7 +193,7 @@ pub async fn get_community_list(client: &Client, instance: &String, paging_param
 //     println!("Making request: {}", url);
 
 //     Ok(CommunityDetail::from(
-//         client.get(url).send().await?.json().await?
+//         client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
 //     ))
 // }
 
@@ -213,7 +213,7 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
     println!("Making request: {}", url);
 
     Ok(PostList::from(
-        client.get(url).send().await?.json().await?
+        client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
     ))
 }
 

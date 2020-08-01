@@ -86,9 +86,10 @@ table {
     background-color: #333;
     color: #dedede;
     margin: 2px;
+    cursor: pointer;
 }
 .pb>div>a {
-    padding: auto 4px
+    padding: 0 4px
 }
 
 .highlight {
