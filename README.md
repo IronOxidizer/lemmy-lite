@@ -54,6 +54,7 @@ lemmy-lite: Mobile
 
 ## TODO
 
+0. Consider switching sort row to [form select](https://www.w3schools.com/tags/tag_select.asp)
 1. Implement post search backend.
 2. Impelemnt post search UI.
 3. Refactor Navbar based on new UI.
