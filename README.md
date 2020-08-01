@@ -1,7 +1,7 @@
 # lemmy-lite
 A static, JSless, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
 
-This project is not intended for official use, but rather as a proof-of-concept for pre-rendering Lemmy. Eventually it will transition into a microservice that is ran alongside Lemmy, for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine removing any extra latency in API calls.
+This project is not intended for official use, but rather as a proof-of-concept for pre-rendering [Lemmy](https://github.com/LemmyNet/lemmy). Eventually it will transition into a microservice that is ran alongside [Lemmy](https://github.com/LemmyNet/lemmy), for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine removing any extra latency in API calls.
 
 ### Built With
 
