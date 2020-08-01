@@ -63,7 +63,6 @@ table {
     table-layout: fixed;
     background-color: #282828;
     width: 100%;
-    margin-bottom: 1px
 }
 
 #navbar>a {
@@ -73,20 +72,23 @@ table {
 }
 
 .pb {
-    text-align: center
+    display: table;
+    table-layout: fixed;
+    width: 100%
 }
-.pb>p {
-    margin: 4px 0 0 0;
+.pb>* {
+    display: table-cell;
+    text-align: center;
 }
-.pb>p>a {
-    background-color: #282828;
+.pb>*>* {
+    border: 0;
     border-radius: 3px;
-    padding: 0 4px
+    background-color: #333;
+    color: #dedede;
+    margin: 2px;
 }
-.pb>p>.ss {
-    background-color: #444;
-    border-radius: 3px;
-    padding: 0 4px
+.pb>div>a {
+    padding: auto 4px
 }
 
 .highlight {

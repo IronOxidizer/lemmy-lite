@@ -141,42 +141,51 @@ fn navbar_markup(instance: &String) -> Markup {
 fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
         .pb {
-            p {
-                @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-                    a.ss[sort == &"Hot".to_string()] href=(format!("?s=Hot{}",
-                        default_page_string(paging_params))) {"Hot"} " "
-                    a.ss[sort == &"New".to_string()] href=(format!("?s=New{}",
-                        default_page_string(paging_params))) {"New"} " "
-                    a.ss[sort == &"TopDay".to_string()] href=(format!("?s=TopDay{}",
-                        default_page_string(paging_params))) {"Day"} " "
-                    a.ss[sort == &"TopWeek".to_string()] href=(format!("?s=TopWeek{}",
-                        default_page_string(paging_params))) {"Week"} " "
-                    a.ss[sort == &"TopMonth".to_string()] href=(format!("?s=TopMonth{}",
-                        default_page_string(paging_params))) {"Month"} " "
-                    a.ss[sort == &"TopYear".to_string()] href=(format!("?s=TopYear{}",
-                        default_page_string(paging_params))) {"Year"} " "
-                    a.ss[sort == &"TopAll".to_string()] href=(format!("?s=TopAll{}",
-                        default_page_string(paging_params))) {"All"}
-                } @else {
-                    a.ss href=(format!("?s=Hot{}", default_page_string(paging_params))) {"Hot"} " "
-                    a href=(format!("?s=New{}", default_page_string(paging_params))) {"New"} " "
-                    a href=(format!("?s=TopDay{}", default_page_string(paging_params))) {"Day"} " "
-                    a href=(format!("?s=TopWeek{}", default_page_string(paging_params))) {"Week"} " "
-                    a href=(format!("?s=TopMonth{}", default_page_string(paging_params))) {"Month"} " "
-                    a href=(format!("?s=TopYear{}", default_page_string(paging_params))) {"Year"} " "
-                    a href=(format!("?s=TopAll{}", default_page_string(paging_params))) {"All"}
+            form {
+                select name="s" {
+                    @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+                        option selected?[sort==&"Hot".to_string()] value="Hot" {"Hot"}
+                        option selected?[sort==&"New".to_string()] value="New" {"New"}
+                        option selected?[sort==&"TopDay".to_string()] value="TopDay" {"Day"}
+                        option selected?[sort==&"TopWeek".to_string()] value="TopWeek" {"Week"}
+                        option selected?[sort==&"TopMonth".to_string()] value="TopMonth" {"Month"}
+                        option selected?[sort==&"TopYear".to_string()] value="TopYear" {"Year"}
+                        option selected?[sort==&"TopAll".to_string()] value="TopAll" {"All"}
+                    } @else {
+                        option selected? value="Hot" {"Hot"}
+                        option value="New" {"New"}
+                        option value="TopDay" {"Day"}
+                        option value="TopWeek" {"Week"}
+                        option value="TopMonth" {"Month"}
+                        option value="TopYear" {"Year"}
+                        option value="TopAll" {"All"}
+                    }
                 }
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    input type="hidden" name="p" value=(page);
+                }
+                input type="submit" value="Sort";
             }
 
-            p {
-                @if let Some(&PagingParams {p: Some(page), ..}) = paging_params {
-                    @if page > 1 {
-                        a href=(format!("?{}p={}", default_sort_string(paging_params), page-1)) {"Prev"} " "
+            div {
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    @if page > &1 {
+                        a href=(format!("?{}p={}", default_sort_string(paging_params), page-1)) {"Prev"}
                     }
                     a href=(format!("?{}p={}", default_sort_string(paging_params), page+1)) {"Next"}
                 } @else {
                     a href=(format!("?{}p=2", default_sort_string(paging_params))) {"Next"}
                 }
+            }
+
+            form {
+                select name="s" {
+                    option {"10"}
+                    option {"25"}
+                    option {"50"}
+                    option {"100"}
+                }
+                input type="button" value="Size";
             }
         }
     }
