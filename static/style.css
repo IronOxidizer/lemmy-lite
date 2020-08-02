@@ -62,7 +62,7 @@ table {
 #navbar {
     display: table;
     table-layout: fixed;
-    background-color: #282828;
+    background-color: #333;
     width: 100%;
 }
 
@@ -139,7 +139,7 @@ table {
 .b0, .b1, .b2, .b3, .b4, .b5 {
     margin-top: 4px;
     padding: 4px 0 0 4px;
-    border-top: 1px solid #282828
+    border-top: 1px solid #333
 }
 .b0 {
     border-left:2px solid #ac5353
