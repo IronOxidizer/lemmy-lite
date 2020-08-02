@@ -90,7 +90,8 @@ table {
     cursor: pointer;
 }
 .pb>div>a {
-    padding: 0 4px
+    padding: 0 4px;
+    margin-top: 2px
 }
 
 .highlight {
