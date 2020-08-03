@@ -60,7 +60,7 @@ async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Resul
     let paging_params = &query.into_inner();
 
     let post_list = get_post_list(client, inst, None, None, Some(paging_params)).await?;
-    Ok(post_list_page(inst, post_list, now, Some(paging_params)))
+    Ok(post_list_page(inst, post_list, now, None, Some(paging_params)))
 }
 
 async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Result<Markup> {
@@ -95,7 +95,7 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
     } else if p.command == "c" {
         let post_list = get_post_list(client, &p.inst, None,
             Some(&p.id), Some(paging_params)).await?;
-        Ok(post_list_page(&p.inst, post_list, now, Some(paging_params)))
+        Ok(post_list_page(&p.inst, post_list, now, Some(&p.id), Some(paging_params)))
     } else if p.command == "u" {
         let user = get_user(client, &p.inst, &p.id, Some(paging_params)).await?;
         Ok(user_page(&p.inst, user, now, Some(paging_params)))

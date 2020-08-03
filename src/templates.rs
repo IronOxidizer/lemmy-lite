@@ -19,7 +19,9 @@ pub fn redirect_page(instance: String) -> Markup {
 pub fn communities_page(instance: &String, community_list: CommunityList, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance))
+        (navbar_markup(instance, Some(html!{
+            a.community href="/instance/communities" {"/communities"}
+        })))
         #cw {
             (pagebar_markup(paging_params))
             table {
@@ -40,10 +42,12 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
     }
 }
 
-pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
+pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime, community: Option<&String>, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance))
+        (navbar_markup(instance, community.map(|c| html!{
+            a.community href=(c) {"/c/" (c)}
+        })))
         #cw {
             (pagebar_markup(paging_params))
             @for post in &post_list.posts {
@@ -58,7 +62,7 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
 pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance))
+        (navbar_markup(instance, None))
         #cw {
             (post_markup(instance, &post_detail.post, now))
 
@@ -82,7 +86,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
 
     html! {
         (headers_markup())
-        (navbar_markup(instance))
+        (navbar_markup(instance, None))
         #cw {
             (post_markup(instance, &post_detail.post, now))
 
@@ -102,7 +106,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
 pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html!{
         (headers_markup())
-        (navbar_markup(instance))
+        (navbar_markup(instance, None))
         #cw {
             div { (pagebar_markup(paging_params)) }
             @for comment in user.comments {
@@ -126,14 +130,17 @@ fn headers_markup() -> Markup {
     }
 }
 
-fn navbar_markup(instance: &String) -> Markup {
+fn navbar_markup(instance: &String, embed: Option<Markup>) -> Markup {
     html! {
         #navbar {
-            a href=".." {"Directory Up"}
-        
-            a href={"/" (instance) } {(instance)}
-        
             a href={"/" (instance) "/communities"} {"Communities"}
+        
+            div {
+                a href={"/" (instance)} {(instance)}
+                @if let Some(e) = embed {(e)}
+            }
+        
+            a href=".." {"Directory Up"}
         }
     }
 }
@@ -188,6 +195,7 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
                             page-1,
                             default_limit_string(paging_params)))
                             {"Prev"}
+                        " " (page) " "
                     }
                     a href=(format!("?{}p={}{}",
                         default_sort_string(paging_params),
@@ -223,7 +231,7 @@ fn community_markup(instance: &String, community: CommunityView) -> Markup {
 fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Markup {
     html!{
         .row {
-            p.score { (post.score) }
+            p.score {(post.score)}
             @match &post.url {
                 Some(url) => {
                     a href=(url) {
