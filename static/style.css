@@ -21,8 +21,7 @@ table {
 /* Content wrapper */
 #cw {
     min-width: 344px;
-    max-width: 66%;
-    /* max-width: 1012px; /* Default for Jeckyll and GitHub Pages */
+    max-width: 1012px; /* Default for Jeckyll and GitHub Pages */
     margin: auto
 }
 
@@ -80,7 +79,7 @@ table {
     width: 43%;
 }
 #navbar>a {
-    width: 27%;
+    width: 28%;
 }
 
 .pb {

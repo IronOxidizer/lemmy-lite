@@ -43,7 +43,7 @@ lemmy-lite: FireFox
 lemmy-lite: Mobile
 ![lemmy-lite: Mobile](https://user-images.githubusercontent.com/60191958/84398664-39d38e80-abce-11ea-862d-d2d5cb98a89b.png)
 
-## Footnotes
+## Notes
 
 1. First load fetches a stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
 2. I use CSS Tables instead of FlexBox and Grid because Tables are [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight), simpler, and have much better legacy support. Using CSS tables over HTML tables avoids excess DOM objects.
@@ -51,6 +51,7 @@ lemmy-lite: Mobile
 4. 1.0.0 is set for when account functionality is stabilized.
 5. Ideally, static content is served through a CDN to further improve server performance and response times.
 6. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
+7. Test resolutions: `360x640` `1280x720` `1920x1080`
 
 ## TODO
 
