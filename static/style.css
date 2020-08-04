@@ -20,7 +20,6 @@ table {
 
 /* Content wrapper */
 #cw {
-    clear: left;
     min-width: 344px;
     max-width: 1012px; /* Default for Jeckyll and GitHub Pages */
     padding-top: 4px;
@@ -60,35 +59,39 @@ table {
     margin-left: 4px
 }
 
+#navbar {
+    text-align: center
+}
+
 #navbar>* {
+    display: inline-block;
+
+    width: 32%;
+    min-width: 340px;
     word-break: keep-all;
     word-wrap: normal;
     overflow-wrap: normal;
 
-    min-width: 340px;
     border-radius: 6px;
-    float: left;
     text-align: center;
     padding: 6px 0;
 
     background-color: #333;
     margin: 2px
 }
-#navbar>div {
-    width: 43%;
-}
-#navbar>a {
-    width: 28%;
-}
 
-.pb {
+.pb::after {
+    content: "";
     display: table;
-    table-layout: fixed;
-    width: 100%
+    clear: both;
 }
-.pb>* {
-    display: table-cell;
-    text-align: center;
+.pb>form {
+    float: left;
+    margin-bottom: 4px;
+}
+.pb>div {
+    margin-top: 2px;
+    float: right;
 }
 .pb>*>* {
     border: 0;
