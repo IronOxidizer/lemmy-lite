@@ -20,8 +20,10 @@ table {
 
 /* Content wrapper */
 #cw {
+    clear: left;
     min-width: 344px;
     max-width: 1012px; /* Default for Jeckyll and GitHub Pages */
+    padding-top: 4px;
     margin: auto
 }
 
@@ -58,9 +60,6 @@ table {
     margin-left: 4px
 }
 
-#navbar {
-    width: 100%;
-}
 #navbar>* {
     word-break: keep-all;
     word-wrap: normal;
