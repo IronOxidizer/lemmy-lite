@@ -18,8 +18,8 @@ use maud::{Markup};
 mod templates;
 mod lemmy_api;
 
-use crate::templates::{redirect_page, post_list_page, post_page, comment_page, communities_page, user_page};
-use crate::lemmy_api::{PagingParams, get_post_list, get_post, get_community_list, get_user};
+use crate::templates::{redirect_page, post_list_page, post_page, comment_page, communities_page, user_page, search_page};
+use crate::lemmy_api::{PagingParams, SearchParams, get_post_list, get_post, get_community_list, get_user, search};
 
 #[derive(Deserialize)]
 struct RedirForm {
@@ -63,23 +63,32 @@ async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Resul
     Ok(post_list_page(inst, post_list, now, None, Some(paging_params)))
 }
 
-async fn lvl2(p: web::Path<PathParams2>, query: web::Query<PagingParams>) -> Result<Markup> {
+async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Result<Markup> {
     let client = &Client::default();
-    let paging_params = &query.into_inner();
+    let search_params = &query.into_inner();
 
     if p.command == "communities" {
-        let modified_params = &match paging_params.s {
-            Some(_) => (*paging_params).clone(),
-            None => PagingParams {
-                s: Some("TopAll".to_string()),
-                p: paging_params.p,
-                l: paging_params.l
-            }
+        let paging_params = &PagingParams {
+            s: search_params.s.clone().or(Some("TopAll".to_string())),
+            p: search_params.p,
+            l: search_params.l
         };
-
-        let communities = get_community_list(client, &p.inst, Some(modified_params)).await?;
-        Ok(communities_page(&p.inst, communities, Some(modified_params)))
-    } else {
+        let communities = get_community_list(client, &p.inst, Some(paging_params)).await?;
+        Ok(communities_page(&p.inst, communities, Some(paging_params)))
+    }
+    // Consider refactor using search_params.q.and_then
+    else if p.command == "search" {
+        if let Some(ref query) = search_params.q {
+            if query.is_empty() {
+                return Ok(search_page(&p.inst, None, search_params))
+            }
+            let search_res = search(client, &p.inst, search_params).await?;
+            Ok(search_page(&p.inst, Some(search_res), search_params))
+        } else {
+            Ok(search_page(&p.inst, None, search_params))
+        }
+    }
+    else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
 }

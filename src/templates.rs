@@ -1,6 +1,6 @@
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup};
-use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail, PagingParams};
+use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail, PagingParams, SearchParams, SearchResponse};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
 const STYLESHEET: &str = "/style.css";
@@ -122,6 +122,14 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
     }
 }
 
+pub fn search_page(instance: &String, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
+    html! {
+        (headers_markup())
+        (navbar_markup(instance, None))
+        "THIS IS THE SEARCH PAGE"
+    }
+}
+
 fn headers_markup() -> Markup {
     html! {
         meta charset="utf8" name="viewport" content="width=device-width,user-scalable=no,initial-scale=1";
@@ -140,7 +148,10 @@ fn navbar_markup(instance: &String, embed: Option<Markup>) -> Markup {
                 @if let Some(e) = embed {(e)}
             }
         
-            a href=".." {"Directory Up"}
+            form action={"/" (instance) "/search"} {
+                input name="q" placeholder="Search";
+                input type="submit" value="Go";
+            }
         }
     }
 }

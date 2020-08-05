@@ -62,7 +62,6 @@ table {
 #navbar {
     text-align: center
 }
-
 #navbar>* {
     display: inline-block;
 
@@ -78,6 +77,19 @@ table {
 
     background-color: #333;
     margin: 2px
+}
+#navbar>form>input {
+    border: 0;
+    border-radius: 3px;
+    background-color: #222;
+    color: #dedede;
+    margin: 0 2px;
+}
+#navbar>form>input:first-child {
+    cursor: text;
+}
+#navbar>form>input:last-child {
+    cursor: pointer;
 }
 
 .pb::after {

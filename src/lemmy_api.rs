@@ -12,6 +12,16 @@ pub struct PagingParams {
     pub l: Option<i32> // Limit size
 }
 
+#[derive(Deserialize, Clone)]
+pub struct SearchParams {
+    pub q: Option<String>,  // Query
+    pub t: Option<String>,  // Content type
+    pub c: Option<String>,  // Community name
+    pub s: Option<String>,  // Sort
+    pub p: Option<i32>,     // Page
+    pub l: Option<i32>      // Limit size
+}
+
 #[derive(Deserialize)]
 pub struct CommunityView {
     pub id: i32,
@@ -178,6 +188,15 @@ pub struct UserDetail {
     pub posts: Vec<PostView>,
 }
 
+#[derive(Deserialize)]
+pub struct SearchResponse {
+    pub type_: String,
+    pub comments: Vec<CommentView>,
+    pub posts: Vec<PostView>,
+    pub communities: Vec<CommunityView>,
+    pub users: Vec<UserView>,
+}
+
 pub async fn get_community_list(client: &Client, instance: &String, paging_params: Option<&PagingParams>) -> Result<CommunityList> {
     let url = format_url(instance, "v1/community/list", paging_params, None);
     println!("Making request: {}", url);
@@ -187,15 +206,15 @@ pub async fn get_community_list(client: &Client, instance: &String, paging_param
     ))
 }
 
-// pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
-//     let url = format_url(instance,"v1/community",
-//         None, Some(format!("name={}", community)));
-//     println!("Making request: {}", url);
+pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
+    let url = format_url(instance,"v1/community",
+        None, Some(format!("name={}", community)));
+    println!("Making request: {}", url);
 
-//     Ok(CommunityDetail::from(
-//         client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
-//     ))
-// }
+    Ok(CommunityDetail::from(
+        client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
+    ))
+}
 
 pub async fn get_post_list(client: &Client, instance: &String, community: Option<&i32>, community_name: Option<&String>,
     paging_params: Option<&PagingParams>) -> Result<PostList> {
@@ -230,7 +249,13 @@ pub async fn get_user(client: &Client, instance: &String, username: &String, pag
     Ok(UserDetail::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
 
+pub async fn search(client: &Client, instance: &String, search_params: &SearchParams) -> Result<SearchResponse> {
+    let url = format_url(instance, "v1/search", None, Some(String::new())); // TODO: Replace string new with params
+    Ok(SearchResponse::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
+}
+
 // Benchmark faster solutions, too many allocations
+// Preallocate buffer and push
 fn format_url(instance: &String, endpoint: &str, paging_params: Option<&PagingParams>, extra_params: Option<String>) -> String{
     format!("https://{}/api/{}?{}{}", instance, endpoint,
         match paging_params {

@@ -15,6 +15,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - Cross-instance support, get a lite version of any Lemmy instance.
 - JSless using pre-rendered HTML and CSS only.
 - Touch-friendly.
+- Small screen support, minimum 360px.
 - Internet Exporer and NetSurf compatible.
 - High performance.
   - Written in rust.
@@ -51,14 +52,12 @@ lemmy-lite: Mobile
 4. 1.0.0 is set for when account functionality is stabilized.
 5. Ideally, static content is served through a CDN to further improve server performance and response times.
 6. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
-7. Test resolutions: `360x640` `1280x720` `1920x1080`
 
 ## TODO
 
-0. Consider changing all #282828 to #333
-1. Implement post search backend.
-2. Impelemnt post search UI.
-3. Refactor Navbar based on new UI.
+1. Implement post search backend, if query is empty, don't make API call, just serve page.
+2. Impelemnt post search page and UI including filters.
+3. If within a community, restrict search to community by default.
 4. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
 5. Add instance info column that moves to the bottom when there's no space like `Lemmy` in mobile view.
 6. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
