@@ -20,8 +20,8 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.community href="/instance/communities" {"/communities"}
-        })))
+            a.community href={"/" (instance) "/communities"} {"/communities"}
+        }), None))
         #cw {
             (pagebar_markup(paging_params))
             table {
@@ -47,7 +47,7 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
         (headers_markup())
         (navbar_markup(instance, community.map(|c| html!{
             a.community href=(c) {"/c/" (c)}
-        })))
+        }), None))
         #cw {
             (pagebar_markup(paging_params))
             @for post in &post_list.posts {
@@ -62,7 +62,7 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
 pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance, None))
+        (navbar_markup(instance, None, None))
         #cw {
             (post_markup(instance, &post_detail.post, now))
 
@@ -86,7 +86,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
 
     html! {
         (headers_markup())
-        (navbar_markup(instance, None))
+        (navbar_markup(instance, None, None))
         #cw {
             (post_markup(instance, &post_detail.post, now))
 
@@ -106,7 +106,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
 pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html!{
         (headers_markup())
-        (navbar_markup(instance, None))
+        (navbar_markup(instance, None, None))
         #cw {
             div { (pagebar_markup(paging_params)) }
             @for comment in user.comments {
@@ -125,8 +125,13 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
 pub fn search_page(instance: &String, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance, None))
-        "THIS IS THE SEARCH PAGE"
+        (navbar_markup(instance, Some(html!{
+            a.community href={"/" (instance) "/search"} {"/search"}
+        }), None))
+        #cw {
+            (searchbar_markup(search_params))
+            "Search page not yet implemented"
+        }
     }
 }
 
@@ -138,7 +143,7 @@ fn headers_markup() -> Markup {
     }
 }
 
-fn navbar_markup(instance: &String, embed: Option<Markup>) -> Markup {
+fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option<SearchParams>) -> Markup {
     html! {
         #navbar {
             a href={"/" (instance) "/communities"} {"Communities"}
@@ -151,74 +156,6 @@ fn navbar_markup(instance: &String, embed: Option<Markup>) -> Markup {
             form action={"/" (instance) "/search"} {
                 input name="q" placeholder="Search";
                 input type="submit" value="Go";
-            }
-        }
-    }
-}
-
-fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
-    html! {
-        .pb {
-            form {
-                select name="s" {
-                    @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-                        option selected?[sort==&"Hot".to_string()] value="Hot" {"Hot"}
-                        option selected?[sort==&"New".to_string()] value="New" {"New"}
-                        option selected?[sort==&"TopDay".to_string()] value="TopDay" {"Day"}
-                        option selected?[sort==&"TopWeek".to_string()] value="TopWeek" {"Week"}
-                        option selected?[sort==&"TopMonth".to_string()] value="TopMonth" {"Month"}
-                        option selected?[sort==&"TopYear".to_string()] value="TopYear" {"Year"}
-                        option selected?[sort==&"TopAll".to_string()] value="TopAll" {"All"}
-                    } @else {
-                        option value="Hot" {"Hot"}
-                        option value="New" {"New"}
-                        option value="TopDay" {"Day"}
-                        option value="TopWeek" {"Week"}
-                        option value="TopMonth" {"Month"}
-                        option value="TopYear" {"Year"}
-                        option value="TopAll" {"All"}
-                    }
-                }
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-                    input type="hidden" name="p" value=(page);
-                }
-                select name="l" {
-                    @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
-                        option selected?[limit==&10] value="10" {"10"}
-                        option selected?[limit==&25] value="25" {"25"}
-                        option selected?[limit==&50] value="50" {"50"}
-                        option selected?[limit==&100] value="100" {"100"}
-                    } @else {
-                        option value="10" {"10"}
-                        option value="25" {"25"}
-                        option value="50" {"50"}
-                        option value="100" {"100"}
-                    }
-                }
-                input type="submit" value="Apply";
-            }
-
-            div {
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-                    @if page > &1 {
-                        a href=(format!("?{}p={}{}",
-                            default_sort_string(paging_params),
-                            page-1,
-                            default_limit_string(paging_params)))
-                            {"Prev"}
-                        " " (page) " "
-                    }
-                    a href=(format!("?{}p={}{}",
-                        default_sort_string(paging_params),
-                        page+1,
-                        default_limit_string(paging_params)))
-                        {"Next"}
-                } @else {
-                    a href=(format!("?{}p=2{}",
-                    default_sort_string(paging_params),
-                    default_limit_string(paging_params)))
-                    {"Next"}
-                }
             }
         }
     }
@@ -345,6 +282,153 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
                 )} {
                 (comment_markup(instance, comment, Some(post_creator_id), highlight_id, now,
                     Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id, now))))
+            }
+        }
+    }
+}
+
+
+fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        .pb {
+            form {
+                (sort_markup(paging_params))
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    input type="hidden" name="p" value=(page);
+                }
+                (limit_size_markup(paging_params))
+                input type="submit" value="Apply";
+            }
+
+            div {
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    @if page > &1 {
+                        a href=(format!("?{}p={}{}",
+                            default_sort_string(paging_params),
+                            page-1,
+                            default_limit_string(paging_params)))
+                            {"Prev"}
+                        " " (page) " "
+                    }
+                    a href=(format!("?{}p={}{}",
+                        default_sort_string(paging_params),
+                        page+1,
+                        default_limit_string(paging_params)))
+                        {"Next"}
+                } @else {
+                    a href=(format!("?{}p=2{}",
+                    default_sort_string(paging_params),
+                    default_limit_string(paging_params)))
+                    {"Next"}
+                }
+            }
+        }
+    }
+}
+
+fn searchbar_markup(search_params: &SearchParams) -> Markup {
+    let paging_params_bare = &(search_params.to_paging_params());
+    let paging_params = Some(paging_params_bare);
+    html! {
+        .pb {
+            form {
+                (sort_markup(paging_params))
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    input type="hidden" name="p" value=(page);
+                }
+                (limit_size_markup(paging_params))
+
+                select name="t" {
+                    @if let Some(ref type_) = search_params.t {
+                        option selected?[type_==&"All".to_string()] value="All" {"All"}
+                        option selected?[type_==&"Comments".to_string()] value="Comments" {"Comments"}
+                        option selected?[type_==&"Posts".to_string()] value="Posts" {"Posts"}
+                        option selected?[type_==&"Communities".to_string()] value="Communities" {"Communities"}
+                        option selected?[type_==&"Users".to_string()] value="Users" {"Users"}
+                        option selected?[type_==&"Url".to_string()] value="Url" {"URLs"}
+
+                    } @else {
+                        option value="All" {"All"}
+                        option value="Comments" {"Comments"}
+                        option value="Posts" {"Posts"}
+                        option value="Communities" {"Communities"}
+                        option value="Users" {"Users"}
+                        option value="Url" {"URLs"}
+                    }
+                    @if let Some(ref community) = search_params.c {
+                        input type="text" name="c" placeholder="Community" value=((community));
+                    } @else {
+                        input type="text" name="c" placeholder="Community";
+                    }
+                    input type="submit" value="Apply";
+                }
+            }
+
+            div {
+                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                    @if page > &1 {
+                        a href=(format!("?{}p={}{}",
+                            default_sort_string(paging_params),
+                            page-1,
+                            default_limit_string(paging_params)))
+                            {"Prev"}
+                        " " (page) " "
+                    }
+                    a href=(format!("?{}p={}{}",
+                        default_sort_string(paging_params),
+                        page+1,
+                        default_limit_string(paging_params)))
+                        {"Next"}
+                } @else {
+                    a href=(format!("?{}p=2{}",
+                    default_sort_string(paging_params),
+                    default_limit_string(paging_params)))
+                    {"Next"}
+                }
+            }
+        }
+    }
+}
+
+fn sort_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        select name="s" {
+            @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+                option selected?[sort==&"Active".to_string()] value="Active" {"Active"}
+                option selected?[sort==&"Hot".to_string()] value="Hot" {"Hot"}
+                option selected?[sort==&"New".to_string()] value="New" {"New"}
+                option selected?[sort==&"TopDay".to_string()] value="TopDay" {"Day"}
+                option selected?[sort==&"TopWeek".to_string()] value="TopWeek" {"Week"}
+                option selected?[sort==&"TopMonth".to_string()] value="TopMonth" {"Month"}
+                option selected?[sort==&"TopYear".to_string()] value="TopYear" {"Year"}
+                option selected?[sort==&"TopAll".to_string()] value="TopAll" {"All"}
+            } @else {
+                option value="Active" {"Active"}
+                option value="Hot" {"Hot"}
+                option value="New" {"New"}
+                option value="TopDay" {"Day"}
+                option value="TopWeek" {"Week"}
+                option value="TopMonth" {"Month"}
+                option value="TopYear" {"Year"}
+                option value="TopAll" {"All"}
+            }
+        }
+    }
+}
+
+fn limit_size_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        select name="l" {
+            @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+                option selected?[limit==&10] value="10" {"10"}
+                option selected?[limit==&25] value="25" {"25"}
+                option selected?[limit==&50] value="50" {"50"}
+                option selected?[limit==&100] value="100" {"100"}
+            } @else {
+                option value="10" {"10"}
+                option value="25" {"25"}
+                option value="50" {"50"}
+                option value="100" {"100"}
             }
         }
     }

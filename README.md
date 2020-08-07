@@ -15,7 +15,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - Cross-instance support, get a lite version of any Lemmy instance.
 - JSless using pre-rendered HTML and CSS only.
 - Touch-friendly.
-- Small screen support, minimum 360px.
+- Small screen support, as small as 320px.
 - Internet Exporer and NetSurf compatible.
 - High performance.
   - Written in rust.
@@ -51,10 +51,12 @@ lemmy-lite: Mobile
 3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
 4. 1.0.0 is set for when account functionality is stabilized.
 5. Ideally, static content is served through a CDN to further improve server performance and response times.
-6. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
+6. Strictly only uses characters from [BMP](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane) for legacy font support.
+7. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
 
 ## TODO
 
+0. Fix scommunities, make markup modular to be reused in search.
 1. Implement post search backend, if query is empty, don't make API call, just serve page.
 2. Impelemnt post search page and UI including filters.
 3. If within a community, restrict search to community by default.

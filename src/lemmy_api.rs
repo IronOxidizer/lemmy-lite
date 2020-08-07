@@ -7,9 +7,22 @@ const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 
 #[derive(Deserialize, Clone)]
 pub struct PagingParams {
-    pub s: Option<String>, // Sort
-    pub p: Option<i32>, // Page
-    pub l: Option<i32> // Limit size
+    pub s: Option<String>,  // Sort
+    pub p: Option<i32>,     // Page
+    pub l: Option<i32>      // Limit size
+}
+
+impl PagingParams {
+    pub fn to_search_params(&self) -> SearchParams {
+        SearchParams {
+            q: None,
+            t: None,
+            c: None,
+            s: self.s.clone(),
+            p: self.p,
+            l: self.l
+        }
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -20,6 +33,16 @@ pub struct SearchParams {
     pub s: Option<String>,  // Sort
     pub p: Option<i32>,     // Page
     pub l: Option<i32>      // Limit size
+}
+
+impl SearchParams {
+    pub fn to_paging_params(&self) -> PagingParams {
+        PagingParams {
+            s: self.s.clone(),
+            p: self.p,
+            l: self.l
+        }
+    }
 }
 
 #[derive(Deserialize)]
