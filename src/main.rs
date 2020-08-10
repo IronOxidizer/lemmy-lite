@@ -78,14 +78,16 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
     }
     // Consider refactor using search_params.q.and_then
     else if p.command == "search" {
+        let now= &Utc::now().naive_utc();
+
         if let Some(ref query) = search_params.q {
             if query.is_empty() {
-                return Ok(search_page(&p.inst, None, search_params))
+                return Ok(search_page(&p.inst, now, None, search_params))
             }
             let search_res = search(client, &p.inst, search_params).await?;
-            Ok(search_page(&p.inst, Some(search_res), search_params))
+            Ok(search_page(&p.inst, now, Some(&search_res), search_params))
         } else {
-            Ok(search_page(&p.inst, None, search_params))
+            Ok(search_page(&p.inst, now, None, search_params))
         }
     }
     else {

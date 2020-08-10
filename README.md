@@ -56,9 +56,8 @@ lemmy-lite: Mobile
 
 ## TODO
 
-0. Fix scommunities, make markup modular to be reused in search.
-1. Implement post search backend, if query is empty, don't make API call, just serve page.
-2. Impelemnt post search page and UI including filters.
+1. Fix communities, make markup modular to be reused in search.
+2. Implement post search page and UI including filters.
 3. If within a community, restrict search to community by default.
 4. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
 5. Add instance info column that moves to the bottom when there's no space like `Lemmy` in mobile view.

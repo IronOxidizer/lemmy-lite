@@ -45,9 +45,20 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
 pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime, community: Option<&String>, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance, community.map(|c| html!{
-            a.community href=(c) {"/c/" (c)}
-        }), None))
+        (navbar_markup(
+            instance,
+            community.map(|c| html!{
+                a.community href=(c) {"/c/" (c)}
+            }), 
+            community.map(|c| SearchParams {
+                q: None,
+                t: None,
+                c: Some(c.clone()),
+                s: None,
+                p: None,
+                l: None
+            }).as_ref()
+        ))
         #cw {
             (pagebar_markup(paging_params))
             @for post in &post_list.posts {
@@ -122,15 +133,22 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
     }
 }
 
-pub fn search_page(instance: &String, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
+pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<&SearchResponse>, search_params: &SearchParams) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
             a.community href={"/" (instance) "/search"} {"/search"}
-        }), None))
+        }), Some(search_params)))
         #cw {
             (searchbar_markup(search_params))
-            "Search page not yet implemented"
+            @if let Some(results) = search_res {
+                @for post in &results.posts {
+                    (post_markup(instance, post, now))
+                }
+                (searchbar_markup(search_params))
+            } @else {
+                "Empty search"
+            }
         }
     }
 }
@@ -143,7 +161,8 @@ fn headers_markup() -> Markup {
     }
 }
 
-fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option<SearchParams>) -> Markup {
+fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option<&SearchParams>) -> Markup {
+    let paging_params = search_params.map(|s| s.to_paging_params());
     html! {
         #navbar {
             a href={"/" (instance) "/communities"} {"Communities"}
@@ -154,7 +173,16 @@ fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option
             }
         
             form action={"/" (instance) "/search"} {
-                input name="q" placeholder="Search";
+                @if let Some(SearchParams {q: Some(query), ..}) = search_params {
+                    input name="q" placeholder="Search" value=((query));
+                    (default_sort_markup(paging_params.as_ref()))
+                    (default_page_markup(paging_params.as_ref()))
+                    (default_limit_markup(paging_params.as_ref()))
+                    (default_type_markup(search_params))
+                } @else {
+                    input name="q" placeholder="Search";
+                }
+                (default_community_markup(search_params))
                 input type="submit" value="Go";
             }
         }
@@ -303,23 +331,27 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
             div {
                 @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
                     @if page > &1 {
-                        a href=(format!("?{}p={}{}",
-                            default_sort_string(paging_params),
-                            page-1,
-                            default_limit_string(paging_params)))
-                            {"Prev"}
+                        form {
+                            (default_sort_markup(paging_params))
+                            input type="hidden" name="p" value=((page-1));
+                            (default_limit_markup(paging_params))
+                            input type="submit" value="Prev";
+                        }
                         " " (page) " "
                     }
-                    a href=(format!("?{}p={}{}",
-                        default_sort_string(paging_params),
-                        page+1,
-                        default_limit_string(paging_params)))
-                        {"Next"}
+                    form {
+                        (default_sort_markup(paging_params))
+                        input type="hidden" name="p" value=((page+1));
+                        (default_limit_markup(paging_params))
+                        input type="submit" value="Next";
+                    }
                 } @else {
-                    a href=(format!("?{}p=2{}",
-                    default_sort_string(paging_params),
-                    default_limit_string(paging_params)))
-                    {"Next"}
+                    form {
+                        (default_sort_markup(paging_params))
+                        input type="hidden" name="p" value=(2);
+                        (default_limit_markup(paging_params))
+                        input type="submit" value="Next";
+                    }
                 }
             }
         }
@@ -332,10 +364,9 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
     html! {
         .pb {
             form {
+                (default_query_markup(Some(search_params)))
                 (sort_markup(paging_params))
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-                    input type="hidden" name="p" value=(page);
-                }
+                (default_page_markup(paging_params))
                 (limit_size_markup(paging_params))
 
                 select name="t" {
@@ -355,35 +386,50 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                         option value="Users" {"Users"}
                         option value="Url" {"URLs"}
                     }
-                    @if let Some(ref community) = search_params.c {
-                        input type="text" name="c" placeholder="Community" value=((community));
-                    } @else {
-                        input type="text" name="c" placeholder="Community";
-                    }
-                    input type="submit" value="Apply";
                 }
+
+                @if let Some(ref community) = search_params.c {
+                    input type="text" name="c" placeholder="Community" value=((community));
+                } @else {
+                    input type="text" name="c" placeholder="Community";
+                }
+
+                input type="submit" value="Apply";
             }
 
             div {
                 @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
                     @if page > &1 {
-                        a href=(format!("?{}p={}{}",
-                            default_sort_string(paging_params),
-                            page-1,
-                            default_limit_string(paging_params)))
-                            {"Prev"}
+                        form {
+                            (default_query_markup(Some(search_params)))
+                            (default_sort_markup(paging_params))
+                            input type="hidden" name="p" value=((page-1));
+                            (default_limit_markup(paging_params))
+                            (default_type_markup(Some(search_params)))
+                            (default_community_markup(Some(search_params)))
+                            input type="submit" value="Prev";
+                        }
                         " " (page) " "
                     }
-                    a href=(format!("?{}p={}{}",
-                        default_sort_string(paging_params),
-                        page+1,
-                        default_limit_string(paging_params)))
-                        {"Next"}
+                    form {
+                        (default_query_markup(Some(search_params)))
+                        (default_sort_markup(paging_params))
+                        input type="hidden" name="p" value=((page+1));
+                        (default_limit_markup(paging_params))
+                        (default_type_markup(Some(search_params)))
+                        (default_community_markup(Some(search_params)))
+                        input type="submit" value="Next";
+                    }
                 } @else {
-                    a href=(format!("?{}p=2{}",
-                    default_sort_string(paging_params),
-                    default_limit_string(paging_params)))
-                    {"Next"}
+                    form {
+                        (default_query_markup(Some(search_params)))
+                        (default_sort_markup(paging_params))
+                        input type="hidden" name="p" value=(2);
+                        (default_limit_markup(paging_params))
+                        (default_type_markup(Some(search_params)))
+                        (default_community_markup(Some(search_params)))
+                        input type="submit" value="Next";
+                    }
                 }
             }
         }
@@ -460,18 +506,50 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
     }
 }
 
-fn default_sort_string(paging_params: Option<&PagingParams>) -> String {
-    if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-        format!("s={}&", sort)
-    } else {
-        String::new()
+fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+            input type="hidden" name="s" value=((sort));
+        }
     }
 }
 
-fn default_limit_string(paging_params: Option<&PagingParams>) -> String {
-    if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
-        format!("&l={}", limit)
-    } else {
-        String::new()
+fn default_page_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+            input type="hidden" name="p" value=((page));
+        }
+    }
+}
+
+fn default_limit_markup(paging_params: Option<&PagingParams>) -> Markup {
+    html! {
+        @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+            input type="hidden" name="l" value=((limit));
+        }
+    }
+}
+
+fn default_query_markup(search_params: Option<&SearchParams>) -> Markup {
+    html! {
+        @if let Some(SearchParams {q: Some(query), ..}) = search_params {
+            input type="hidden" name="q" value=((query));
+        }
+    }
+}
+
+fn default_type_markup(search_params: Option<&SearchParams>) -> Markup {
+    html! {
+        @if let Some(SearchParams {t: Some(type_), ..}) = search_params {
+            input type="hidden" name="t" value=((type_));
+        }
+    }
+}
+
+fn default_community_markup(search_params: Option<&SearchParams>) -> Markup {
+    html! {
+        @if let Some(SearchParams {c: Some(community), ..}) = search_params {
+            input type="hidden" name="c" value=((community));
+        }
     }
 }

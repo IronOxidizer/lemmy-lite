@@ -2,6 +2,7 @@ use chrono::naive::NaiveDateTime;
 use serde::Deserialize;
 use actix_web::client::Client;
 use actix_web::Result;
+use actix_web::error::ErrorBadRequest;
 
 const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 
@@ -229,15 +230,15 @@ pub async fn get_community_list(client: &Client, instance: &String, paging_param
     ))
 }
 
-pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
-    let url = format_url(instance,"v1/community",
-        None, Some(format!("name={}", community)));
-    println!("Making request: {}", url);
+// pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
+//     let url = format_url(instance,"v1/community",
+//         None, Some(format!("name={}", community)));
+//     println!("Making request: {}", url);
 
-    Ok(CommunityDetail::from(
-        client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
-    ))
-}
+//     Ok(CommunityDetail::from(
+//         client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
+//     ))
+// }
 
 pub async fn get_post_list(client: &Client, instance: &String, community: Option<&i32>, community_name: Option<&String>,
     paging_params: Option<&PagingParams>) -> Result<PostList> {
@@ -252,8 +253,8 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
                 }
             }
         });
-    println!("Making request: {}", url);
 
+    println!("Making request: {}", url);
     Ok(PostList::from(
         client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
     ))
@@ -261,6 +262,7 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
 
 pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> Result<PostDetail> {
     let url = format_url(instance, "v1/post", None, Some(format!("id={}", post_id)));
+    
     println!("Making request: {}", url);
     Ok(PostDetail::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
@@ -268,12 +270,27 @@ pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> R
 pub async fn get_user(client: &Client, instance: &String, username: &String, paging_params: Option<&PagingParams>) -> Result<UserDetail> {
     let url = format_url(instance, "v1/user", paging_params, 
         Some(format!("saved_only=false&username={}", username)));
+
     println!("Making request: {}", url);
     Ok(UserDetail::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
 
 pub async fn search(client: &Client, instance: &String, search_params: &SearchParams) -> Result<SearchResponse> {
-    let url = format_url(instance, "v1/search", None, Some(String::new())); // TODO: Replace string new with params
+    let query = search_params.q.clone().ok_or(ErrorBadRequest("Query cannot be empty"))?;
+    let url = format_url(instance, "v1/search", Some(&search_params.to_paging_params()),
+        Some(format!("q={}&{}{}", query,
+            match &search_params.t {
+                Some(type_) => format!("type_={}&", type_),
+                None => "type_=All&".to_string()
+            },
+            match &search_params.c {
+                Some(community) => format!("community_name={}&", community),
+                None => String::new()
+           } 
+        ))
+    );
+
+    println!("Making request: {}", url);
     Ok(SearchResponse::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
 

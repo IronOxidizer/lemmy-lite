@@ -99,26 +99,27 @@ table {
 }
 .pb>form {
     float: left;
-    margin-bottom: 4px;
 }
 .pb>div {
-    margin-top: 2px;
     float: right;
+    margin-bottom: 4px;
 }
 .pb>form>input[type=text] {
     width: 89px
 }
-.pb>*>* {
+.pb input,.pb select {
     border: 0;
     border-radius: 3px;
     background-color: #333;
     color: #dedede;
     margin: 2px;
-    cursor: pointer;
+    cursor: pointer
 }
-.pb>div>a {
-    padding: 0 4px
+.pb form {
+    display: inline-block;
+    margin: 0
 }
+
 
 .highlight {
     background-color: #333;
