@@ -104,9 +104,6 @@ table {
     float: right;
     margin-bottom: 4px;
 }
-.pb>form>input[type=text] {
-    width: 89px
-}
 .pb input,.pb select {
     border: 0;
     border-radius: 3px;
@@ -118,6 +115,10 @@ table {
 .pb form {
     display: inline-block;
     margin: 0
+}
+.pb input[type=text] {
+    width: 89px;
+    cursor: text
 }
 
 

@@ -75,3 +75,14 @@ lemmy-lite: Mobile
 ## iOS Quirks
 
 1. Highlights break with non-default CSS `word-spacing`
+
+## Update Script
+
+```
+killall lemmy-lite
+git pull
+gzip -rk9f static
+sudo rm -rf /etc/nginx/lemmy-lite
+sudo cp -rf static /etc/nginx/lemmy-lite
+nohup cargo +nightly run --release &
+```
