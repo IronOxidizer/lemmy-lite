@@ -46,13 +46,14 @@ lemmy-lite: Mobile
 
 ## Notes
 
-1. First load fetches a stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
-2. I use CSS Tables instead of FlexBox and Grid because Tables are [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight), simpler, and have much better legacy support. Using CSS tables over HTML tables avoids excess DOM objects.
-3. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
-4. 1.0.0 is set for when account functionality is stabilized.
-5. Ideally, static content is served through a CDN to further improve server performance and response times.
-6. Strictly only uses characters from [BMP](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane) for legacy font support.
-7. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
+1. As of 0.2.0 (Aug2020) worst case scenario ([240 comment thread](https://lemmylite.crabdance.com/dev.lemmy.ml/post/30493)) takes 9ms to render on server.
+2. First load fetches a stylesheet, favicon, and svgs. These are cached so all subsequent pages require only a single HTML request.
+3. I use CSS Tables instead of FlexBox and Grid because Tables are [faster](https://benfrain.com/css-performance-test-flexbox-v-css-table-fight), simpler, and have much better legacy support. Using CSS tables over HTML tables avoids excess DOM objects.
+4. Each page refresh is limited to API critical chain of 1 to limit the impact on instances and to keep page times fast.
+5. 1.0.0 is set for when account functionality is stabilized.
+6. Ideally, static content is served through a CDN to further improve server performance and response times.
+7. Strictly only uses characters from [BMP](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane) for legacy font support.
+8. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
 
 ## TODO
 

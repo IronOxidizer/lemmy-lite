@@ -3,8 +3,7 @@ use serde::Deserialize;
 use actix_web::client::Client;
 use actix_web::Result;
 use actix_web::error::ErrorBadRequest;
-use url::{Url, ParseError, UrlQuery};
-use url::form_urlencoded::Serializer;
+use url::{Url, ParseError};
 
 const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 
