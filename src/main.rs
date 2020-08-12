@@ -129,7 +129,7 @@ async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Res
             Ok(cid) => cid,
             Err(_) => return Err(error::ErrorExpectationFailed("Comment ID is invalid"))
         };
-        let comment = match post_detail.comments.iter().find(|c| c.id == comment_id) {
+        let comment = match post_detail.comments.iter().find(|ref c| c.id == comment_id) {
             Some(c) => c.clone(),
             None => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
         };

@@ -142,8 +142,13 @@ pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<&S
         #cw {
             (searchbar_markup(search_params))
             @if let Some(results) = search_res {
+                @for comment in &results.comments {
+                    (comment_markup(instance, comment, None, None, now, None))
+                    hr;
+                }
                 @for post in &results.posts {
                     (post_markup(instance, post, now))
+                    hr;
                 }
                 (searchbar_markup(search_params))
             } @else {
