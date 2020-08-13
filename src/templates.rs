@@ -119,7 +119,9 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
 pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html!{
         (headers_markup())
-        (navbar_markup(instance, None, None))
+        (navbar_markup(instance, Some(html!{
+            a.username href={"/" (instance) "/u/" (user.user.name)} {"/u/" (user.user.name)}
+        }), None))
         #cw {
             div { (pagebar_markup(paging_params)) }
             @for post in user.posts {

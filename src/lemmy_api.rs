@@ -206,7 +206,7 @@ struct CommunityFollowerView {
 
 #[derive(Deserialize)]
 pub struct UserDetail {
-    user: UserView,
+    pub user: UserView,
     follows: Vec<CommunityFollowerView>,
     moderates: Vec<CommunityModeratorView>,
     pub comments: Vec<CommentView>,
