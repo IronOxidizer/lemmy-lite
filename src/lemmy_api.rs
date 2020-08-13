@@ -169,7 +169,7 @@ pub struct CommunityModeratorView {
 #[derive(Deserialize)]
 pub struct UserView {
     id: i32,
-    name: String,
+    pub name: String,
     avatar: Option<String>,
     email: Option<String>,
     matrix_user_id: Option<String>,
@@ -179,10 +179,10 @@ pub struct UserView {
     show_avatars: bool,
     send_notifications_to_email: bool,
     published: NaiveDateTime,
-    number_of_posts: i32,
-    post_score: i32,
-    number_of_comments: i32,
-    comment_score: i32,
+    pub number_of_posts: i32,
+    pub post_score: i32,
+    pub number_of_comments: i32,
+    pub comment_score: i32,
 }
 
 #[derive(Deserialize)]

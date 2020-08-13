@@ -57,16 +57,12 @@ lemmy-lite: Mobile
 
 ## TODO
 
-1. Fix communities, make markup modular to be reused in search.
-2. Implement post search page and UI including filters.
-3. If within a community, restrict search to community by default.
-4. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
-5. Add instance info column that moves to the bottom when there's no space like `Lemmy` in mobile view.
-6. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
-7. Use 1 letter HTML class names.
-8. Use 1 letter static file names except for favicon and index.
-9. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
-10. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
+1. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
+2. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
+3. Use 1 letter HTML class names.
+4. Use 1 letter static file names except for favicon and index.
+5. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
+6. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
 ## NetSurf Quirks
 

@@ -1,6 +1,6 @@
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup};
-use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserDetail, PagingParams, SearchParams, SearchResponse};
+use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
 const STYLESHEET: &str = "/style.css";
@@ -24,17 +24,19 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
         }), None))
         #cw {
             (pagebar_markup(paging_params))
-            table {
-                tr {
-                    th {"Name"}
-                    th {"Title"}
-                    th {"Category"}
-                    th {"Subscribers"}
-                    th {"Posts"}
-                    th {"Comments"}
-                }
-                @for community in community_list.communities {
-                    (community_markup(instance, community))
+            .tw {
+                table {
+                    tr {
+                        th {"Name"}
+                        th {"Title"}
+                        th {"Category"}
+                        th {"Subscribers"}
+                        th {"Posts"}
+                        th {"Comments"}
+                    }
+                    @for community in &community_list.communities {
+                        (community_markup(instance, community))
+                    }
                 }
             }
             (pagebar_markup(paging_params))
@@ -120,12 +122,12 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
         (navbar_markup(instance, None, None))
         #cw {
             div { (pagebar_markup(paging_params)) }
-            @for comment in user.comments {
-                (comment_markup(instance, &comment, None, None, now, None))
-                hr;
-            }
             @for post in user.posts {
                 (post_markup(instance, &post, now))
+                hr;
+            }
+            @for comment in user.comments {
+                (comment_markup(instance, &comment, None, None, now, None))
                 hr;
             }
             (pagebar_markup(paging_params))
@@ -142,12 +144,48 @@ pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<&S
         #cw {
             (searchbar_markup(search_params))
             @if let Some(results) = search_res {
-                @for comment in &results.comments {
-                    (comment_markup(instance, comment, None, None, now, None))
+                @if !results.communities.is_empty() {
+                    .tw {
+                        table {
+                            tr {
+                                th {"Community"}
+                                th {"Title"}
+                                th {"Category"}
+                                th {"Subscribers"}
+                                th {"Posts"}
+                                th {"Comments"}
+                            }
+                            @for community in &results.communities {
+                                (community_markup(instance, community))
+                            }
+                        }
+                    }
+                    hr;
+                }
+
+                @if !results.users.is_empty() {
+                    .tw {
+                        table {
+                            tr {
+                                th {"User"}
+                                th {"Post Score"}
+                                th {"Posts"}
+                                th {"Comment Score"}
+                                th {"Comments"}
+                            }
+                            @for user in &results.users {
+                                (user_markup(instance, user))
+                            }
+                        }
+                    }
                     hr;
                 }
                 @for post in &results.posts {
                     (post_markup(instance, post, now))
+                    hr;
+                }
+                @for comment in &results.comments {
+                    (comment_markup(instance, comment, None, None, now, None))
                     hr;
                 }
                 (searchbar_markup(search_params))
@@ -194,7 +232,7 @@ fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option
     }
 }
 
-fn community_markup(instance: &String, community: CommunityView) -> Markup {
+fn community_markup(instance: &String, community: &CommunityView) -> Markup {
     html! {
         tr {
             td {a.community href= {"/" (instance) "/c/" (community.name)} {
@@ -202,9 +240,23 @@ fn community_markup(instance: &String, community: CommunityView) -> Markup {
             }}
             td {(community.title)}
             td {(community.category_name)}
-            td {(community.number_of_subscribers)}
-            td {(community.number_of_posts)}
-            td {(community.number_of_comments)}
+            td.ar {(community.number_of_subscribers)}
+            td.ar {(community.number_of_posts)}
+            td.ar {(community.number_of_comments)}
+        }
+    }
+}
+
+fn user_markup(instance: &String, user: &UserView) -> Markup {
+    html! {
+        tr {
+            td {a.username href= {"/" (instance) "/u/" (user.name)} {
+                (user.name)
+            }}
+            td.ar {(user.post_score)}
+            td.ar {(user.number_of_posts)}
+            td.ar {(user.comment_score)}
+            td.ar {(user.number_of_comments)}
         }
     }
 }

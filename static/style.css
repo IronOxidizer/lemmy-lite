@@ -14,8 +14,25 @@ a {
     text-decoration: inherit
 }
 
+.tw {
+    word-break: keep-all;
+    overflow-x: auto;
+}
+
+.ar {
+    text-align: right
+}
+
 table {
-    border-spacing: 0 .5em;
+    width: 100%;
+    min-width: 704px;
+    border-collapse: collapse;
+}
+td {
+    border-top: 1px solid #333;
+}
+td, th {
+    padding: 6px;
 }
 
 /* Content wrapper */
@@ -159,12 +176,12 @@ table {
     display: none
 }
 
-/* Comment thread branch */
 .br {
-    border-top: 1px solid #282828;
+    border-top: 1px solid #333;
     margin-top: 4px;
     padding-top: 4px;
 }
+/* Comment thread branch */
 .b0, .b1, .b2, .b3, .b4, .b5 {
     margin-top: 4px;
     padding: 4px 0 0 4px;
