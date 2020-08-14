@@ -1,7 +1,7 @@
 # lemmy-lite
 A static, JSless, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
 
-This project is not intended for official use, but rather as a proof-of-concept for pre-rendering [Lemmy](https://github.com/LemmyNet/lemmy). Eventually it will transition into a microservice that is ran alongside [Lemmy](https://github.com/LemmyNet/lemmy), for example, under a *lite.lemmy.com* sub domain. Ideally it will run on the same machine removing any extra latency in API calls.
+This project is not intended for official use, but rather as a proof-of-concept for pre-rendering [Lemmy](https://github.com/LemmyNet/lemmy). Eventually it will transition into a microservice that is ran alongside Lemmy, for example, under *lite.lemmy.com* or *lemmy.com/lite*. Ideally it will run on the same machine removing any extra latency in API calls.
 
 ### Built With
 
@@ -15,7 +15,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - Open source, [AGPL License](/LICENSE).
 - Cross-instance support, get a lite version of any Lemmy instance.
 - JSless using pre-rendered HTML and CSS only.
-- Touch-friendly.
+- Touch and mobile friendly.
 - Small screen support, as small as 320px.
 - Internet Exporer and NetSurf compatible.
 - High performance.
@@ -25,7 +25,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
   
 ## Installation
 
-- Symlink won't work since nginx user (root) requires ownership of linked file
+- Symlinks won't work since nginx user (root) requires ownership of linked file
 - GZip static to allow serving of compressed files for lower bandwith usage
 - Rust nightly is required, use `rustup`
 ```
