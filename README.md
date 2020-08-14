@@ -38,11 +38,9 @@ cargo +nightly run --release
 
 ## Pictures
 
-lemmy-lite: FireFox
-![lemmy-lite: FireFox](https://user-images.githubusercontent.com/60191958/84398555-1872a280-abce-11ea-8e87-a06b3165a77e.png)
-
-lemmy-lite: Mobile
-![lemmy-lite: Mobile](https://user-images.githubusercontent.com/60191958/84398664-39d38e80-abce-11ea-862d-d2d5cb98a89b.png)
+Desktop|Mobile
+---|---
+![Desktop](https://user-images.githubusercontent.com/60191958/90256040-1bc71c00-de13-11ea-995d-9d53fbfd688c.png)|![Mobile](https://user-images.githubusercontent.com/60191958/90256350-9a23be00-de13-11ea-8411-a9b34cb32cae.png)
 
 ## Notes
 
