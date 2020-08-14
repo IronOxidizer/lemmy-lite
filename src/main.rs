@@ -13,7 +13,7 @@ use chrono::offset::Utc;
 use serde::Deserialize;
 use actix_web::{web, App, HttpServer, Result, error};
 use actix_web::client::Client;
-use maud::{Markup};
+use maud::Markup;
 
 mod templates;
 mod lemmy_api;
@@ -97,7 +97,7 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
 
 async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();
-    let now= &Utc::now().naive_utc();
+    let now = &Utc::now().naive_utc();
     let paging_params = &query.into_inner();
 
     if p.command == "post" {

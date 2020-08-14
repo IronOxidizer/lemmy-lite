@@ -1,5 +1,6 @@
 use chrono::naive::NaiveDateTime;
-use maud::{html, Markup};
+use maud::{html, Markup, PreEscaped};
+use pulldown_cmark::{Parser, html as pchtml};
 use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
@@ -80,7 +81,7 @@ pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime
             (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
-                p { (body)}
+                p { (mdstr_to_html(body))}
             }
             hr;
             
@@ -104,7 +105,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
             (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
-                p {(body)}
+                p {(mdstr_to_html(body))}
             }
             hr;
             
@@ -308,9 +309,9 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
     }
 }
 
-fn comment_details_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, now: &NaiveDateTime) -> Markup {
+fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
     return html! {
-        p.ch {
+        p.ch.highlight[Some(comment.id) == highlight_id] {
             a.username href={"/" (instance) "/u/" (comment.creator_name)} {
                 (comment.creator_name)
             }
@@ -333,24 +334,14 @@ fn comment_details_markup(instance: &String, comment: &CommentView, post_creator
 
 fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime, children: Option<Markup>) -> Markup {
     html! {
-        @if let Some(hid) = highlight_id {
-            @if comment.id == hid {
-                .highlight {
-                    (comment_details_markup(instance, comment, post_creator_id, now))
-                }
-            } @else {
-                (comment_details_markup(instance, comment, post_creator_id, now))
-            }
-        } @else {
-            (comment_details_markup(instance, comment, post_creator_id, now))
-        }
+        (comment_header_markup(instance, comment, post_creator_id, highlight_id, now))
         
         @if children.is_some() {
             input.cc type="checkbox";
         }
         
         div {
-            (comment.content)
+            (mdstr_to_html(comment.content.as_str()))
             @if let Some(c) = children {
                 (c);
             }
@@ -539,32 +530,6 @@ fn limit_size_markup(paging_params: Option<&PagingParams>) -> Markup {
     }
 }
 
-fn ends_with_any(s: String, suffixes: &'static [&'static str]) -> bool {
-    return suffixes.iter().any(|&suffix| s.to_lowercase().ends_with(suffix));
-}
-
-fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
-    let seconds = now.signed_duration_since(record).num_seconds();
-    if seconds < 60 {
-        format!("{}s", seconds)
-    } else if seconds < 3600 {
-        format!("{}m",
-            now.signed_duration_since(record).num_minutes())
-    } else if seconds < 86400 {
-        format!("{}h",
-            now.signed_duration_since(record).num_hours())
-    } else if seconds < 2629746 {
-        format!("{}d",
-            now.signed_duration_since(record).num_days())
-    } else if seconds < 31556952 {
-        format!("{}mo",
-            now.signed_duration_since(record).num_weeks() / 4)
-    } else {
-        format!("{}y",
-            now.signed_duration_since(record).num_weeks() / 52)
-    }
-}
-
 fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
         @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
@@ -611,4 +576,37 @@ fn default_community_markup(search_params: Option<&SearchParams>) -> Markup {
             input type="hidden" name="c" value=((community));
         }
     }
+}
+
+fn ends_with_any(s: String, suffixes: &'static [&'static str]) -> bool {
+    return suffixes.iter().any(|&suffix| s.to_lowercase().ends_with(suffix));
+}
+
+fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
+    let seconds = now.signed_duration_since(record).num_seconds();
+    if seconds < 60 {
+        format!("{}s", seconds)
+    } else if seconds < 3600 {
+        format!("{}m",
+            now.signed_duration_since(record).num_minutes())
+    } else if seconds < 86400 {
+        format!("{}h",
+            now.signed_duration_since(record).num_hours())
+    } else if seconds < 2629746 {
+        format!("{}d",
+            now.signed_duration_since(record).num_days())
+    } else if seconds < 31556952 {
+        format!("{}mo",
+            now.signed_duration_since(record).num_weeks() / 4)
+    } else {
+        format!("{}y",
+            now.signed_duration_since(record).num_weeks() / 52)
+    }
+}
+
+fn mdstr_to_html(text: &str) -> Markup {
+    let parser = Parser::new(text);
+    let mut html_output = String::new();
+    pchtml::push_html(&mut html_output, parser);
+    PreEscaped(html_output)
 }

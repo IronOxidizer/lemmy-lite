@@ -8,6 +8,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - [Rust](https://www.rust-lang.org)
 - [Actix](https://actix.rs) - [Benchmarks](https://www.techempower.com/benchmarks/#test=composite)
 - [Maud](https://maud.lambda.xyz) - [Benchmarks](https://ironoxidizer.github.io/ironoxidizer/blog/20200623-fastest-templating-engine)
+- [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark)
 
 ## Features
 
@@ -55,7 +56,7 @@ Desktop|Mobile
 
 ## TODO
 
-1. Implement server side markdown rendering for comments and text post body using [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark).
+1. Fix `rustls` panic.
 2. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
 3. Use 1 letter HTML class names.
 4. Use 1 letter static file names except for favicon and index.

@@ -14,13 +14,13 @@ a {
     text-decoration: inherit
 }
 
-.tw {
-    word-break: keep-all;
-    overflow-x: auto;
+p {
+    margin-top: 0
 }
-
-.ar {
-    text-align: right
+blockquote {
+    border-left: 2px solid #333;
+    padding-left: 4px;
+    margin: 0 5 16 5
 }
 
 table {
@@ -31,8 +31,17 @@ table {
 td {
     border-top: 1px solid #333;
 }
-td, th {
+td,th {
     padding: 6px;
+}
+
+.tw {
+    word-break: keep-all;
+    overflow-x: auto;
+}
+
+.ar {
+    text-align: right
 }
 
 /* Content wrapper */
@@ -138,7 +147,6 @@ td, th {
     cursor: text
 }
 
-
 .highlight {
     background-color: #333;
     display: inline-block;
@@ -156,7 +164,7 @@ td, th {
 .ch {
     display: inline-block;
     word-spacing: 1em;
-    margin-top: 0
+    margin: 4 0
 }
 .cc {
     cursor: pointer;
