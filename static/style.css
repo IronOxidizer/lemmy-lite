@@ -10,17 +10,20 @@ body {
 }
 
 a {
-    color: inherit;
-    text-decoration: inherit
+    text-decoration: inherit;
+    color: #00bc8c
 }
-
 p {
-    margin-top: 0
+    margin: 5px 0
+}
+ul {
+    margin-top: 5px;
+    margin-bottom: 5px
 }
 blockquote {
     border-left: 2px solid #333;
     padding-left: 4px;
-    margin: 0 5 16 5
+    margin: 4px
 }
 
 table {
@@ -56,6 +59,9 @@ td,th {
     display: table-cell;
     vertical-align: middle
 }
+.row a {
+    color: inherit;
+}
 
 .preview {
     width: 64px;
@@ -69,14 +75,12 @@ td,th {
 }
 
 .username {
-    color: #dedede;
+    color: #dedede !important;
     font-weight: bold
 }
-
-.community {
-    color: #00bc8c
+.l {
+    color: #00bc8c !important;
 }
-
 .badge {
     background-color: #444;
     color: #dedede;
@@ -87,6 +91,9 @@ td,th {
 
 #navbar {
     text-align: center
+}
+#navbar a {
+    color: inherit
 }
 #navbar>* {
     display: inline-block;
@@ -186,13 +193,11 @@ td,th {
 
 .br {
     border-top: 1px solid #333;
-    margin-top: 4px;
-    padding-top: 4px;
+    padding-top: 5px;
 }
 /* Comment thread branch */
 .b0, .b1, .b2, .b3, .b4, .b5 {
-    margin-top: 4px;
-    padding: 4px 0 0 4px;
+    padding: 5px 0 0 4px;
     border-top: 1px solid #333
 }
 .b0 {

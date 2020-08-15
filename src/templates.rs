@@ -1,6 +1,11 @@
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup, PreEscaped};
-use pulldown_cmark::{Parser, html as pchtml};
+use pulldown_cmark::{
+    Parser,
+    html as pchtml,
+    Event::{Start, End},
+    Tag::{Image, Link}
+};
 use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
@@ -21,7 +26,7 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.community href={"/" (instance) "/communities"} {"/communities"}
+            a.l href={"/" (instance) "/communities"} {"/communities"}
         }), None))
         #cw {
             (pagebar_markup(paging_params))
@@ -51,7 +56,7 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
         (navbar_markup(
             instance,
             community.map(|c| html!{
-                a.community href=(c) {"/c/" (c)}
+                a.l href=(c) {"/c/" (c)}
             }), 
             community.map(|c| SearchParams {
                 q: None,
@@ -142,7 +147,7 @@ pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<&S
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.community href={"/" (instance) "/search"} {"/search"}
+            a.l href={"/" (instance) "/search"} {"/search"}
         }), Some(search_params)))
         #cw {
             (searchbar_markup(search_params))
@@ -238,7 +243,7 @@ fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option
 fn community_markup(instance: &String, community: &CommunityView) -> Markup {
     html! {
         tr {
-            td {a.community href= {"/" (instance) "/c/" (community.name)} {
+            td {a.l href= {"/" (instance) "/c/" (community.name)} {
                 (community.name)
             }}
             td {(community.title)}
@@ -295,7 +300,7 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                         (post.creator_name)
                     }
                     " to "
-                    a.community href= {"/" (instance) "/c/" (post.community_name)} {
+                    a.l href= {"/" (instance) "/c/" (post.community_name)} {
                         (post.community_name)
                     }
                     " • ˄ " (post.upvotes) " ˅ " (post.downvotes)
@@ -327,7 +332,6 @@ fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_
             }
             
             (simple_duration(now, comment.published))
-
         }
     }
 }
@@ -364,7 +368,6 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
         }
     }
 }
-
 
 fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
@@ -605,7 +608,18 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
 }
 
 fn mdstr_to_html(text: &str) -> Markup {
-    let parser = Parser::new(text);
+    let parser = Parser::new(text)
+        .map(|event| match event { // Remove image rendering by default to save user data usage
+            Start(Image(linktype, url, title)) if title.is_empty() =>
+                Start(Link(linktype, url.clone(), url)),
+            Start(Image(linktype, url, title)) =>
+                Start(Link(linktype, url, title)),
+            End(Image(linktype, url, title)) if title.is_empty() =>
+                End(Link(linktype, url.clone(), url)),
+            End(Image(linktype, url, title)) =>
+                End(Link(linktype, url, title)),
+            _ => event,
+        });
     let mut html_output = String::new();
     pchtml::push_html(&mut html_output, parser);
     PreEscaped(html_output)

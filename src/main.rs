@@ -11,10 +11,8 @@ ds9.lemmy.ml
 
 use chrono::offset::Utc;
 use serde::Deserialize;
-use actix_web::{web, App, HttpServer, Result, error};
-use actix_web::client::Client;
+use actix_web::{web, App, HttpServer, Result, error, client::Client};
 use maud::Markup;
-
 mod templates;
 mod lemmy_api;
 
@@ -44,6 +42,27 @@ struct PathParams5 {
     id: String,
     sub_command: String,
     sub_id: String
+}
+
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| { App::new()
+        .service(
+            web::resource("/").route(web::get().to(index))
+        ).route(
+            "/{inst}", web::get().to(lvl1)
+        ).route(
+            "/{inst}/{command}", web::get().to(lvl2)
+        ).route(
+            "/{inst}/{command}/{id}", web::get().to(lvl3)
+        // ).route(
+        //     "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
+        ).route(
+            "/{inst}/{command}/{id}/{sub_command}/{sub_id}", web::get().to(lvl5)
+        )
+    })
+    .bind("127.0.0.1:1131")?
+    .run().await
 }
 
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<Markup> {
@@ -138,25 +157,4 @@ async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Res
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
-}
-
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| { App::new()
-        .service(
-            web::resource("/").route(web::get().to(index))
-        ).route(
-            "/{inst}", web::get().to(lvl1)
-        ).route(
-            "/{inst}/{command}", web::get().to(lvl2)
-        ).route(
-            "/{inst}/{command}/{id}", web::get().to(lvl3)
-        // ).route(
-        //     "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
-        ).route(
-            "/{inst}/{command}/{id}/{sub_command}/{sub_id}", web::get().to(lvl5)
-        )
-    })
-    .bind("127.0.0.1:1131")?
-    .run().await
 }

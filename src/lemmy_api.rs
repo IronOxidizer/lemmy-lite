@@ -1,8 +1,6 @@
 use chrono::naive::NaiveDateTime;
 use serde::Deserialize;
-use actix_web::client::Client;
-use actix_web::Result;
-use actix_web::error::ErrorBadRequest;
+use actix_web::{Result, client::Client, error::ErrorBadRequest};
 use url::{Url, ParseError};
 
 const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
@@ -252,7 +250,9 @@ pub async fn get_post_list(client: &Client, instance: &String, community: Option
     if let Some(cid) = community {
         url_builder.append_pair("community_id", cid.to_string().as_str());
     } else if let Some(cn) = community_name {
-        url_builder.append_pair("community_name", cn);
+        if !cn.is_empty() {
+            url_builder.append_pair("community_name", cn);
+        }
     }
     let url = url_builder.finish().to_string();
 
