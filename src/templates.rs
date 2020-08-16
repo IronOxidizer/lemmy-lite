@@ -305,11 +305,13 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                     a.l href= {"/" (instance) "/c/" (post.community_name)} {
                         (post.community_name)
                     }
-                    " • ˄ " (post.upvotes) " ˅ " (post.downvotes)
-                    a href={"/" (instance) "/post/" (post.id )} {
-                        " • ✉ " (post.number_of_comments)
+                    div {
+                        "˄ " (post.upvotes) " ˅ " (post.downvotes)
+                        a href={"/" (instance) "/post/" (post.id )} {
+                            " • ✉ " (post.number_of_comments)
+                        }
+                        " • " (simple_duration(now, post.published))
                     }
-                    " • " (simple_duration(now, post.published))
                 }
             }
         }

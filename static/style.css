@@ -167,6 +167,12 @@ td,th {
     font-size: 0.7em;
 }
 
+.mute>* {
+    display: inline-block
+}
+.mute>.l{
+    margin-right: 4px
+}
 /* Comment header and Comment collapsable */
 .ch {
     display: inline-block;
