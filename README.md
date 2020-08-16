@@ -56,7 +56,8 @@ Desktop|Mobile
 
 ## TODO
 
-1. Fix `rustls` panic.
+0. Fix `rustls` panic.
+1. Switch to updated `@` and `!` syntax for users and communities respectively.
 2. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
 3. Use 1 letter HTML class names.
 4. Use 1 letter static file names except for favicon and index.
@@ -78,7 +79,18 @@ Desktop|Mobile
 killall lemmy-lite
 git pull
 gzip -rk9f static
+for i in static/*gz; do
+  [ -f "$i" ] || break
+  j="${i%.*}"
+  if((`stat -c%s "$i"`>=`stat -c%s "$j"`));then
+    echo "$i is larger than base, deleting"
+    rm -f "$i"
+  fi
+done
 sudo rm -rf /etc/nginx/lemmy-lite
 sudo cp -rf static /etc/nginx/lemmy-lite
 nohup cargo +nightly run --release &
 ```
+
+
+

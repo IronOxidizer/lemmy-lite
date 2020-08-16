@@ -206,7 +206,8 @@ pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<&S
 
 fn headers_markup() -> Markup {
     html! {
-        meta charset="utf8" name="viewport" content="width=device-width,user-scalable=no,initial-scale=1";
+        meta charset="utf8" name="mobile-web-app-capable" content="yes";
+        meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1";
         meta name="theme-color" content="#222";
         link rel="stylesheet" href=(STYLESHEET);
     }
