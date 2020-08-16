@@ -78,6 +78,7 @@ Desktop|Mobile
 ```
 killall lemmy-lite
 git pull
+rm static/*.gz
 gzip -rk9f static
 for i in static/*gz; do
   [ -f "$i" ] || break
