@@ -8,7 +8,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 - [Rust](https://www.rust-lang.org)
 - [Actix](https://actix.rs) - [Benchmarks](https://www.techempower.com/benchmarks/#test=composite)
 - [Maud](https://maud.lambda.xyz) - [Benchmarks](https://ironoxidizer.github.io/ironoxidizer/blog/20200623-fastest-templating-engine)
-- [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark) - [Benchmarks](https://github.com/IronOxidizer/markdown-benchmarks)
+- [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark) - [Benchmarks](https://github.com/1Password/markdown-benchmarks)
 
 ## Features
 
