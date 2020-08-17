@@ -1,11 +1,6 @@
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup, PreEscaped};
-use pulldown_cmark::{
-    Parser,
-    html as pchtml,
-    Event::{Start, End},
-    Tag::{Image, Link}
-};
+use pulldown_cmark::{Parser, CowStr, Event, Tag, html as pchtml};
 use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityModeratorView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse, CommunityDetail};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
@@ -693,20 +688,52 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
     }
 }
 
+// Custom markdown to HTML
 fn mdstr_to_html(text: &str) -> Markup {
-    let parser = Parser::new(text)
-        .map(|event| match event { // Remove image rendering by default to save user data usage
-            Start(Image(linktype, url, title)) if title.is_empty() =>
-                Start(Link(linktype, url.clone(), url)),
-            Start(Image(linktype, url, title)) =>
-                Start(Link(linktype, url, title)),
-            End(Image(linktype, url, title)) if title.is_empty() =>
-                End(Link(linktype, url.clone(), url)),
-            End(Image(linktype, url, title)) =>
-                End(Link(linktype, url, title)),
-            _ => event,
-        });
+    let parser = ImageSwapper::new(Parser::new(text));
     let mut html_output = String::new();
     pchtml::push_html(&mut html_output, parser);
     PreEscaped(html_output)
+}
+struct ImageSwapper<'a, I> {
+    iter: I,
+    image_title: Option<CowStr<'a>>,
+}
+impl<'a, I> ImageSwapper<'a, I> {
+    fn new(iter: I) -> Self {
+        ImageSwapper {
+            iter: iter,
+            image_title: None,
+        }
+    }
+}
+impl<'a, I> Iterator for ImageSwapper<'a, I>
+    where I: ::std::iter::Iterator<Item = Event<'a>>
+{
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut title = None;
+        ::std::mem::swap(&mut self.image_title, &mut title);
+
+        match title {
+            None => self.iter.next().map(|event| match event {
+                Event::Start(Tag::Image(linktype, url, title)) if title.is_empty() => {
+                    self.image_title = Some(url.clone());
+                    Event::Start(Tag::Link(linktype, url, title))
+                }
+                Event::Start(Tag::Image(linktype, url, title)) => {
+                    self.image_title = Some(title.clone());
+                    Event::Start(Tag::Link(linktype, url, title))
+                }
+                Event::End(Tag::Image(linktype, url, title)) =>
+                    Event::End(Tag::Link(linktype, url, title)),
+                _ => event,
+            }),
+            Some(title) => {
+                self.image_title = None;
+                Some(Event::Text(title))
+            }
+        }
+    }
 }
