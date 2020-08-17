@@ -39,9 +39,9 @@ cargo +nightly run --release
 
 ## Pictures
 
-Desktop|Mobile
----|---
-![Desktop](https://user-images.githubusercontent.com/60191958/90257112-b542fd80-de14-11ea-9b84-752b5b691631.png)|![Mobile](https://user-images.githubusercontent.com/60191958/90256779-351c9800-de14-11ea-8189-092283c8fe28.png)
+Desktop|Android|iOS
+---|---|---
+![Desktop](https://user-images.githubusercontent.com/60191958/90257112-b542fd80-de14-11ea-9b84-752b5b691631.png)|![Android](https://user-images.githubusercontent.com/60191958/90256779-351c9800-de14-11ea-8189-092283c8fe28.png)|![iOS](https://user-images.githubusercontent.com/60191958/90353627-b0e53300-e014-11ea-8a08-c7fd03105d1f.png)
 
 ## Notes
 
