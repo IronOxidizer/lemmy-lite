@@ -224,3 +224,8 @@ td,th {
 .b5 {
     border-left:2px solid #ac53ac
 }
+
+#ft {
+    display: block;
+    text-align: center
+}

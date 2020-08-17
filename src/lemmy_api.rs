@@ -50,7 +50,7 @@ pub struct CommunityView {
     pub id: i32,
     pub name: String,
     pub title: String,
-    description: Option<String>,
+    pub description: Option<String>,
     category_id: i32,
     creator_id: i32,
     removed: bool,
@@ -64,7 +64,7 @@ pub struct CommunityView {
     pub number_of_subscribers: i32,
     pub number_of_posts: i32,
     pub number_of_comments: i32,
-    hot_rank: i32,
+    pub hot_rank: i32,
     user_id: Option<i32>,
     subscribed: Option<bool>
 }
@@ -159,7 +159,7 @@ pub struct CommunityModeratorView {
     community_id: i32,
     user_id: i32,
     published: String,
-    user_name: String,
+    pub user_name: String,
     avatar: Option<String>,
     community_name: String,
 }
@@ -186,9 +186,9 @@ pub struct UserView {
 #[derive(Deserialize)]
 pub struct CommunityDetail {
     pub community: CommunityView,
-    moderators: Vec<CommunityModeratorView>,
-    admins: Vec<UserView>,
-    online: i32
+    pub moderators: Vec<CommunityModeratorView>,
+    pub admins: Option<Vec<UserView>>,
+    pub online: i32
 }
 
 #[derive(Deserialize)]
@@ -230,15 +230,17 @@ pub async fn get_community_list(client: &Client, instance: &String, paging_param
     ))
 }
 
-// pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
-//     let url = format_url(instance,"v1/community",
-//         None, Some(format!("name={}", community)));
-//     println!("Making request: {}", url);
+pub async fn get_community(client: &Client, instance: &String, community: &String) -> Result<CommunityDetail> {
+    let mut base_url = build_url(instance, "v1/community", None)
+        .map_err(|e| ErrorBadRequest(e.to_string()))?;
+    let mut url_builder = base_url.query_pairs_mut();
+    let url = url_builder.append_pair("name", community.as_str()).finish().to_string();
 
-//     Ok(CommunityDetail::from(
-//         client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
-//     ))
-// }
+    println!("Making request: {}", url);
+    Ok(CommunityDetail::from(
+        client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?
+    ))
+}
 
 pub async fn get_post_list(client: &Client, instance: &String, community: Option<&i32>, community_name: Option<&String>,
     paging_params: Option<&PagingParams>) -> Result<PostList> {

@@ -16,8 +16,8 @@ use maud::Markup;
 mod templates;
 mod lemmy_api;
 
-use crate::templates::{redirect_page, post_list_page, post_page, comment_page, communities_page, user_page, search_page};
-use crate::lemmy_api::{PagingParams, SearchParams, get_post_list, get_post, get_community_list, get_user, search};
+use crate::templates::{redirect_page, post_list_page, post_page, comment_page, community_info_page, communities_page, user_page, search_page};
+use crate::lemmy_api::{PagingParams, SearchParams, get_post_list, get_post, get_community, get_community_list, get_user, search};
 
 #[derive(Deserialize)]
 struct RedirForm {
@@ -35,6 +35,15 @@ struct PathParams3 {
     command: String,
     id: String
 }
+
+#[derive(Deserialize)]
+struct PathParams4 {
+    inst: String,
+    command: String,
+    id: String,
+    sub_command: String
+}
+
 #[derive(Deserialize)]
 struct PathParams5 {
     inst: String,
@@ -55,8 +64,8 @@ async fn main() -> std::io::Result<()> {
             "/{inst}/{command}", web::get().to(lvl2)
         ).route(
             "/{inst}/{command}/{id}", web::get().to(lvl3)
-        // ).route(
-        //     "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
+        ).route(
+            "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
         ).route(
             "/{inst}/{command}/{id}/{sub_command}/{sub_id}", web::get().to(lvl5)
         )
@@ -134,9 +143,15 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
     }
 }
 
-// async fn lvl4(path: web::Path<PathParams4>, query: web::Query<PagingParams>) -> Result<Markup> {
-//     Err(error::ErrorExpectationFailed("Invalid path"))
-// }
+async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>) -> Result<Markup> {
+    let client = &Client::default();
+    if p.command == "c" && p.sub_command == "info" {
+        let community = get_community(client, &p.inst, &p.id).await?;
+        Ok(community_info_page(&p.inst, community))
+    } else {
+        Err(error::ErrorExpectationFailed("Invalid path"))
+    }
+}
 
 async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Result<Markup> {
     let client = &Client::default();

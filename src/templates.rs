@@ -6,7 +6,7 @@ use pulldown_cmark::{
     Event::{Start, End},
     Tag::{Image, Link}
 };
-use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse};
+use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityModeratorView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse, CommunityDetail};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif"];
 const STYLESHEET: &str = "/style.css";
@@ -74,6 +74,78 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
                 hr;
             }
             (pagebar_markup(paging_params))
+            @if let Some(c) = community {
+                a#ft href={"/" (instance) "/c/" (c) "/info"} {
+                    "More info on /c/" (c)
+                }
+            }
+        }
+    }
+}
+
+pub fn community_info_page(instance: &String, community_detail: CommunityDetail) -> Markup {
+    let community = &community_detail.community;
+    html! {
+        (headers_markup())
+        (navbar_markup(instance, Some(html! {
+            a.l href={"/" (instance) "/c/" (community.name)} {
+                "/c/" (community_detail.community.name)
+            }
+            a href={"/" (instance) "/c/" (community.name) "/info"} {
+                "/info"
+            }
+        }), None))
+        #cw {
+            h1 {(community.name)}
+            h2 {(community.title)}
+            h3 {"Category: " (community.category_name)}
+            h3 {"Number of online: " (community_detail.online)}
+            h3 {"Number of subscribers: " (community.number_of_subscribers)}
+            h3 {"Number of posts: " (community.number_of_posts)}
+            h3 {"Number of comments: " (community.number_of_comments)}
+            @if community.hot_rank > 0 {
+                h3 {"Hot rank: " (community.hot_rank)}
+            }
+            @if let Some(ref d) = community.description {
+                h3 {"Description:"}
+                p {(d)}
+            }
+
+            @if let Some(a) = community_detail.admins {
+                h3 {"Admins: "}
+                @if !a.is_empty() {
+                    .tw {
+                        table {
+                            tr {
+                                th {"User"}
+                                th {"Post Score"}
+                                th {"Posts"}
+                                th {"Comment Score"}
+                                th {"Comments"}
+                            }
+                            @for user in &a {
+                                (user_markup(instance, user))
+                            }
+                        }
+                    }
+                    hr;
+                }
+            }
+
+            @if !community_detail.moderators.is_empty() {
+                h3 {"Moderators: "}
+                .tw {
+                    table {
+                        tr {
+                            th {"User"}
+                        }
+                        @for moderator in &community_detail.moderators {
+                            (moderator_markup(instance, moderator))
+                        }
+                    }
+                }
+                hr;
+            }
         }
     }
 }
@@ -267,6 +339,16 @@ fn user_markup(instance: &String, user: &UserView) -> Markup {
             td.ar {(user.number_of_posts)}
             td.ar {(user.comment_score)}
             td.ar {(user.number_of_comments)}
+        }
+    }
+}
+
+fn moderator_markup(instance: &String, moderator: &CommunityModeratorView) -> Markup {
+    html! {
+        tr {
+            td {a.username href= {"/" (instance) "/u/" (moderator.user_name)} {
+                (moderator.user_name)
+            }}
         }
     }
 }
