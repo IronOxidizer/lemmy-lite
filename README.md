@@ -56,8 +56,8 @@ Desktop|Android|iOS
 
 ## TODO
 
-0. Fix `rustls` panic.
-1. Switch to updated `@` and `!` syntax for users and communities respectively.
+0. Add `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">` tag
+1. Switch to updated `@` and `!` syntax for users and communities respectively, update dark mode styling.
 2. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
 3. Use 1 letter HTML class names.
 4. Use 1 letter static file names except for favicon and index.
