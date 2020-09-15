@@ -56,17 +56,18 @@ Desktop|Android|iOS
 
 ## TODO
 
-1. Switch to updated `@` and `!` syntax for users and communities respectively, update dark mode styling.
-2. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
-3. Use 1 letter HTML class names.
-4. Use 1 letter static file names except for favicon and index.
-5. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
-6. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
+1. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
+  - Do `saved` using the `saved_only` parameter in the API
+2. Use 1 letter HTML class names.
+3. Use 1 letter static file names except for favicon and index.
+4. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
+5. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
 ## NetSurf Quirks
 
 1. CSS `checked` is not implemented for `input[checkbox]` causing comment thread collapse to not work
 2. CSS `word-spacing` is not implemented
+3. Spacing between words in posts are inconsistent
 
 ## iOS Quirks
 
@@ -91,6 +92,3 @@ sudo rm -rf /etc/nginx/lemmy-lite
 sudo cp -rf static /etc/nginx/lemmy-lite
 nohup cargo +nightly run --release &
 ```
-
-
-

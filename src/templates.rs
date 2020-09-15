@@ -103,7 +103,7 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
             }
             @if let Some(ref d) = community.description {
                 h3 {"Description:"}
-                p {(d)}
+                p {(mdstr_to_html(d))}
             }
 
             @if let Some(a) = community_detail.admins {
@@ -153,7 +153,7 @@ pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime
             (post_markup(instance, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
-                p { (mdstr_to_html(body))}
+                p {(mdstr_to_html(body))}
             }
             hr;
             
@@ -365,18 +365,18 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                         };
                     }
                 }, None => {
-                    a href={"/" (instance) "/post/" (post.id )} {
+                    a href={"/" (instance) "/post/" (post.id)} {
                         img.preview src=(TEXT_IMG);
                     }
                 }
             }
             div {
-                a href={"/" (instance) "/post/" (post.id )} {
-                    (post.name)
+                a.s[post.stickied] href={"/" (instance) "/post/" (post.id)} {
+                    @if post.stickied {"📌 "} (post.name)
                 }
                 .mute{
                     "by "
-                    a.username href={"/" (instance) "/u/" (post.creator_name) } {
+                    a.username href={"/" (instance) "/u/" (post.creator_name) " " } {
                         (post.creator_name)
                     }
                     " to "

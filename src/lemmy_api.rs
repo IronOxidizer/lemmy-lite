@@ -88,7 +88,7 @@ pub struct PostView {
     updated: Option<String>,
     deleted: bool,
     nsfw: bool,
-    stickied: bool,
+    pub stickied: bool,
     embed_title: Option<String>,
     embed_description: Option<String>,
     embed_html: Option<String>,

@@ -13,6 +13,10 @@ a {
     text-decoration: inherit;
     color: #00bc8c
 }
+a:hover {
+    text-decoration: underline
+}
+
 p {
     margin: 5px 0
 }
@@ -60,7 +64,18 @@ td,th {
     vertical-align: middle
 }
 .row a {
-    color: inherit;
+    color: inherit
+}
+.row a:visited {
+    color: #888
+}
+
+.row a.s {
+    color: #3498db !important
+}
+
+.row a.s:visited {
+    color: #284b90 !important
 }
 
 .preview {
@@ -75,7 +90,7 @@ td,th {
 }
 
 .username {
-    color: #dedede !important;
+    color: #3498db !important;
     font-weight: bold
 }
 .l {
