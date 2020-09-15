@@ -6,7 +6,7 @@ body {
     overflow-x: hidden;
     word-break: break-word;
     word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: break-word
 }
 
 a {
@@ -33,18 +33,18 @@ blockquote {
 table {
     width: 100%;
     min-width: 704px;
-    border-collapse: collapse;
+    border-collapse: collapse
 }
 td {
-    border-top: 1px solid #333;
+    border-top: 1px solid #333
 }
 td,th {
-    padding: 6px;
+    padding: 6px
 }
 
 .tw {
     word-break: keep-all;
-    overflow-x: auto;
+    overflow-x: auto
 }
 
 .ar {
@@ -90,11 +90,10 @@ td,th {
 }
 
 .username {
-    color: #3498db !important;
-    font-weight: bold
+    color: #3498db !important
 }
 .l {
-    color: #00bc8c !important;
+    color: #00bc8c !important
 }
 .badge {
     background-color: #444;
@@ -131,26 +130,26 @@ td,th {
     border-radius: 3px;
     background-color: #222;
     color: #dedede;
-    margin: 0 2px;
+    margin: 0 2px
 }
 #navbar>form>input:first-child {
-    cursor: text;
+    cursor: text
 }
 #navbar>form>input:last-child {
-    cursor: pointer;
+    cursor: pointer
 }
 
 .pb::after {
     content: "";
     display: table;
-    clear: both;
+    clear: both
 }
 .pb>form {
-    float: left;
+    float: left
 }
 .pb>div {
     float: right;
-    margin-bottom: 4px;
+    margin-bottom: 4px
 }
 .pb input,.pb select {
     border: 0;
@@ -173,13 +172,13 @@ td,th {
     background-color: #333;
     display: inline-block;
     padding: 4px;
-    border-radius: 3px;
+    border-radius: 3px
 }
 
 .mute,.ch {
     color: #999;
     margin-bottom: 0;
-    font-size: 0.7em;
+    font-size: 0.75em
 }
 
 .mute>* {
@@ -203,10 +202,10 @@ td,th {
     width: 14px;
     height: 14px;
     margin-left: 17px;
-    vertical-align: middle;
+    vertical-align: middle
 }
 .cc:checked {
-    background-color: #000000;
+    background-color: #000000
 }
 .cc:checked + div { 
     display: none
@@ -214,7 +213,7 @@ td,th {
 
 .br {
     border-top: 1px solid #333;
-    padding-top: 5px;
+    padding-top: 5px
 }
 /* Comment thread branch */
 .b0, .b1, .b2, .b3, .b4, .b5 {
