@@ -9,5 +9,5 @@ chrono = { version = "0.4", default-features = false, features = ["serde", "cloc
 serde = { version = "1.0", default-features = false }
 url = { version = "2.1", default-features = false }
 actix-web = { version = "3.0", default-features = false, features = ["rustls"] }
-maud = { version = "0.22", default-features = false}
+maud = { version = "0.22", default-features = false }
 pulldown-cmark = { version = "0.8", default-features = false }
