@@ -91,4 +91,5 @@ done
 sudo rm -rf /etc/nginx/lemmy-lite
 sudo cp -rf static /etc/nginx/lemmy-lite
 nohup cargo +nightly run --release &
+tail -f nohup.out
 ```
