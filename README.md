@@ -27,14 +27,13 @@ This project is not intended for official use, but rather as a proof-of-concept 
 
 - Symlinks won't work since nginx user (root) requires ownership of linked file
 - GZip static to allow serving of compressed files for lower bandwith usage
-- Rust nightly is required, use `rustup`
 ```
 cd lemmy-lite
 gzip -kr9 static
 cp -rf static /etc/nginx/lemmy-lite
 cp -f lemmy-lite.conf /etc/nginx/sites-enabled/
 systemctl start nginx
-cargo +nightly run --release
+cargo run --release
 ```
 
 ## Pictures
@@ -90,6 +89,6 @@ for i in static/*gz; do
 done
 sudo rm -rf /etc/nginx/lemmy-lite
 sudo cp -rf static /etc/nginx/lemmy-lite
-nohup cargo +nightly run --release &
+nohup cargo run --release &
 tail -f nohup.out
 ```
