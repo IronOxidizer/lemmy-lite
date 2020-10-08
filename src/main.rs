@@ -12,6 +12,7 @@ ds9.lemmy.ml
 use chrono::offset::Utc;
 use serde::Deserialize;
 use actix_web::{web, App, HttpServer, Result, error, client::Client, HttpResponse, http::StatusCode};
+use maud::Markup;
 mod templates;
 mod lemmy_api;
 
@@ -74,9 +75,7 @@ async fn main() -> std::io::Result<()> {
 }
 
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<HttpResponse>{
-    Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-        redirect_page(query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is NginX running?"))?)
-    .into_string()))
+    html_res(redirect_page(query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is NginX running?"))?))
 }
 
 async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Result<HttpResponse>{
@@ -87,9 +86,7 @@ async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Resul
     let paging_params = &query.into_inner();
 
     let post_list = get_post_list(client, inst, None, None, Some(paging_params)).await?;
-    Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-        post_list_page(inst, post_list, now, None, Some(paging_params))
-    .into_string()))
+    html_res(post_list_page(inst, post_list, now, None, Some(paging_params)))
 }
 
 async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Result<HttpResponse> {
@@ -103,9 +100,7 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
             l: search_params.l
         };
         let communities = get_community_list(client, &p.inst, Some(paging_params)).await?;
-        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-            communities_page(&p.inst, communities, Some(paging_params))
-        .into_string()))
+        html_res(communities_page(&p.inst, communities, Some(paging_params)))
     } else if p.command == "search" {
         let now = &Utc::now().naive_utc();
         let search_res = match search_params.q {
@@ -113,9 +108,7 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
             _ => None,
         };
 
-        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-            search_page(&p.inst, now, search_res, search_params)
-        .into_string()))
+        html_res(search_page(&p.inst, now, search_res, search_params))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
@@ -128,20 +121,14 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
 
     if p.command == "post" {
         let post_detail = get_post(client, &p.inst, &p.id).await?;
-        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-            post_page(&p.inst, post_detail, now)
-        .into_string()))
+        html_res(post_page(&p.inst, post_detail, now))
     } else if p.command == "c" {
         let post_list = get_post_list(client, &p.inst, None,
             Some(&p.id), Some(paging_params)).await?;
-            Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-                post_list_page(&p.inst, post_list, now, Some(&p.id), Some(paging_params))
-            .into_string()))
+        html_res(post_list_page(&p.inst, post_list, now, Some(&p.id), Some(paging_params)))
     } else if p.command == "u" {
         let user = get_user(client, &p.inst, &p.id, Some(paging_params)).await?;
-        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-            user_page(&p.inst, user, now, Some(paging_params))
-        .into_string()))
+        html_res(user_page(&p.inst, user, now, Some(paging_params)))
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
@@ -151,15 +138,13 @@ async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>) -> Res
     let client = &Client::default();
     if p.command == "c" && p.sub_command == "info" {
         let community = get_community(client, &p.inst, &p.id).await?;
-        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-            community_info_page(&p.inst, community)
-        .into_string()))
+        html_res(community_info_page(&p.inst, community))
     } else {
         Err(error::ErrorExpectationFailed("Invalid path"))
     }
 }
 
-async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Result<HttpResponse>{
+async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Result<HttpResponse> {
     let client = &Client::default();
     let now = &Utc::now().naive_utc();
 
@@ -173,11 +158,15 @@ async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Res
             Some(c) => c.clone(),
             None => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
         };
-        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-            comment_page(&p.inst, comment, post_detail, now)
-        .into_string()))
+        html_res(comment_page(&p.inst, comment, post_detail, now))
         
     } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
+}
+
+fn html_res(markup: Markup) -> Result<HttpResponse> {
+    Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
+        markup.into_string())
+    )
 }
