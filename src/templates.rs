@@ -455,9 +455,9 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
         .pb {
             form {
                 (sort_markup(paging_params))
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-                    input type="hidden" name="p" value=(page);
-                }
+                // @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                //     input type="hidden" name="p" value=(page);
+                // }
                 (limit_size_markup(paging_params))
                 input type="submit" value="Apply";
             }
