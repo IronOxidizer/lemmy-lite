@@ -306,11 +306,11 @@ fn build_url(instance: &String, endpoint: &str, paging_params: Option<&PagingPar
     
     match paging_params {
         Some(params) => {
-            url_queries.append_pair("sort", params.s.as_ref().map_or("Active", |s| s.as_str()));
+            url_queries.append_pair("sort", params.s.as_ref().map_or("Hot", |s| s.as_str()));
             params.p.map(|p| url_queries.append_pair("page", p.to_string().as_str()));
             params.l.map(|l| url_queries.append_pair("limit", l.to_string().as_str()));
         }, None => {
-            url_queries.append_pair("sort", "Active");
+            url_queries.append_pair("sort", "Hot");
         }
     }
     Ok(url_queries.finish().to_owned())

@@ -573,8 +573,8 @@ fn sort_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
         select name="s" {
             @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-                option selected?[sort==&"Active".to_string()] value="Active" {"Active"}
                 option selected?[sort==&"Hot".to_string()] value="Hot" {"Hot"}
+                option selected?[sort==&"Active".to_string()] value="Active" {"Active"}
                 option selected?[sort==&"New".to_string()] value="New" {"New"}
                 option selected?[sort==&"TopDay".to_string()] value="TopDay" {"Day"}
                 option selected?[sort==&"TopWeek".to_string()] value="TopWeek" {"Week"}
@@ -582,8 +582,8 @@ fn sort_markup(paging_params: Option<&PagingParams>) -> Markup {
                 option selected?[sort==&"TopYear".to_string()] value="TopYear" {"Year"}
                 option selected?[sort==&"TopAll".to_string()] value="TopAll" {"All"}
             } @else {
-                option value="Active" {"Active"}
                 option value="Hot" {"Hot"}
+                option value="Active" {"Active"}
                 option value="New" {"New"}
                 option value="TopDay" {"Day"}
                 option value="TopWeek" {"Week"}
