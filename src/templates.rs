@@ -297,7 +297,6 @@ fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option
                 @if let Some(SearchParams {q: Some(query), ..}) = search_params {
                     input name="q" placeholder="Search" value=((query));
                     (default_sort_markup(paging_params.as_ref()))
-                    (default_page_markup(paging_params.as_ref()))
                     (default_limit_markup(paging_params.as_ref()))
                     (default_type_markup(search_params))
                 } @else {
@@ -501,7 +500,6 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
             form {
                 (default_query_markup(Some(search_params)))
                 (sort_markup(paging_params))
-                (default_page_markup(paging_params))
                 (limit_size_markup(paging_params))
 
                 select name="t" {
