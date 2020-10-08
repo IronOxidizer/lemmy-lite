@@ -55,8 +55,8 @@ struct PathParams5 {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| { App::new()
-        .service(
-            web::resource("/").route(web::get().to(index))
+        .route(
+            "/", web::get().to(index)
         ).route(
             "/{inst}", web::get().to(lvl1)
         ).route(
