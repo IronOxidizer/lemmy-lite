@@ -56,6 +56,7 @@ struct PathParams5 {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| { App::new()
+        .data(Client::default())
         .route(
             "/", web::get().to(index)
         ).route(
@@ -78,10 +79,10 @@ async fn index(web::Query(query): web::Query<RedirForm>) -> Result<HttpResponse>
     html_res(redirect_page(query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is NginX running?"))?))
 }
 
-async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Result<HttpResponse>{
+async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse>{
     let inst = &path.to_string();
+    let client = &data_client.into_inner();
 
-    let client = &Client::default();
     let now = &Utc::now().naive_utc();
     let paging_params = &query.into_inner();
 
@@ -89,8 +90,8 @@ async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>) -> Resul
     html_res(post_list_page(inst, post_list, now, None, Some(paging_params)))
 }
 
-async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Result<HttpResponse> {
-    let client = &Client::default();
+async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>, data_client: web::Data<Client>) -> Result<HttpResponse> {
+    let client = &data_client.into_inner();
     let search_params = &query.into_inner();
 
     if p.command == "communities" {
@@ -105,7 +106,7 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
         let now = &Utc::now().naive_utc();
         let search_res = match search_params.q {
             Some(ref query) if !query.is_empty() => Some(search(client, &p.inst, search_params).await?),
-            _ => None,
+            _ => None
         };
 
         html_res(search_page(&p.inst, now, search_res, search_params))
@@ -114,8 +115,8 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
     }
 }
 
-async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Result<HttpResponse>{
-    let client = &Client::default();
+async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse>{
+    let client = &data_client.into_inner();
     let now = &Utc::now().naive_utc();
     let paging_params = &query.into_inner();
 
@@ -134,8 +135,8 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>) -> Res
     }
 }
 
-async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>) -> Result<HttpResponse>{
-    let client = &Client::default();
+async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse>{
+    let client = &data_client.into_inner();
     if p.command == "c" && p.sub_command == "info" {
         let community = get_community(client, &p.inst, &p.id).await?;
         html_res(community_info_page(&p.inst, community))
@@ -144,8 +145,8 @@ async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>) -> Res
     }
 }
 
-async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>) -> Result<HttpResponse> {
-    let client = &Client::default();
+async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse> {
+    let client = &data_client.into_inner();
     let now = &Utc::now().naive_utc();
 
     if p.command == "post" && p.sub_command == "comment" {
