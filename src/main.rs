@@ -75,7 +75,7 @@ async fn main() -> std::io::Result<()> {
 
 async fn index(web::Query(query): web::Query<RedirForm>) -> Result<HttpResponse>{
     Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-        redirect_page(query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is Nginx running?"))?)
+        redirect_page(query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is NginX running?"))?)
     .into_string()))
 }
 
@@ -106,28 +106,17 @@ async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>) -> Res
         Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
             communities_page(&p.inst, communities, Some(paging_params))
         .into_string()))
-    }
-    // Consider refactor using search_params.q.and_then
-    else if p.command == "search" {
+    } else if p.command == "search" {
         let now = &Utc::now().naive_utc();
+        let search_res = match search_params.q {
+            Some(ref query) if !query.is_empty() => Some(search(client, &p.inst, search_params).await?),
+            _ => None,
+        };
 
-        if let Some(ref query) = search_params.q {
-            if query.is_empty() {
-                return Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-                    search_page(&p.inst, now, None, search_params)
-                .into_string()))
-            }
-            let search_res = search(client, &p.inst, search_params).await?;
-            Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-                search_page(&p.inst, now, Some(&search_res), search_params)
-            .into_string()))
-        } else {
-            Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-                search_page(&p.inst, now, None, search_params)
-            .into_string()))
-        }
-    }
-    else {
+        Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
+            search_page(&p.inst, now, search_res, search_params)
+        .into_string()))
+    } else {
         Err(error::ErrorExpectationFailed("Invalid parameters"))
     }
 }

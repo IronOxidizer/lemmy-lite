@@ -210,7 +210,7 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
     }
 }
 
-pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<&SearchResponse>, search_params: &SearchParams) -> Markup {
+pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
