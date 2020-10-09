@@ -1,3 +1,27 @@
+/*
+DOM ids
+#w  = content Wrapper
+#n  = Navbar
+#f  = Footer
+
+DOM classes
+.o  = Overflow
+.ar = Align Right
+.r  = Row
+.p  = content type Preview
+.s  = Score
+.u  = Username
+.l  = Link
+.b  = Badge
+.pb = PageBar
+.h  = Highlight
+.m  = Mute
+.ch = Comment Header details
+.c  = Collapsible
+.br = Border Root
+.b? = Border 0-5
+*/
+
 body {
     background-color: #222;
     text-decoration: none;
@@ -18,16 +42,17 @@ a:hover {
 }
 
 p {
-    margin: 5px 0
+    margin: 6px 0
 }
-ul {
-    margin-top: 5px;
-    margin-bottom: 5px
+ul,ol {
+    margin-top: 6px;
+    margin-bottom: 6px
 }
 blockquote {
     border-left: 2px solid #333;
     padding-left: 4px;
-    margin: 4px
+    margin: 4px;
+    color: #aaa
 }
 
 table {
@@ -42,7 +67,7 @@ td,th {
     padding: 6px
 }
 
-.tw {
+.o {
     word-break: keep-all;
     overflow-x: auto
 }
@@ -51,51 +76,50 @@ td,th {
     text-align: right
 }
 
-/* Content wrapper */
-#cw {
+#w {
     min-width: 304px;
     max-width: 1012px; /* Default for Jeckyll and GitHub Pages */
     padding-top: 4px;
     margin: auto
 }
 
-.row > * {
+.r > * {
     display: table-cell;
     vertical-align: middle
 }
-.row a {
+.r a {
     color: inherit
 }
-.row a:visited {
+.r a:visited {
     color: #888
 }
 
-.row a.s {
+.r a.s {
     color: #3498db !important
 }
 
-.row a.s:visited {
+.r a.s:visited {
     color: #284b90 !important
 }
 
-.preview {
+.p {
     width: 64px;
     height: 64px;
     padding: 0 8px
 }
 
-.score {
+.s {
     width: 32px;
     text-align: right
 }
 
-.username {
+.u {
     color: #3498db !important
 }
 .l {
     color: #00bc8c !important
 }
-.badge {
+.b {
     background-color: #444;
     color: #dedede;
     padding: 0 3px;
@@ -103,13 +127,13 @@ td,th {
     margin-left: 4px
 }
 
-#navbar {
+#n {
     text-align: center
 }
-#navbar a {
+#n a {
     color: inherit
 }
-#navbar>* {
+#n>* {
     display: inline-block;
 
     width: 32%;
@@ -125,17 +149,17 @@ td,th {
     background-color: #333;
     margin: 2px
 }
-#navbar>form>input {
+#n>form>input {
     border: 0;
     border-radius: 3px;
     background-color: #222;
     color: #dedede;
     margin: 0 2px
 }
-#navbar>form>input:first-child {
+#n>form>input:first-child {
     cursor: text
 }
-#navbar>form>input:last-child {
+#n>form>input:last-child {
     cursor: pointer
 }
 
@@ -168,23 +192,23 @@ td,th {
     cursor: text
 }
 
-.highlight {
+.h {
     background-color: #333;
     display: inline-block;
     padding: 4px;
     border-radius: 3px
 }
 
-.mute,.ch {
+.m,.ch {
     color: #999;
     margin-bottom: 0;
     font-size: 0.75em
 }
 
-.mute>* {
+.m>* {
     display: inline-block
 }
-.mute>.l{
+.m>.l{
     margin-right: 4px
 }
 /* Comment header and Comment collapsable */
@@ -193,7 +217,7 @@ td,th {
     word-spacing: 1em;
     margin: 4 0
 }
-.cc {
+.c {
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
@@ -204,10 +228,10 @@ td,th {
     margin-left: 17px;
     vertical-align: middle
 }
-.cc:checked {
+.c:checked {
     background-color: #000000
 }
-.cc:checked + div { 
+.c:checked + div { 
     display: none
 }
 
@@ -239,7 +263,7 @@ td,th {
     border-left:2px solid #ac53ac
 }
 
-#ft {
+#f {
     display: block;
     text-align: center
 }

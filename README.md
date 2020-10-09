@@ -26,7 +26,7 @@ This project is not intended for official use, but rather as a proof-of-concept 
 ## Installation
 
 - Symlinks won't work since nginx user (root) requires ownership of linked file
-- GZip static to allow serving of compressed files for lower bandwith usage
+- GZip static to allow serving of compressed files for lower bandwidth usage
 ```
 cd lemmy-lite
 gzip -kr9 static
@@ -55,12 +55,8 @@ Desktop|Android|iOS
 
 ## TODO
 
-1. Add URL handling for `/u/username/view/[overview/comments/posts/saved]`.
-  - Do `saved` using the `saved_only` parameter in the API
-2. Use 1 letter HTML class names.
-3. Use 1 letter static file names except for favicon and index.
-4. Consider not supporting UTF-8 and only using ASCII charcters for data size and better legacy font support.
-5. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
+1. Consider not supporting UTF-8 and only using ASCII characters for data size and better legacy font support.
+2. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
 ## NetSurf Quirks
 

@@ -135,7 +135,7 @@ async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>, data_c
     }
 }
 
-async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse>{
+async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse> {
     let client = &data_client.into_inner();
     if p.command == "c" && p.sub_command == "info" {
         let community = get_community(client, &p.inst, &p.id).await?;
