@@ -38,9 +38,9 @@ cargo run --release
 
 ## Pictures
 
-Desktop|Android|iOS
+Android|Desktop|iOS
 ---|---|---
-![Desktop](https://user-images.githubusercontent.com/60191958/90257112-b542fd80-de14-11ea-9b84-752b5b691631.png)|![Android](https://user-images.githubusercontent.com/60191958/90256779-351c9800-de14-11ea-8189-092283c8fe28.png)|![iOS](https://user-images.githubusercontent.com/60191958/90353627-b0e53300-e014-11ea-8a08-c7fd03105d1f.png)
+![android](https://user-images.githubusercontent.com/60191958/96905327-4dd5a980-1466-11eb-973c-476ae3af27e5.png)|![desktop](https://user-images.githubusercontent.com/60191958/96905850-fedc4400-1466-11eb-8902-f8aea874b670.png)|![ios](https://user-images.githubusercontent.com/60191958/96905906-11ef1400-1467-11eb-8f56-f4f8b336a3c5.png)
 
 ## Notes
 
@@ -55,18 +55,13 @@ Desktop|Android|iOS
 
 ## TODO
 
-1. Consider not supporting UTF-8 and only using ASCII characters for data size and better legacy font support.
-2. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
+1. Fix user and community links (change markdown interpretation for same-site links)
+2. Consider not supporting UTF-8 and only using ASCII characters for data size and better legacy font support.
+3. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
-## NetSurf Quirks
+**Quirks**
 
-1. CSS `checked` is not implemented for `input[checkbox]` causing comment thread collapse to not work
-2. CSS `word-spacing` is not implemented
-3. Spacing between words in posts are inconsistent
-
-## iOS Quirks
-
-1. Highlights break with non-default CSS `word-spacing`
+1. CSS `word-spacing` is broken on iOS and NetSurf
 
 ## Update Script
 

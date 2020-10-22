@@ -706,7 +706,7 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
         format!("{}d",
             now.signed_duration_since(record).num_days())
     } else if seconds < 31556952 {
-        format!("{}mo",
+        format!("{}M",
             now.signed_duration_since(record).num_weeks() / 4)
     } else {
         format!("{}y",
