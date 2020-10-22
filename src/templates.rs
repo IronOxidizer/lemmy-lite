@@ -709,7 +709,7 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
         format!("{}M",
             now.signed_duration_since(record).num_weeks() / 4)
     } else {
-        format!("{}y",
+        format!("{}Y",
             now.signed_duration_since(record).num_weeks() / 52)
     }
 }
