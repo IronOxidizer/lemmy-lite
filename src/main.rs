@@ -1,173 +1,146 @@
-/*
-rustup toolchain install nightly
-cargo +nightly run --release
-
-Test instances:
-dev.lemmy.ml
-enterprise.lemmy.ml
-voyager.lemmy.ml
-ds9.lemmy.ml
-*/
-
 use chrono::offset::Utc;
-use serde::Deserialize;
-use actix_web::{web, App, HttpServer, Result, error, client::Client, HttpResponse, http::StatusCode};
+use actix_web::{App, HttpServer, Result, error, middleware, client::Client, 
+    web::{Data, Query, ServiceConfig, Path, scope, get}};
+use actix_files::Files;
 use maud::Markup;
+
 mod templates;
 mod lemmy_api;
+use templates::*;
+use lemmy_api::*;
 
-use crate::templates::{redirect_page, post_list_page, post_page, comment_page, community_info_page, communities_page, user_page, search_page};
-use crate::lemmy_api::{PagingParams, SearchParams, get_post_list, get_post, get_community, get_community_list, get_user, search};
+const BARE_ROOT: &str = "";
+const LITE_ROOT: &str = "/lite";
 
-#[derive(Deserialize)]
-struct RedirForm {
-    i: Option<String>,
-}
 
-#[derive(Deserialize)]
-struct PathParams2 {
-    inst: String,
-    command: String
-}
-#[derive(Deserialize)]
-struct PathParams3 {
-    inst: String,
-    command: String,
-    id: String
-}
+/*
+const FAVICON_ICO: &str = "favicon.ico.gz";
+const LINK_IMG: &str = "l.svg.gz";
+const MEDIA_IMG: &str = "m.svg.gz";
+const TEXT_IMG: &str = "t.svg.gz";
+const STYLE_CSS: &str = "s.css.gz";
 
-#[derive(Deserialize)]
-struct PathParams4 {
-    inst: String,
-    command: String,
-    id: String,
-    sub_command: String
-}
-
-#[derive(Deserialize)]
-struct PathParams5 {
-    inst: String,
-    command: String,
-    id: String,
-    sub_command: String,
-    sub_id: String
-}
+let res = HttpResponse::Ok()
+    .content_type("application/x-protobuf")
+    //.content_encoding(ContentEncoding::Gzip) // <======= this does not work
+    .header("content-encoding", "gzip")  // <======== this works
+    .content_encoding(ContentEncoding::Identity)
+    .body(data);
+Ok(res)
+*/
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| { App::new()
-        .data(Client::default())
-        .route(
-            "/", web::get().to(index)
-        ).route(
-            "/{inst}", web::get().to(lvl1)
-        ).route(
-            "/{inst}/{command}", web::get().to(lvl2)
-        ).route(
-            "/{inst}/{command}/{id}", web::get().to(lvl3)
-        ).route(
-            "/{inst}/{command}/{id}/{sub_command}", web::get().to(lvl4)
-        ).route(
-            "/{inst}/{command}/{id}/{sub_command}/{sub_id}", web::get().to(lvl5)
+    let instance_name = get_site_detail(&Client::default())
+        .await.map_err(|_| std::io::ErrorKind::NotConnected)?.site.name;
+    println!("Successfully connected to {}", instance_name);
+
+    HttpServer::new(move || { App::new()
+        .wrap(middleware::NormalizePath::default())
+        .data((Client::default(), instance_name.clone()))
+        .service(
+            // Alias /lite paths to / while preserving knowledge of /lite, needed to produce links that work on bare and lite root
+            scope(LITE_ROOT).data(LITE_ROOT).configure(config)
         )
-    })
-    .bind("127.0.0.1:1131")?
-    .run().await
-}
-
-async fn index(web::Query(query): web::Query<RedirForm>) -> Result<HttpResponse>{
-    html_res(redirect_page(query.i.ok_or(error::ErrorExpectationFailed("i parameter missing. Is NginX running?"))?))
-}
-
-async fn lvl1(path: web::Path<String>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse>{
-    let inst = &path.to_string();
-    let client = &data_client.into_inner();
-
-    let now = &Utc::now().naive_utc();
-    let paging_params = &query.into_inner();
-
-    let post_list = get_post_list(client, inst, None, None, Some(paging_params)).await?;
-    html_res(post_list_page(inst, post_list, now, None, Some(paging_params)))
-}
-
-async fn lvl2(p: web::Path<PathParams2>, query: web::Query<SearchParams>, data_client: web::Data<Client>) -> Result<HttpResponse> {
-    let client = &data_client.into_inner();
-    let search_params = &query.into_inner();
-
-    if p.command == "communities" {
-        let paging_params = &PagingParams {
-            s: search_params.s.clone().or(Some("TopAll".to_string())),
-            p: search_params.p,
-            l: search_params.l
-        };
-        let communities = get_community_list(client, &p.inst, Some(paging_params)).await?;
-        html_res(communities_page(&p.inst, communities, Some(paging_params)))
-    } else if p.command == "search" {
-        let now = &Utc::now().naive_utc();
-        let search_res = match search_params.q {
-            Some(ref query) if !query.is_empty() => Some(search(client, &p.inst, search_params).await?),
-            _ => None
-        };
-
-        html_res(search_page(&p.inst, now, search_res, search_params))
-    } else {
-        Err(error::ErrorExpectationFailed("Invalid parameters"))
-    }
-}
-
-async fn lvl3(p: web::Path<PathParams3>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse>{
-    let client = &data_client.into_inner();
-    let now = &Utc::now().naive_utc();
-    let paging_params = &query.into_inner();
-
-    if p.command == "post" {
-        let post_detail = get_post(client, &p.inst, &p.id).await?;
-        html_res(post_page(&p.inst, post_detail, now))
-    } else if p.command == "c" {
-        let post_list = get_post_list(client, &p.inst, None,
-            Some(&p.id), Some(paging_params)).await?;
-        html_res(post_list_page(&p.inst, post_list, now, Some(&p.id), Some(paging_params)))
-    } else if p.command == "u" {
-        let user = get_user(client, &p.inst, &p.id, Some(paging_params)).await?;
-        html_res(user_page(&p.inst, user, now, Some(paging_params)))
-    } else {
-        Err(error::ErrorExpectationFailed("Invalid parameters"))
-    }
-}
-
-async fn lvl4(p: web::Path<PathParams4>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse> {
-    let client = &data_client.into_inner();
-    if p.command == "c" && p.sub_command == "info" {
-        let community = get_community(client, &p.inst, &p.id).await?;
-        html_res(community_info_page(&p.inst, community))
-    } else {
-        Err(error::ErrorExpectationFailed("Invalid path"))
-    }
-}
-
-async fn lvl5(p: web::Path<PathParams5>, query: web::Query<PagingParams>, data_client: web::Data<Client>) -> Result<HttpResponse> {
-    let client = &data_client.into_inner();
-    let now = &Utc::now().naive_utc();
-
-    if p.command == "post" && p.sub_command == "comment" {
-        let post_detail = get_post(client, &p.inst, &p.id).await?;
-        let comment_id = match p.sub_id.parse::<i32>() {
-            Ok(cid) => cid,
-            Err(_) => return Err(error::ErrorExpectationFailed("Comment ID is invalid"))
-        };
-        let comment = match post_detail.comments.iter().find(|ref c| c.id == comment_id) {
-            Some(c) => c.clone(),
-            None => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
-        };
-        html_res(comment_page(&p.inst, comment, post_detail, now))
+        .data(BARE_ROOT).configure(config)
         
-    } else {
-        Err(error::ErrorExpectationFailed("Invalid parameters"))
-    }
+    }).bind("127.0.0.1:1131")?.run().await
 }
 
-fn html_res(markup: Markup) -> Result<HttpResponse> {
-    Ok(HttpResponse::build(StatusCode::OK).content_type("text/html; charset=utf-8").body(
-        markup.into_string())
-    )
+pub fn config(cfg: &mut ServiceConfig) {
+    cfg
+        .route("/", get().to(root))
+        .route("/communities/", get().to(communities))
+        .route("/search/", get().to(search))
+        .route("/u/{user_id}/", get().to(user))
+        .route("/c/{community_id}/", get().to(community))
+        .route("/c/{community_id}/info/", get().to(community_info))
+        .route("/post/{post_id}/",  get().to(post))
+        .route("/post/{post_id}/comment/{comment_id}",  get().to(post_comment))
+
+        // Using actix-files for the sake of simplicity. NginX can be way faster and compressed.
+        .service(Files::new("/", "static"));
+}
+
+async fn root(data: Data<(Client, String)>, data_root: Data<&'static str>, query_paging_params: Query<PagingParams>) -> Result<Markup> {
+    let (client, inst) = &**data; 
+    let paging_params = &query_paging_params.into_inner();
+
+    let post_list = get_post_list(client, None, None, Some(paging_params)).await?;
+    Ok(post_list_page(inst, **data_root, post_list, &Utc::now().naive_utc(), None, Some(paging_params)))
+}
+
+async fn communities(data: Data<(Client, String)>, data_root: Data<&'static str>, query_paging_params: Query<PagingParams>) -> Result<Markup> {
+    let (client, inst) = &**data; 
+    let mut paging_params = query_paging_params.into_inner();
+    // TODO: Can be done better, maybe map_or + replace
+    if paging_params.s.is_none() {
+        paging_params.s = Some("TopAll".to_string());
+    }
+
+    let communities = get_community_list(client, Some(&paging_params)).await?;
+    Ok(communities_page(inst, **data_root, communities, Some(&paging_params)))
+}
+
+async fn search (data: Data<(Client, String)>, data_root: Data<&'static str>, query_search_params: Query<SearchParams>) -> Result<Markup> {
+    let (client, inst) = data.get_ref(); 
+    let search_params = &query_search_params.into_inner();
+    let now = &Utc::now().naive_utc();
+
+    let search_res = match search_params.q {
+        Some(ref query) if !query.is_empty() => Some(get_search(client, search_params).await?),
+        _ => None
+    };
+
+    Ok(search_page(inst, **data_root, now, search_res, search_params))
+}
+
+async fn user(data: Data<(Client, String)>, data_root: Data<&'static str>, path: Path<String>, query_paging_params: Query<PagingParams>) -> Result<Markup> {
+    let (client, inst) = data.get_ref();
+    let paging_params = &query_paging_params.into_inner();
+    let now = &Utc::now().naive_utc();
+
+    let user_detail = get_user(client, &path.to_string(), Some(paging_params)).await?;
+    Ok(user_page(inst, **data_root, user_detail, now, Some(paging_params)))
+}
+
+async fn community(data: Data<(Client, String)>, data_root: Data<&'static str>, path: Path<String>, query_paging_params: Query<PagingParams>) -> Result<Markup> {
+    let (client, inst) = data.get_ref();
+    let paging_params = &query_paging_params.into_inner();
+    let com_id = &path.to_string();
+    let now = &Utc::now().naive_utc();
+
+    let post_list = get_post_list(client, None,
+        Some(com_id), Some(paging_params)).await?;
+    Ok(post_list_page(inst, **data_root, post_list, now, Some(com_id), Some(paging_params)))
+}
+
+async fn community_info(data: Data<(Client, String)>, data_root: Data<&'static str>, path: Path<String>) -> Result<Markup> {
+    let (client, inst) = data.get_ref();
+    let com_id = &path.to_string();
+
+    let community = get_community(client, com_id).await?;
+    Ok(community_info_page(inst, **data_root, community))
+}
+
+async fn post(data: Data<(Client, String)>, data_root: Data<&'static str>, path: Path<String>) -> Result<Markup> {
+    let (client, inst) = data.get_ref(); 
+    let now = &Utc::now().naive_utc();
+
+    let post_detail = get_post(client, &path.to_string()).await?;
+    Ok(post_page(inst, **data_root, post_detail, now))
+}
+
+async fn post_comment(data: Data<(Client, String)>, data_root: Data<&'static str>, path: Path<(String, i32)>) -> Result<Markup> {
+    let (client, inst) = data.get_ref(); 
+    let now = &Utc::now().naive_utc();
+    let (post_id, comment_id) = &*path;
+    let post_detail = get_post(client, &post_id).await?;
+
+    // Find a comment in the comment vec with a matching id
+    let comment = match post_detail.comments.iter().find(|c| c.id == *comment_id) {
+        Some(c) => c.clone(),
+        None => return Err(error::ErrorExpectationFailed("Comment doesn't belong to this post"))
+    };
+    Ok(comment_page(inst, **data_root, comment, post_detail, now))
 }

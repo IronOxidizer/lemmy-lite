@@ -55,13 +55,16 @@ Android|Desktop|iOS
 
 ## TODO
 
-1. Fix user and community links (change markdown interpretation for same-site links)
+0. Communicate to api exclusively in docker at 8536 (don't expose), bind/expose on port 0.0.0.0:1132/tcp->docker:1131/tcp, use nginx for routing
+0. Fix user and community links (change markdown interpretation for same-site links)
+1. Change API to use web sockets instead of http
 2. Consider not supporting UTF-8 and only using ASCII characters for data size and better legacy font support.
 3. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
 **Quirks**
 
 1. CSS `word-spacing` is broken on iOS and NetSurf
+2. Layout is non-changing on NetSurf preventing collapsable threads
 
 ## Update Script
 

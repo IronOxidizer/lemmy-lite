@@ -33,19 +33,11 @@ const LINK_IMG: &str = "/l.svg";
 const MEDIA_IMG: &str = "/m.svg";
 const TEXT_IMG: &str = "/t.svg";
 
-// Pure HTML redirect
-pub fn redirect_page(instance: String) -> Markup {
+pub fn communities_page(instance: &String, root: &'static str, community_list: CommunityList, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
-        meta content={"0;URL='/" (instance) "'"} http-equiv="refresh";
-    }
-}
-
-pub fn communities_page(instance: &String, community_list: CommunityList, paging_params: Option<&PagingParams>) -> Markup {
-    html! {
-        (headers_markup())
-        (navbar_markup(instance, Some(html!{
-            a.l href={"/" (instance) "/communities"} {"/communities"}
+        (navbar_markup(instance, root, Some(html!{
+            a.l href={(root) "/communities"} {"/communities"}
         }), None))
         #w {
             (pagebar_markup(paging_params))
@@ -60,7 +52,7 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
                         th {"Comments"}
                     }
                     @for community in &community_list.communities {
-                        (community_markup(instance, community))
+                        (community_markup(root, community))
                     }
                 }
             }
@@ -69,11 +61,11 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
     }
 }
 
-pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime, community: Option<&String>, paging_params: Option<&PagingParams>) -> Markup {
+pub fn post_list_page(instance: &String, root: &'static str, post_list: PostList, now: &NaiveDateTime, community: Option<&String>, paging_params: Option<&PagingParams>) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(
-            instance,
+            instance, root,
             community.map(|c| html!{
                 a.l href=(c) {"/c/" (c)}
             }), 
@@ -89,12 +81,12 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
         #w {
             (pagebar_markup(paging_params))
             @for post in &post_list.posts {
-                div { (post_markup(instance, post, now)) }
+                div { (post_markup(root, post, now)) }
                 hr;
             }
             (pagebar_markup(paging_params))
             @if let Some(c) = community {
-                a#f href={"/" (instance) "/c/" (c) "/info"} {
+                a#f href={(root) "/c/" (c) "/info"} {
                     "More info on /c/" (c)
                 }
             }
@@ -102,15 +94,17 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
     }
 }
 
-pub fn community_info_page(instance: &String, community_detail: CommunityDetail) -> Markup {
+pub fn community_info_page(instance: &String, root: &'static str, community_detail: CommunityDetail) -> Markup {
     let community = &community_detail.community;
     html! {
         (headers_markup())
-        (navbar_markup(instance, Some(html! {
-            a.l href={"/" (instance) "/c/" (community.name)} {
+        (navbar_markup(
+            instance, root,
+            Some(html! {
+            a.l href={(root) "/c/" (community.name)} {
                 "/c/" (community_detail.community.name)
             }
-            a href={"/" (instance) "/c/" (community.name) "/info"} {
+            a href={(root) "/c/" (community.name) "/info"} {
                 "/info"
             }
         }), None))
@@ -143,7 +137,7 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
                                 th {"Comments"}
                             }
                             @for user in &a {
-                                (user_markup(instance, user))
+                                (user_markup(root, user))
                             }
                         }
                     }
@@ -159,7 +153,7 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
                             th {"User"}
                         }
                         @for moderator in &community_detail.moderators {
-                            (moderator_markup(instance, moderator))
+                            (moderator_markup(root, moderator))
                         }
                     }
                 }
@@ -169,24 +163,24 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
     }
 }
 
-pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
+pub fn post_page(instance: &String, root: &'static str, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance, None, None))
+        (navbar_markup(instance, root, None, None))
         #w {
-            (post_markup(instance, &post_detail.post, now))
+            (post_markup(root, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
                 p {(mdstr_to_html(body))}
             }
             hr;
             
-            (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None, now))
+            (comment_tree_markup(root, &post_detail.comments, post_detail.post.creator_id, None, 0, None, now))
         }
     }
 }
 
-pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
+pub fn comment_page(instance: &String, root: &'static str, comment: CommentView, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     let mut comments = post_detail.comments;
     let comment_id = comment.id;
     comments.retain(|c| Some(c.id) == comment.parent_id ||
@@ -196,9 +190,9 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
 
     html! {
         (headers_markup())
-        (navbar_markup(instance, None, None))
+        (navbar_markup(instance, root, None, None))
         #w {
-            (post_markup(instance, &post_detail.post, now))
+            (post_markup(root, &post_detail.post, now))
 
             @if let Some(body) = &post_detail.post.body {
                 p {(mdstr_to_html(body))}
@@ -206,27 +200,28 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
             hr;
             
             @match parent {
-                Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id), now)),
-                None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id), now))
+                Some(p) => (comment_tree_markup(root, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id), now)),
+                None => (comment_tree_markup(root, &comments, post_detail.post.creator_id, None, 0, Some(comment_id), now))
             }
         }
     }
 }
 
-pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
+pub fn user_page(instance: &String, root: &'static str, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html!{
         (headers_markup())
-        (navbar_markup(instance, Some(html!{
-            a.u href={"/" (instance) "/u/" (user.user.name)} {"/u/" (user.user.name)}
+        (navbar_markup(instance, root,
+            Some(html!{
+            a.u href={(root) "/u/" (user.user.name)} {"/u/" (user.user.name)}
         }), None))
         #w {
             div { (pagebar_markup(paging_params)) }
             @for post in user.posts {
-                (post_markup(instance, &post, now))
+                (post_markup(root, &post, now))
                 hr;
             }
             @for comment in user.comments {
-                (comment_markup(instance, &comment, None, None, now, None))
+                (comment_markup(root, &comment, None, None, now, None))
                 hr;
             }
             (pagebar_markup(paging_params))
@@ -234,11 +229,11 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
     }
 }
 
-pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
+pub fn search_page(instance: &String, root: &'static str, now: &NaiveDateTime, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
     html! {
         (headers_markup())
-        (navbar_markup(instance, Some(html!{
-            a.l href={"/" (instance) "/search"} {"/search"}
+        (navbar_markup(instance, root, Some(html!{
+            a.l href={(root) "/search"} {"/search"}
         }), Some(search_params)))
         #w {
             (searchbar_markup(search_params))
@@ -255,7 +250,7 @@ pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<Se
                                 th {"Comments"}
                             }
                             @for community in &results.communities {
-                                (community_markup(instance, community))
+                                (community_markup(root, community))
                             }
                         }
                     }
@@ -273,18 +268,18 @@ pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<Se
                                 th {"Comments"}
                             }
                             @for user in &results.users {
-                                (user_markup(instance, user))
+                                (user_markup(root, user))
                             }
                         }
                     }
                     hr;
                 }
                 @for post in &results.posts {
-                    (post_markup(instance, post, now))
+                    (post_markup(root, post, now))
                     hr;
                 }
                 @for comment in &results.comments {
-                    (comment_markup(instance, comment, None, None, now, None))
+                    (comment_markup(root, comment, None, None, now, None))
                     hr;
                 }
                 (searchbar_markup(search_params))
@@ -309,18 +304,18 @@ fn headers_markup() -> Markup {
     }
 }
 
-fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option<&SearchParams>) -> Markup {
+fn navbar_markup(instance: &String, root: &'static str, embed: Option<Markup>, search_params: Option<&SearchParams>) -> Markup {
     let paging_params = search_params.map(|s| s.to_paging_params());
     html! {
         #n {
-            a href={"/" (instance) "/communities"} {"Communities"}
+            a href={(root) "/communities"} {"Communities"}
         
             div {
-                a href={"/" (instance)} {(instance)}
+                a href={(root) "/"} {(instance)}
                 @if let Some(e) = embed {(e)}
             }
         
-            form action={"/" (instance) "/search"} {
+            form action={(root) "/search"} {
                 @if let Some(SearchParams {q: Some(query), ..}) = search_params {
                     input name="q" placeholder="Search" value=((query));
                     (default_sort_markup(paging_params.as_ref()))
@@ -336,10 +331,10 @@ fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option
     }
 }
 
-fn community_markup(instance: &String, community: &CommunityView) -> Markup {
+fn community_markup(root: &'static str, community: &CommunityView) -> Markup {
     html! {
         tr {
-            td {a.l href= {"/" (instance) "/c/" (community.name)} {
+            td {a.l href= {(root) "/c/" (community.name)} {
                 (community.name)
             }}
             td {(community.title)}
@@ -351,10 +346,10 @@ fn community_markup(instance: &String, community: &CommunityView) -> Markup {
     }
 }
 
-fn user_markup(instance: &String, user: &UserView) -> Markup {
+fn user_markup(root: &'static str, user: &UserView) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/" (instance) "/u/" (user.name)} {
+            td {a.u href= {(root) "/u/" (user.name)} {
                 (user.name)
             }}
             td.e {(user.post_score)}
@@ -365,17 +360,17 @@ fn user_markup(instance: &String, user: &UserView) -> Markup {
     }
 }
 
-fn moderator_markup(instance: &String, moderator: &CommunityModeratorView) -> Markup {
+fn moderator_markup(root: &'static str, moderator: &CommunityModeratorView) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/" (instance) "/u/" (moderator.user_name)} {
+            td {a.u href= {(root) "/u/" (moderator.user_name)} {
                 (moderator.user_name)
             }}
         }
     }
 }
 
-fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Markup {
+fn post_markup(root: &'static str, post: &PostView, now: &NaiveDateTime) -> Markup {
     html!{
         .r {
             p.s {(post.score)}
@@ -391,27 +386,27 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                         };
                     }
                 }, None => {
-                    a href={"/" (instance) "/post/" (post.id)} {
+                    a href={(root) "/post/" (post.id)} {
                         img.p src=(TEXT_IMG);
                     }
                 }
             }
             div {
-                a.s[post.stickied] href={"/" (instance) "/post/" (post.id)} {
+                a.s[post.stickied] href={(root) "/post/" (post.id)} {
                     @if post.stickied {"📌 "} (post.name)
                 }
                 .m{
                     "by "
-                    a.u href={"/" (instance) "/u/" (post.creator_name) " " } {
+                    a.u href={(root) "/u/" (post.creator_name) " " } {
                         (post.creator_name)
                     }
                     " to "
-                    a.l href= {"/" (instance) "/c/" (post.community_name)} {
+                    a.l href= {(root) "/c/" (post.community_name)} {
                         (post.community_name)
                     }
                     div {
                         "˄ " (post.upvotes) " ˅ " (post.downvotes)
-                        a href={"/" (instance) "/post/" (post.id )} {
+                        a href={(root) "/post/" (post.id )} {
                             " • ✉ " (post.number_of_comments)
                         }
                         " • " (simple_duration(now, post.published))
@@ -422,10 +417,10 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
     }
 }
 
-fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
+fn comment_header_markup(root: &'static str, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
     return html! {
         p.ch.h[Some(comment.id) == highlight_id] {
-            a.u href={"/" (instance) "/u/" (comment.creator_name)} {
+            a.u href={(root) "/u/" (comment.creator_name)} {
                 (comment.creator_name)
             }
             @if let Some(pcid) = post_creator_id {
@@ -435,7 +430,7 @@ fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_
             }
 
             " ϟ" (comment.score) 
-            a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
+            a href={(root) "/post/" (comment.post_id) "/comment/" (comment.id)} {
                 " ⚓ "
             }
             
@@ -444,9 +439,9 @@ fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_
     }
 }
 
-fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime, children: Option<Markup>) -> Markup {
+fn comment_markup(root: &'static str, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime, children: Option<Markup>) -> Markup {
     html! {
-        (comment_header_markup(instance, comment, post_creator_id, highlight_id, now))
+        (comment_header_markup(root, comment, post_creator_id, highlight_id, now))
         
         @if children.is_some() {
             input.c type="checkbox";
@@ -462,7 +457,7 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
 }
 
 // zstewart#2487@discord.rust-community-server
-fn comment_tree_markup(instance: &String, comments: &[CommentView],
+fn comment_tree_markup(root: &'static str, comments: &[CommentView],
     post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
 
     html! {
@@ -470,8 +465,8 @@ fn comment_tree_markup(instance: &String, comments: &[CommentView],
             .{"b" (
                 if depth == 0 {"r".to_string()} else {((depth - 1)%6).to_string()}
                 )} {
-                (comment_markup(instance, comment, Some(post_creator_id), highlight_id, now,
-                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id, now))))
+                (comment_markup(root, comment, Some(post_creator_id), highlight_id, now,
+                    Some(comment_tree_markup(root, comments, post_creator_id, Some(comment.id), depth+1, highlight_id, now))))
             }
         }
     }
@@ -648,14 +643,6 @@ fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
     }
 }
 
-fn default_page_markup(paging_params: Option<&PagingParams>) -> Markup {
-    html! {
-        @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-            input type="hidden" name="p" value=((page));
-        }
-    }
-}
-
 fn default_limit_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
         @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
@@ -715,6 +702,8 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
 }
 
 // Custom markdown to HTML
+// TODO, reuse parser for improved performance, only create a parser at the start of each handler
+//      https://github.com/raphlinus/pulldown-cmark/issues/463
 fn mdstr_to_html(text: &str) -> Markup {
     let parser = ImageSwapper::new(Parser::new(text));
     let mut html_output = String::new();
