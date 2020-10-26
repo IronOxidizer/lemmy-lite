@@ -6,6 +6,9 @@ Android|Desktop|iOS
 ---|---|---
 ![android](https://user-images.githubusercontent.com/60191958/96905327-4dd5a980-1466-11eb-973c-476ae3af27e5.png)|![desktop](https://user-images.githubusercontent.com/60191958/96905850-fedc4400-1466-11eb-8902-f8aea874b670.png)|![ios](https://user-images.githubusercontent.com/60191958/96905906-11ef1400-1467-11eb-8f56-f4f8b336a3c5.png)
 
+- https://github.com/IronOxidizer/lemmy-lite
+- https://hub.docker.com/r/ironoxidizer/lemmy-lite
+
 ### Built With
 
 - [Rust](https://www.rust-lang.org)
@@ -31,7 +34,7 @@ Android|Desktop|iOS
 
 ```
 docker build -t lemmy-lite .
-docker run --net dev_default -p "1132:1131" -it lemmy-lite
+docker run --net dev_default -p "1132:1131" -e LEMMY_INTERNAL_HOST=lemmy:8536 -it lemmy-lite
 ```
 
 ## Notes
@@ -47,7 +50,6 @@ docker run --net dev_default -p "1132:1131" -it lemmy-lite
 
 ## TODO
 
-0. Communicate to api exclusively in docker at 8536 (don't expose), bind/expose on port 0.0.0.0:1132/tcp->docker:1131/tcp, use nginx for routing
 0. Fix user and community links (change markdown interpretation for same-site links)
 0. Change API to use web sockets instead of http
 1. Reimplement static gzipping exclusively at compile time

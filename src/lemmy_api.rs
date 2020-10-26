@@ -1,7 +1,7 @@
 use chrono::naive::NaiveDateTime;
 use serde::Deserialize;
-use actix_web::{Result, client::Client, error::ErrorBadRequest};
-use url::{Url, ParseError};
+use actix_web::{Result, client::Client, error::ErrorBadRequest, error::ErrorExpectationFailed};
+use url::Url;
 
 const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 const DEFAULT_SORT: &str = "Hot";
@@ -316,8 +316,12 @@ pub async fn get_search(client: &Client, search_params: &SearchParams) -> Result
     Ok(SearchResponse::from(client.get(url).send().await?.json().limit(REQ_MAX_SIZE).await?))
 }
 
-fn build_url(endpoint: &str, paging_params: Option<&PagingParams>) -> Result<Url, ParseError> {
-    let mut url = Url::parse(format!("http://{}/api/v1/{}", env!("LEMMY_INTERNAL_HOST"), endpoint).as_str())?;
+fn build_url(endpoint: &str, paging_params: Option<&PagingParams>) -> Result<Url> {
+    let url_string = format!("http://{}/api/v1/{}", 
+        std::env::var("LEMMY_INTERNAL_HOST").map_err(|e| ErrorExpectationFailed(
+            format!("EnvVar LEMMY_INTERNAL_HOST is invalid: {}", e.to_string())
+        ))?, endpoint);
+    let mut url = Url::parse(url_string.as_str()).map_err(|e| ErrorBadRequest(e.to_string()))?;
     let mut url_queries = url.query_pairs_mut();
     
     match paging_params {
