@@ -1,7 +1,10 @@
 # lemmy-lite
+
 A static, JSless, touch-friendly Lemmy frontend built for legacy web clients and maximum performance
 
-This project is not intended for official use, but rather as a proof-of-concept for pre-rendering [Lemmy](https://github.com/LemmyNet/lemmy). Eventually it will transition into a microservice that is ran alongside Lemmy, for example, under *lite.lemmy.com* or *lemmy.com/lite*. Ideally it will run on the same machine removing any extra latency in API calls.
+Android|Desktop|iOS
+---|---|---
+![android](https://user-images.githubusercontent.com/60191958/96905327-4dd5a980-1466-11eb-973c-476ae3af27e5.png)|![desktop](https://user-images.githubusercontent.com/60191958/96905850-fedc4400-1466-11eb-8902-f8aea874b670.png)|![ios](https://user-images.githubusercontent.com/60191958/96905906-11ef1400-1467-11eb-8f56-f4f8b336a3c5.png)
 
 ### Built With
 
@@ -22,25 +25,15 @@ This project is not intended for official use, but rather as a proof-of-concept 
   - Written in rust.
   - Static, only one<sup>1</sup> tiny request per page.
   - Supports arm64 / Raspberry Pi.
+  - 13.5MB docker image.
   
 ## Installation
 
-- Symlinks won't work since nginx user (root) requires ownership of linked file
-- GZip static to allow serving of compressed files for lower bandwidth usage
 ```
-cd lemmy-lite
-gzip -kr9 static
-cp -rf static /etc/nginx/lemmy-lite
-cp -f lemmy-lite.conf /etc/nginx/sites-enabled/
-systemctl start nginx
-cargo run --release
+docker build -t lemmy-lite .
+docker run --net dev_default --link dev_lemmy_1 -p "1132:1131" -it lemmy-lite
 ```
 
-## Pictures
-
-Android|Desktop|iOS
----|---|---
-![android](https://user-images.githubusercontent.com/60191958/96905327-4dd5a980-1466-11eb-973c-476ae3af27e5.png)|![desktop](https://user-images.githubusercontent.com/60191958/96905850-fedc4400-1466-11eb-8902-f8aea874b670.png)|![ios](https://user-images.githubusercontent.com/60191958/96905906-11ef1400-1467-11eb-8f56-f4f8b336a3c5.png)
 
 ## Notes
 
@@ -57,7 +50,8 @@ Android|Desktop|iOS
 
 0. Communicate to api exclusively in docker at 8536 (don't expose), bind/expose on port 0.0.0.0:1132/tcp->docker:1131/tcp, use nginx for routing
 0. Fix user and community links (change markdown interpretation for same-site links)
-1. Change API to use web sockets instead of http
+0. Change API to use web sockets instead of http
+1. Reimplement static gzipping exclusively at compile time
 2. Consider not supporting UTF-8 and only using ASCII characters for data size and better legacy font support.
 3. Consider switching from Maud to [Sailfish](https://github.com/Kogia-sima/sailfish/tree/master/benches) to improve performance.
 
@@ -65,23 +59,3 @@ Android|Desktop|iOS
 
 1. CSS `word-spacing` is broken on iOS and NetSurf
 2. Layout is non-changing on NetSurf preventing collapsable threads
-
-## Update Script
-
-```
-killall lemmy-lite
-git pull
-rm static/*.gz
-gzip -rk9f static
-for i in static/*gz; do
-  [ -f "$i" ] || break
-  j="${i%.*}"
-  if((`stat -c%s "$i"`>=`stat -c%s "$j"`));then
-    echo "$i is larger than base, deleting"
-    rm -f "$i"
-  fi
-done
-sudo rm -rf /etc/nginx/lemmy-lite
-sudo cp -rf static /etc/nginx/lemmy-lite
-nohup cargo run --release &
-```

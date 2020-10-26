@@ -12,27 +12,10 @@ use lemmy_api::*;
 const BARE_ROOT: &str = "";
 const LITE_ROOT: &str = "/lite";
 
-
-/*
-const FAVICON_ICO: &str = "favicon.ico.gz";
-const LINK_IMG: &str = "l.svg.gz";
-const MEDIA_IMG: &str = "m.svg.gz";
-const TEXT_IMG: &str = "t.svg.gz";
-const STYLE_CSS: &str = "s.css.gz";
-
-let res = HttpResponse::Ok()
-    .content_type("application/x-protobuf")
-    //.content_encoding(ContentEncoding::Gzip) // <======= this does not work
-    .header("content-encoding", "gzip")  // <======== this works
-    .content_encoding(ContentEncoding::Identity)
-    .body(data);
-Ok(res)
-*/
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let instance_name = get_site_detail(&Client::default())
-        .await.map_err(|_| std::io::ErrorKind::NotConnected)?.site.name;
+        .await.map_err(|e| {eprintln!("{:#?}",e);std::io::ErrorKind::NotConnected})?.site.name;
     println!("Successfully connected to {}", instance_name);
 
     HttpServer::new(move || { App::new()
@@ -44,7 +27,7 @@ async fn main() -> std::io::Result<()> {
         )
         .data(BARE_ROOT).configure(config)
         
-    }).bind("127.0.0.1:1131")?.run().await
+    }).bind("0.0.0.0:1131")?.run().await
 }
 
 pub fn config(cfg: &mut ServiceConfig) {

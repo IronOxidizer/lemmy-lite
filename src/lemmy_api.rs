@@ -7,7 +7,7 @@ const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 const DEFAULT_SORT: &str = "Hot";
 
 // Const generics required for this to be useful
-// const API_URL: &str = "http://0.0.0.0:8536/api/v1/{}";
+// const API_URL: &str = "http://lemmy:8536/api/v1/{}";
 
 #[derive(Deserialize, Clone)]
 pub struct PagingParams {
@@ -334,7 +334,7 @@ pub async fn get_search(client: &Client, search_params: &SearchParams) -> Result
 
 fn build_url(endpoint: &str, paging_params: Option<&PagingParams>) -> Result<Url, ParseError> {
     // TODO: Replace url with API_URL, currently not possible without const generics
-    let mut url = Url::parse(format!("http://0.0.0.0:8536/api/v1/{}", endpoint).as_str())?;
+    let mut url = Url::parse(format!("http://lemmy:8536/api/v1/{}", endpoint).as_str())?;
     let mut url_queries = url.query_pairs_mut();
     
     match paging_params {
