@@ -334,7 +334,7 @@ pub async fn get_search(client: &Client, search_params: &SearchParams) -> Result
 
 fn build_url(endpoint: &str, paging_params: Option<&PagingParams>) -> Result<Url, ParseError> {
     // TODO: Replace url with API_URL, currently not possible without const generics
-    let mut url = Url::parse(format!("http://lemmy:8536/api/v1/{}", endpoint).as_str())?;
+    let mut url = Url::parse(format!("http://{}/api/v1/{}", env!("LEMMY_INTERNAL_HOST"), endpoint).as_str())?;
     let mut url_queries = url.query_pairs_mut();
     
     match paging_params {

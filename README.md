@@ -31,9 +31,8 @@ Android|Desktop|iOS
 
 ```
 docker build -t lemmy-lite .
-docker run --net dev_default --link dev_lemmy_1 -p "1132:1131" -it lemmy-lite
+docker run --net dev_default -p "1132:1131" -it lemmy-lite
 ```
-
 
 ## Notes
 
