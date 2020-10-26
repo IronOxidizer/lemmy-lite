@@ -6,28 +6,12 @@ use url::{Url, ParseError};
 const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 const DEFAULT_SORT: &str = "Hot";
 
-// Const generics required for this to be useful
-// const API_URL: &str = "http://lemmy:8536/api/v1/{}";
-
 #[derive(Deserialize, Clone)]
 pub struct PagingParams {
     pub s: Option<String>,  // Sort
     pub p: Option<i32>,     // Page
     pub l: Option<i32>      // Limit size
 }
-
-// impl PagingParams {
-//     pub fn to_search_params(&self) -> SearchParams {
-//         SearchParams {
-//             q: None,
-//             t: None,
-//             c: None,
-//             s: self.s.clone(),
-//             p: self.p,
-//             l: self.l
-//         }
-//     }
-// }
 
 #[derive(Deserialize, Clone)]
 pub struct SearchParams {
@@ -163,25 +147,25 @@ pub struct CommentView {
     pub post_id: i32,
     pub parent_id: Option<i32>,
     pub content: String,
-    removed: bool,
-    read: Option<bool>,
+    // removed: bool,
+    // read: Option<bool>,
     pub published: NaiveDateTime,
-    updated: Option<NaiveDateTime>,
-    deleted: Option<bool>,
-    community_id: i32,
-    community_name: String,
-    banned: bool,
-    banned_from_community: bool,
+    // updated: Option<NaiveDateTime>,
+    // deleted: Option<bool>,
+    // community_id: i32,
+    // community_name: String,
+    // banned: bool,
+    // banned_from_community: bool,
     pub creator_name: String,
-    creator_avatar: Option<String>,
+    // creator_avatar: Option<String>,
     pub score: i32,
     pub upvotes: i32,
-    pub downvotes: i32,
-    hot_rank: i32,
-    user_id: Option<i32>,
-    my_vote: Option<i32>,
-    subscribed: Option<bool>,
-    saved: Option<bool>,
+    // pub downvotes: i32,
+    // hot_rank: i32,
+    // user_id: Option<i32>,
+    // my_vote: Option<i32>,
+    // subscribed: Option<bool>,
+    // saved: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -333,7 +317,6 @@ pub async fn get_search(client: &Client, search_params: &SearchParams) -> Result
 }
 
 fn build_url(endpoint: &str, paging_params: Option<&PagingParams>) -> Result<Url, ParseError> {
-    // TODO: Replace url with API_URL, currently not possible without const generics
     let mut url = Url::parse(format!("http://{}/api/v1/{}", env!("LEMMY_INTERNAL_HOST"), endpoint).as_str())?;
     let mut url_queries = url.query_pairs_mut();
     
