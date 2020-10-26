@@ -30,11 +30,17 @@ Android|Desktop|iOS
   - Supports arm64 / Raspberry Pi.
   - 13.5MB docker image.
   
-## Installation
+## Install
 
-```
+From source:
+```sh
 docker build -t lemmy-lite .
-docker run --net dev_default -p "1132:1131" -e LEMMY_INTERNAL_HOST=lemmy:8536 -it lemmy-lite
+docker run --net dev_default -p '1132:1131' -e LEMMY_INTERNAL_HOST=lemmy:8536 -it lemmy-lite
+```
+
+From dockerhub:
+```sh
+docker run --net dev_default -p '1132:1131' -e LEMMY_INTERNAL_HOST=lemmy:8536 -it ironoxidizer/lemmy-lite:0.3.0-rc1
 ```
 
 ## Notes
