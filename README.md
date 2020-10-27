@@ -40,7 +40,7 @@ docker run --net dev_default -p '1132:1131' -e LEMMY_INTERNAL_HOST=lemmy:8536 -i
 
 From dockerhub:
 ```sh
-docker run --net dev_default -p '1132:1131' -e LEMMY_INTERNAL_HOST=lemmy:8536 -it ironoxidizer/lemmy-lite:0.3.0-rc2
+docker run --net dev_default -p '1132:1131' -e LEMMY_INTERNAL_HOST=lemmy:8536 -it ironoxidizer/lemmy-lite:0.3.0-rc3
 ```
 
 ## Notes

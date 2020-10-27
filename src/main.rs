@@ -39,7 +39,7 @@ pub fn config(cfg: &mut ServiceConfig) {
         .route("/c/{community_id}/", get().to(community))
         .route("/c/{community_id}/info/", get().to(community_info))
         .route("/post/{post_id}/",  get().to(post))
-        .route("/post/{post_id}/comment/{comment_id}",  get().to(post_comment))
+        .route("/post/{post_id}/comment/{comment_id}/",  get().to(post_comment))
 
         // Using actix-files for the sake of simplicity. NginX can be way faster and compressed.
         .service(Files::new("/", "static"));
