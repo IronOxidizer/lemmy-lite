@@ -35,7 +35,7 @@ const TEXT_IMG: &str = "/t.svg";
 
 pub fn communities_page(instance: &String, root: &'static str, community_list: CommunityList, paging_params: Option<&PagingParams>) -> Markup {
     html! {
-        (headers_markup())
+        (headers_markup(instance, root))
         (navbar_markup(instance, root, Some(html!{
             a.l href={(root) "/communities"} {"/communities"}
         }), None))
@@ -63,7 +63,7 @@ pub fn communities_page(instance: &String, root: &'static str, community_list: C
 
 pub fn post_list_page(instance: &String, root: &'static str, post_list: PostList, now: &NaiveDateTime, community: Option<&String>, paging_params: Option<&PagingParams>) -> Markup {
     html! {
-        (headers_markup())
+        (headers_markup(instance, root))
         (navbar_markup(
             instance, root,
             community.map(|c| html!{
@@ -97,7 +97,7 @@ pub fn post_list_page(instance: &String, root: &'static str, post_list: PostList
 pub fn community_info_page(instance: &String, root: &'static str, community_detail: CommunityDetail) -> Markup {
     let community = &community_detail.community;
     html! {
-        (headers_markup())
+        (headers_markup(instance, root))
         (navbar_markup(
             instance, root,
             Some(html! {
@@ -165,7 +165,7 @@ pub fn community_info_page(instance: &String, root: &'static str, community_deta
 
 pub fn post_page(instance: &String, root: &'static str, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
     html! {
-        (headers_markup())
+        (headers_markup(instance, root))
         (navbar_markup(instance, root, None, None))
         #w {
             (post_markup(root, &post_detail.post, now))
@@ -189,7 +189,7 @@ pub fn comment_page(instance: &String, root: &'static str, comment: CommentView,
     let parent = comments.iter().find(|c| Some(c.id) == comment.parent_id);
 
     html! {
-        (headers_markup())
+        (headers_markup(instance, root))
         (navbar_markup(instance, root, None, None))
         #w {
             (post_markup(root, &post_detail.post, now))
@@ -209,7 +209,7 @@ pub fn comment_page(instance: &String, root: &'static str, comment: CommentView,
 
 pub fn user_page(instance: &String, root: &'static str, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
     html!{
-        (headers_markup())
+        (headers_markup(instance, root))
         (navbar_markup(instance, root,
             Some(html!{
             a.u href={(root) "/u/" (user.user.name)} {"/u/" (user.user.name)}
@@ -230,8 +230,8 @@ pub fn user_page(instance: &String, root: &'static str, user: UserDetail, now: &
 }
 
 pub fn search_page(instance: &String, root: &'static str, now: &NaiveDateTime, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
-    html! {
-        (headers_markup())
+    html!{
+        (headers_markup(instance, root))
         (navbar_markup(instance, root, Some(html!{
             a.l href={(root) "/search"} {"/search"}
         }), Some(search_params)))
@@ -290,7 +290,7 @@ pub fn search_page(instance: &String, root: &'static str, now: &NaiveDateTime, s
     }
 }
 
-fn headers_markup() -> Markup {
+fn headers_markup(instance: &String, root: &'static str) -> Markup {
     html! {
         (DOCTYPE)
         meta charset="utf8" name="mobile-web-app-capable" content="yes";
@@ -299,8 +299,8 @@ fn headers_markup() -> Markup {
         meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1";
         meta name="theme-color" content="#222";
         meta name="description" content="Lemmy";
-        title { "Lemmy" }
-        link rel="stylesheet" href=(STYLESHEET);
+        title {(instance)}
+        link rel="stylesheet" href={(root) (STYLESHEET)};
     }
 }
 
@@ -379,15 +379,15 @@ fn post_markup(root: &'static str, post: &PostView, now: &NaiveDateTime) -> Mark
                     a href=(url) {
                         img.p src={
                             @if ends_with_any(url.clone(), MEDIA_EXT) {
-                                (MEDIA_IMG)
+                                {(root) (MEDIA_IMG)}
                             } @else {
-                                (LINK_IMG)
+                                {(root) (LINK_IMG)}
                             }
                         };
                     }
                 }, None => {
                     a href={(root) "/post/" (post.id)} {
-                        img.p src=(TEXT_IMG);
+                        img.p src={(root) (TEXT_IMG)};
                     }
                 }
             }
