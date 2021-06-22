@@ -26,10 +26,10 @@ This project is not intended for official use, but rather as a proof-of-concept 
 ## Installation
 
 - Symlinks won't work since nginx user (root) requires ownership of linked file
-- GZip static to allow serving of compressed files for lower bandwidth usage
+- Pigz static to allow serving of compressed files for lower bandwidth usage
 ```
 cd lemmy-lite
-gzip -kr9 static
+pigz -rk11f static
 cp -rf static /etc/nginx/lemmy-lite
 cp -f lemmy-lite.conf /etc/nginx/sites-enabled/
 systemctl start nginx
@@ -69,7 +69,7 @@ Android|Desktop|iOS
 killall lemmy-lite
 git pull
 rm static/*.gz
-gzip -rk9f static
+pigz -rk11f static
 for i in static/*gz; do
   [ -f "$i" ] || break
   j="${i%.*}"
