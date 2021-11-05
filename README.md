@@ -52,6 +52,7 @@ Android|Desktop|iOS
 6. Ideally, static content is served through a CDN to further improve server performance and response times.
 7. Strictly only uses characters from [BMP](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane) for legacy font support.
 8. Catch me developing lemmy-lite on my streams at [Twitch](https://www.twitch.tv/ironoxidizer) or [YouTube](https://www.youtube.com/channel/UCXeNgKTWtqOuIMXnhBHAskw)
+9. SVGs hand optimized using [Aydos SVG Path Editor](https://aydos.com/svgedit/)
 
 ## TODO
 
