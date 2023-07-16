@@ -32,10 +32,10 @@ use maud::{html, Markup, PreEscaped, DOCTYPE};
 use pulldown_cmark::{html as pchtml, CowStr, Event, Parser, Tag};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif", ".svg", ".webm", ".mp4"];
-const STYLESHEET: &str = "/static/static/s.css";
-const LINK_IMG: &str = "/static/static/l.svg";
-const MEDIA_IMG: &str = "/static/static/m.svg";
-const TEXT_IMG: &str = "/static/static/t.svg";
+const STYLESHEET: &str = "/s.css";
+const LINK_IMG: &str = "/l.svg";
+const MEDIA_IMG: &str = "/m.svg";
+const TEXT_IMG: &str = "/t.svg";
 
 pub fn communities_page(
     instance: &String,
