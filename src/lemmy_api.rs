@@ -1,6 +1,7 @@
 use actix_web::{client::Client, error::ErrorBadRequest, Result};
 use chrono::naive::NaiveDateTime;
 use lemmy_api_common::{
+    comment::GetCommentsResponse,
     community::ListCommunitiesResponse,
     post::{GetPostResponse, GetPostsResponse},
 };
@@ -76,7 +77,7 @@ impl CommunityList {
             communities: cv
                 .communities
                 .into_iter()
-                .map(|cv| CommunityView::from_lemmy(cv))
+                .map(CommunityView::from_lemmy)
                 .collect::<Vec<_>>(),
         }
     }
@@ -132,7 +133,7 @@ impl PostList {
             posts: post
                 .posts
                 .into_iter()
-                .map(|pv| PostView::from_lemmy_pv(pv))
+                .map(PostView::from_lemmy_pv)
                 .collect::<Vec<_>>(),
         }
     }
@@ -147,9 +148,26 @@ pub struct CommentView {
     pub content: String,
     pub published: NaiveDateTime,
     pub creator_name: String,
-    pub score: i32,
-    pub upvotes: i32,
-    pub downvotes: i32,
+    pub score: i64,
+    pub upvotes: i64,
+    pub downvotes: i64,
+}
+
+impl CommentView {
+    pub fn from_lemmy(cv: lemmy_api_common::lemmy_db_views::structs::CommentView) -> Self {
+        Self {
+            id: cv.comment.id.0,
+            creator_id: cv.creator.id.0,
+            post_id: cv.post.id.0,
+            parent_id: None,
+            content: cv.comment.content,
+            published: cv.comment.published,
+            creator_name: cv.creator.name,
+            score: cv.counts.score,
+            upvotes: cv.counts.upvotes,
+            downvotes: cv.counts.downvotes,
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -159,10 +177,14 @@ pub struct PostDetail {
 }
 
 impl PostDetail {
-    pub fn from(resp: GetPostResponse) -> Self {
+    pub fn from_lemmy(resp: GetPostResponse, comments: GetCommentsResponse) -> Self {
         Self {
             post: PostView::from_lemmy_pv(resp.post_view),
-            comments: vec![],
+            comments: comments
+                .comments
+                .into_iter()
+                .map(CommentView::from_lemmy)
+                .collect(),
         }
     }
 }
@@ -208,7 +230,7 @@ pub struct SearchResponse {
     pub users: Vec<UserView>,
 }
 
-pub async fn get_community_list(client: &Client, instance: &String) -> Result<CommunityList> {
+pub async fn get_community_list(client: &Client, instance: &str) -> Result<CommunityList> {
     let url = build_url(instance, "community/list")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap()
@@ -231,33 +253,31 @@ pub async fn get_community_list(client: &Client, instance: &String) -> Result<Co
 
 pub async fn get_community(
     client: &Client,
-    instance: &String,
-    community: &String,
+    instance: &str,
+    community: &str,
 ) -> Result<CommunityDetail> {
     let mut base_url = build_url(instance, "community")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap();
     let mut url_builder = base_url.query_pairs_mut();
     let url = url_builder
-        .append_pair("name", community.as_str())
+        .append_pair("name", community)
         .finish()
         .to_string();
 
     println!("Making request: {}", url);
-    Ok(CommunityDetail::from(
-        client
-            .get(url)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .limit(REQ_MAX_SIZE)
-            .await
-            .unwrap(),
-    ))
+    Ok(client
+        .get(url)
+        .send()
+        .await
+        .unwrap()
+        .json::<CommunityDetail>()
+        .limit(REQ_MAX_SIZE)
+        .await
+        .unwrap())
 }
 
-pub async fn get_post_list(client: &Client, instance: &String) -> Result<PostList> {
+pub async fn get_post_list(client: &Client, instance: &str) -> Result<PostList> {
     let base_url = build_url(instance, "post/list")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap();
@@ -275,8 +295,8 @@ pub async fn get_post_list(client: &Client, instance: &String) -> Result<PostLis
     Ok(PostList::from(result))
 }
 
-pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> Result<PostDetail> {
-    let url = build_url(instance, "post")
+pub async fn get_post(client: &Client, instance: &str, post_id: &str) -> Result<PostDetail> {
+    let post_url = build_url(instance, "post")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap()
         .query_pairs_mut()
@@ -284,9 +304,10 @@ pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> R
         .finish()
         .to_string();
 
-    println!("Making request: {}", url);
+    println!("getting post from {}", post_url);
+
     let post = client
-        .get(url)
+        .get(post_url)
         .send()
         .await
         .unwrap()
@@ -295,10 +316,30 @@ pub async fn get_post(client: &Client, instance: &String, post_id: &String) -> R
         .await
         .unwrap();
 
-    Ok(PostDetail::from(post))
+    let comment_url = build_url(instance, "comment/list")
+        .map_err(|e| ErrorBadRequest(e.to_string()))
+        .unwrap()
+        .query_pairs_mut()
+        .append_pair("post_id", post_id)
+        .finish()
+        .to_string();
+
+    println!("getting comments from {}", comment_url);
+
+    let comments = client
+        .get(comment_url)
+        .send()
+        .await
+        .unwrap()
+        .json::<GetCommentsResponse>()
+        .limit(REQ_MAX_SIZE)
+        .await
+        .unwrap();
+
+    Ok(PostDetail::from_lemmy(post, comments))
 }
 
-pub async fn get_user(client: &Client, instance: &String, username: &String) -> Result<UserDetail> {
+pub async fn get_user(client: &Client, instance: &str, username: &str) -> Result<UserDetail> {
     let url = build_url(instance, "user")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap()
@@ -309,22 +350,20 @@ pub async fn get_user(client: &Client, instance: &String, username: &String) -> 
         .to_string();
 
     println!("Making request: {}", url);
-    Ok(UserDetail::from(
-        client
-            .get(url)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .limit(REQ_MAX_SIZE)
-            .await
-            .unwrap(),
-    ))
+    Ok(client
+        .get(url)
+        .send()
+        .await
+        .unwrap()
+        .json::<UserDetail>()
+        .limit(REQ_MAX_SIZE)
+        .await
+        .unwrap())
 }
 
 pub async fn search(
     client: &Client,
-    instance: &String,
+    instance: &str,
     search_params: &SearchParams,
 ) -> Result<SearchResponse> {
     let query = search_params
@@ -346,20 +385,18 @@ pub async fn search(
     let url = url_builder.finish().to_string();
 
     println!("Making request: {}", url);
-    Ok(SearchResponse::from(
-        client
-            .get(url)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .limit(REQ_MAX_SIZE)
-            .await
-            .unwrap(),
-    ))
+    Ok(client
+        .get(url)
+        .send()
+        .await
+        .unwrap()
+        .json::<SearchResponse>()
+        .limit(REQ_MAX_SIZE)
+        .await
+        .unwrap())
 }
 
-fn build_url(instance: &String, endpoint: &str) -> Result<Url, ParseError> {
+fn build_url(instance: &str, endpoint: &str) -> Result<Url, ParseError> {
     let url = Url::parse(format!("https://{}/api/v3/{}", instance, endpoint).as_str()).unwrap();
     Ok(url)
 }

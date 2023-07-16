@@ -60,9 +60,7 @@ struct PathParams5 {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(actix_files::Files::new("/static", "/static").show_files_listing())
             .data(Client::default())
-            .route("/", web::get().to(index))
             .route("/i/{inst}", web::get().to(lvl1))
             .route("/i/{inst}/{command}", web::get().to(lvl2))
             .route("/i/{inst}/{command}/{id}", web::get().to(lvl3))
@@ -74,14 +72,11 @@ async fn main() -> std::io::Result<()> {
                 "/{inst}/{command}/{id}/{sub_command}/{sub_id}",
                 web::get().to(lvl5),
             )
+            .service(actix_files::Files::new("/", "./static").show_files_listing())
     })
     .bind("127.0.0.1:1131")?
     .run()
     .await
-}
-
-async fn index() -> Result<HttpResponse> {
-    Ok("hello".into())
 }
 
 async fn lvl1(
@@ -186,7 +181,7 @@ async fn lvl5(p: web::Path<PathParams5>, data_client: web::Data<Client>) -> Resu
             Ok(cid) => cid,
             Err(_) => return Err(error::ErrorExpectationFailed("Comment ID is invalid")),
         };
-        let comment = match post_detail.comments.iter().find(|ref c| c.id == comment_id) {
+        let comment = match post_detail.comments.iter().find(|c| c.id == comment_id) {
             Some(c) => c.clone(),
             None => {
                 return Err(error::ErrorExpectationFailed(

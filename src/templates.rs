@@ -454,7 +454,7 @@ fn comment_header_markup(
     highlight_id: Option<i32>,
     now: &NaiveDateTime,
 ) -> Markup {
-    return html! {
+    html! {
         p.ch.h[Some(comment.id) == highlight_id] {
             a.u href={"/i/" (instance) "/u/" (comment.creator_name)} {
                 (comment.creator_name)
@@ -472,7 +472,7 @@ fn comment_header_markup(
 
             (simple_duration(now, comment.published))
         }
-    };
+    }
 }
 
 fn comment_markup(
@@ -761,7 +761,7 @@ struct ImageSwapper<'a, I> {
 impl<'a, I> ImageSwapper<'a, I> {
     fn new(iter: I) -> Self {
         ImageSwapper {
-            iter: iter,
+            iter,
             image_title: None,
         }
     }
