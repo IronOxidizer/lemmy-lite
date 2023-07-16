@@ -23,9 +23,8 @@ DOM classes
 */
 
 use crate::lemmy_api::{
-    CommentView, CommunityDetail, CommunityList, CommunityModeratorView, CommunityView,
-    PagingParams, PersonView, PostDetail, PostList, PostView, SearchParams, SearchResponse,
-    UserDetail,
+    CommentData, CommunityData, CommunityDetailData, InstancePageParam, PersonPageData,
+    PersonSummaryData, PostData, PostDetailData, SearchParams, SearchResponseData,
 };
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
@@ -38,9 +37,9 @@ const MEDIA_IMG: &str = "/m.svg";
 const TEXT_IMG: &str = "/t.svg";
 
 pub fn communities_page(
-    instance: &String,
-    community_list: CommunityList,
-    paging_params: Option<&PagingParams>,
+    instance: &str,
+    community_list: &[CommunityData],
+    paging_params: Option<&InstancePageParam>,
 ) -> Markup {
     html! {
         (headers_markup())
@@ -59,7 +58,7 @@ pub fn communities_page(
                         th {"Posts"}
                         th {"Comments"}
                     }
-                    @for community in &community_list.communities {
+                    @for community in community_list {
                         (community_markup(instance, community))
                     }
                 }
@@ -70,11 +69,11 @@ pub fn communities_page(
 }
 
 pub fn post_list_page(
-    instance: &String,
-    post_list: PostList,
+    instance: &str,
+    post_list: &[PostData],
     now: &NaiveDateTime,
-    community: Option<&String>,
-    paging_params: Option<&PagingParams>,
+    community: Option<&str>,
+    paging_params: Option<&InstancePageParam>,
 ) -> Markup {
     html! {
         (headers_markup())
@@ -84,17 +83,17 @@ pub fn post_list_page(
                 a.l href=(c) {"/c/" (c)}
             }),
             community.map(|c| SearchParams {
-                q: None,
-                t: None,
-                c: Some(c.clone()),
-                s: None,
-                p: None,
-                l: None
+                query: None,
+                content_type: None,
+                community_name: Some(c.to_string()),
+                sort: None,
+                page: None,
+                limit: None
             }).as_ref()
         ))
         #w {
             (pagebar_markup(paging_params))
-            @for post in &post_list.posts {
+            @for post in post_list {
                 div { (post_markup(instance, post, now)) }
                 hr;
             }
@@ -108,7 +107,7 @@ pub fn post_list_page(
     }
 }
 
-pub fn community_info_page(instance: &String, community_detail: CommunityDetail) -> Markup {
+pub fn community_info_page(instance: &str, community_detail: CommunityDetailData) -> Markup {
     let community = &community_detail.community;
     html! {
         (headers_markup())
@@ -123,7 +122,6 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
         #w {
             h1 {(community.name)}
             h2 {(community.title)}
-            h3 {"Category: " (community.category_name)}
             h3 {"Number of online: " (community_detail.online)}
             h3 {"Number of subscribers: " (community.number_of_subscribers)}
             h3 {"Number of posts: " (community.number_of_posts)}
@@ -175,7 +173,7 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
     }
 }
 
-pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
+pub fn post_page(instance: &str, post_detail: PostDetailData, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance, None, None))
@@ -193,9 +191,9 @@ pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime
 }
 
 pub fn comment_page(
-    instance: &String,
-    comment: CommentView,
-    post_detail: PostDetail,
+    instance: &str,
+    comment: CommentData,
+    post_detail: PostDetailData,
     now: &NaiveDateTime,
 ) -> Markup {
     let mut comments = post_detail.comments;
@@ -225,10 +223,10 @@ pub fn comment_page(
 }
 
 pub fn user_page(
-    instance: &String,
-    user: UserDetail,
+    instance: &str,
+    user: PersonPageData,
     now: &NaiveDateTime,
-    paging_params: Option<&PagingParams>,
+    paging_params: Option<&InstancePageParam>,
 ) -> Markup {
     html! {
         (headers_markup())
@@ -251,9 +249,9 @@ pub fn user_page(
 }
 
 pub fn search_page(
-    instance: &String,
+    instance: &str,
     now: &NaiveDateTime,
-    search_res: Option<SearchResponse>,
+    search_res: Option<SearchResponseData>,
     search_params: &SearchParams,
 ) -> Markup {
     html! {
@@ -270,7 +268,6 @@ pub fn search_page(
                             tr {
                                 th {"Community"}
                                 th {"Title"}
-                                th {"Category"}
                                 th {"Subscribers"}
                                 th {"Posts"}
                                 th {"Comments"}
@@ -331,7 +328,7 @@ fn headers_markup() -> Markup {
 }
 
 fn navbar_markup(
-    instance: &String,
+    instance: &str,
     embed: Option<Markup>,
     search_params: Option<&SearchParams>,
 ) -> Markup {
@@ -346,7 +343,7 @@ fn navbar_markup(
             }
 
             form action={"/i/" (instance) "/search"} {
-                @if let Some(SearchParams {q: Some(query), ..}) = search_params {
+                @if let Some(SearchParams {query: Some(query), ..}) = search_params {
                     input name="q" placeholder="Search" value=((query));
                     (default_sort_markup(paging_params.as_ref()))
                     (default_limit_markup(paging_params.as_ref()))
@@ -361,14 +358,13 @@ fn navbar_markup(
     }
 }
 
-fn community_markup(instance: &String, community: &CommunityView) -> Markup {
+fn community_markup(instance: &str, community: &CommunityData) -> Markup {
     html! {
         tr {
             td {a.l href= {"/i/" (instance) "/c/" (community.name)} {
                 (community.name)
             }}
             td {(community.title)}
-            td {(community.category_name)}
             td.e {(community.number_of_subscribers)}
             td.e {(community.number_of_posts)}
             td.e {(community.number_of_comments)}
@@ -376,7 +372,7 @@ fn community_markup(instance: &String, community: &CommunityView) -> Markup {
     }
 }
 
-fn user_markup(instance: &String, user: &PersonView) -> Markup {
+fn user_markup(instance: &str, user: &PersonSummaryData) -> Markup {
     html! {
         tr {
             td {a.u href= {"/i/" (instance) "/u/" (user.name)} {
@@ -390,17 +386,17 @@ fn user_markup(instance: &String, user: &PersonView) -> Markup {
     }
 }
 
-fn moderator_markup(instance: &String, moderator: &CommunityModeratorView) -> Markup {
+fn moderator_markup(instance: &str, moderator: &str) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/i/" (instance) "/u/" (moderator.user_name)} {
-                (moderator.user_name)
+            td {a.u href= {"/i/" (instance) "/u/" (moderator)} {
+                (moderator)
             }}
         }
     }
 }
 
-fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Markup {
+fn post_markup(instance: &str, post: &PostData, now: &NaiveDateTime) -> Markup {
     html! {
         .r {
             p.s {(post.score)}
@@ -416,13 +412,13 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                         };
                     }
                 }, None => {
-                    a href={"/i/" (instance) "/post/" (post.id)} {
+                    a href={"/i/" (instance) "/c/" (post.community_name) "/p/" (post.id)} {
                         img.p src=(TEXT_IMG);
                     }
                 }
             }
             div {
-                a.s[post.stickied] href={"/i/" (instance) "/post/" (post.id)} {
+                a.s[post.stickied] href={"/i/" (instance) "/c/" (post.community_name) "/p/" (post.id)} {
                     @if post.stickied {"📌 "} (post.name)
                 }
                 .m{
@@ -436,7 +432,7 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                     }
                     div {
                         "˄ " (post.upvotes) " ˅ " (post.downvotes)
-                        a href={"/i/" (instance) "/post/" (post.id )} {
+                        a href={"/i/" (instance) "/c/" (post.community_name) "/p/" (post.id )} {
                             " • ✉ " (post.number_of_comments)
                         }
                         " • " (simple_duration(now, post.published))
@@ -448,8 +444,8 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
 }
 
 fn comment_header_markup(
-    instance: &String,
-    comment: &CommentView,
+    instance: &str,
+    comment: &CommentData,
     post_creator_id: Option<i32>,
     highlight_id: Option<i32>,
     now: &NaiveDateTime,
@@ -476,8 +472,8 @@ fn comment_header_markup(
 }
 
 fn comment_markup(
-    instance: &String,
-    comment: &CommentView,
+    instance: &str,
+    comment: &CommentData,
     post_creator_id: Option<i32>,
     highlight_id: Option<i32>,
     now: &NaiveDateTime,
@@ -501,8 +497,8 @@ fn comment_markup(
 
 // zstewart#2487@discord.rust-community-server
 fn comment_tree_markup(
-    instance: &String,
-    comments: &[CommentView],
+    instance: &str,
+    comments: &[CommentData],
     post_creator_id: i32,
     comment_parent_id: Option<i32>,
     depth: i32,
@@ -521,7 +517,7 @@ fn comment_tree_markup(
     }
 }
 
-fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
+fn pagebar_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
         .pb {
             form {
@@ -534,7 +530,7 @@ fn pagebar_markup(paging_params: Option<&PagingParams>) -> Markup {
             }
 
             div {
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                @if let Some(InstancePageParam {page: Some(page), ..}) = paging_params {
                     @if page > &1 {
                         form {
                             (default_sort_markup(paging_params))
@@ -574,7 +570,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                 (limit_size_markup(paging_params))
 
                 select name="t" {
-                    @if let Some(ref type_) = search_params.t {
+                    @if let Some(ref type_) = search_params.content_type {
                         option selected?[type_==&"All".to_string()] value="All" {"All"}
                         option selected?[type_==&"Comments".to_string()] value="Comments" {"Comments"}
                         option selected?[type_==&"Posts".to_string()] value="Posts" {"Posts"}
@@ -592,7 +588,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                     }
                 }
 
-                @if let Some(ref community) = search_params.c {
+                @if let Some(ref community) = search_params.community_name {
                     input type="text" name="c" placeholder="Community" value=((community));
                 } @else {
                     input type="text" name="c" placeholder="Community";
@@ -602,7 +598,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
             }
 
             div {
-                @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
+                @if let Some(InstancePageParam {page: Some(page), ..}) = paging_params {
                     @if page > &1 {
                         form {
                             (default_query_markup(Some(search_params)))
@@ -640,18 +636,18 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
     }
 }
 
-fn sort_markup(paging_params: Option<&PagingParams>) -> Markup {
+fn sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
         select name="s" {
-            @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
-                option selected?[sort==&"Hot".to_string()] value="Hot" {"Hot"}
-                option selected?[sort==&"Active".to_string()] value="Active" {"Active"}
-                option selected?[sort==&"New".to_string()] value="New" {"New"}
-                option selected?[sort==&"TopDay".to_string()] value="TopDay" {"Day"}
-                option selected?[sort==&"TopWeek".to_string()] value="TopWeek" {"Week"}
-                option selected?[sort==&"TopMonth".to_string()] value="TopMonth" {"Month"}
-                option selected?[sort==&"TopYear".to_string()] value="TopYear" {"Year"}
-                option selected?[sort==&"TopAll".to_string()] value="TopAll" {"All"}
+            @if let Some(InstancePageParam {sort: Some(sort), ..}) = paging_params {
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::Hot] value="Hot" {"Hot"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::Active] value="Active" {"Active"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::New] value="New" {"New"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::TopDay] value="TopDay" {"Day"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::TopWeek] value="TopWeek" {"Week"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::TopMonth] value="TopMonth" {"Month"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::TopYear] value="TopYear" {"Year"}
+                option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::TopAll] value="TopAll" {"All"}
             } @else {
                 option value="Hot" {"Hot"}
                 option value="Active" {"Active"}
@@ -666,10 +662,10 @@ fn sort_markup(paging_params: Option<&PagingParams>) -> Markup {
     }
 }
 
-fn limit_size_markup(paging_params: Option<&PagingParams>) -> Markup {
+fn limit_size_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
         select name="l" {
-            @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+            @if let Some(InstancePageParam {limit: Some(limit), ..}) = paging_params {
                 option selected?[limit==&10] value="10" {"10"}
                 option selected?[limit==&25] value="25" {"25"}
                 option selected?[limit==&50] value="50" {"50"}
@@ -684,17 +680,17 @@ fn limit_size_markup(paging_params: Option<&PagingParams>) -> Markup {
     }
 }
 
-fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
+fn default_sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
-        @if let Some(PagingParams {s: Some(sort), ..}) = paging_params {
+        @if let Some(InstancePageParam {sort: Some(sort), ..}) = paging_params {
             input type="hidden" name="s" value=((sort));
         }
     }
 }
 
-fn default_limit_markup(paging_params: Option<&PagingParams>) -> Markup {
+fn default_limit_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
-        @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
+        @if let Some(InstancePageParam {limit: Some(limit), ..}) = paging_params {
             input type="hidden" name="l" value=((limit));
         }
     }
@@ -702,7 +698,7 @@ fn default_limit_markup(paging_params: Option<&PagingParams>) -> Markup {
 
 fn default_query_markup(search_params: Option<&SearchParams>) -> Markup {
     html! {
-        @if let Some(SearchParams {q: Some(query), ..}) = search_params {
+        @if let Some(SearchParams {query: Some(query), ..}) = search_params {
             input type="hidden" name="q" value=((query));
         }
     }
@@ -710,7 +706,7 @@ fn default_query_markup(search_params: Option<&SearchParams>) -> Markup {
 
 fn default_type_markup(search_params: Option<&SearchParams>) -> Markup {
     html! {
-        @if let Some(SearchParams {t: Some(type_), ..}) = search_params {
+        @if let Some(SearchParams {content_type: Some(type_), ..}) = search_params {
             input type="hidden" name="t" value=((type_));
         }
     }
@@ -718,7 +714,7 @@ fn default_type_markup(search_params: Option<&SearchParams>) -> Markup {
 
 fn default_community_markup(search_params: Option<&SearchParams>) -> Markup {
     html! {
-        @if let Some(SearchParams {c: Some(community), ..}) = search_params {
+        @if let Some(SearchParams {community_name: Some(community), ..}) = search_params {
             input type="hidden" name="c" value=((community));
         }
     }

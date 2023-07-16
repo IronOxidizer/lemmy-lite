@@ -1,91 +1,68 @@
 use actix_web::{client::Client, error::ErrorBadRequest, Result};
 use chrono::naive::NaiveDateTime;
-use lemmy_api_common::{
-    comment::GetCommentsResponse,
-    community::ListCommunitiesResponse,
-    lemmy_db_schema::SearchType,
-    post::{GetPostResponse, GetPostsResponse},
-};
 use serde::Deserialize;
 use url::{ParseError, Url};
 
 const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 
 #[derive(Deserialize, Clone)]
-pub struct PagingParams {
-    pub s: Option<String>, // Sort
-    pub p: Option<i32>,    // Page
-    pub l: Option<i32>,    // Limit size
+pub struct InstancePageParam {
+    pub sort: Option<lemmy_api_common::lemmy_db_schema::SortType>,
+    pub page: Option<i32>,
+    pub limit: Option<i32>,
 }
 
 #[derive(Deserialize, Clone)]
 pub struct SearchParams {
-    pub q: Option<String>, // Query
-    pub t: Option<String>, // Content type
-    pub c: Option<String>, // Community name
-    pub s: Option<String>, // Sort
-    pub p: Option<i32>,    // Page
-    pub l: Option<i32>,    // Limit size
+    pub query: Option<String>,                                     // Query
+    pub content_type: Option<String>,                              // Content type
+    pub community_name: Option<String>,                            // Community name
+    pub sort: Option<lemmy_api_common::lemmy_db_schema::SortType>, // Sort
+    pub page: Option<i32>,                                         // Page
+    pub limit: Option<i32>,                                        // Limit size
 }
 
 impl SearchParams {
-    pub fn to_paging_params(&self) -> PagingParams {
-        PagingParams {
-            s: self.s.clone(),
-            p: self.p,
-            l: self.l,
+    pub fn to_paging_params(&self) -> InstancePageParam {
+        InstancePageParam {
+            sort: self.sort,
+            page: self.page,
+            limit: self.limit,
         }
     }
 }
 
 #[derive(Deserialize)]
-pub struct CommunityView {
+pub struct CommunityData {
     pub id: i32,
     pub name: String,
     pub title: String,
     pub description: Option<String>,
-    pub category_name: String,
     pub number_of_subscribers: i64,
     pub number_of_posts: i64,
     pub number_of_comments: i64,
     pub hot_rank: i32,
 }
 
-impl CommunityView {
-    pub fn from_lemmy(cv: lemmy_api_common::lemmy_db_views_actor::structs::CommunityView) -> Self {
+impl CommunityData {
+    pub fn from_lemmy(
+        lemmy: lemmy_api_common::lemmy_db_views_actor::structs::CommunityView,
+    ) -> Self {
         Self {
-            id: cv.community.id.0,
-            name: cv.community.name,
-            title: cv.community.title,
-            description: cv.community.description,
-            category_name: "Some Category Name".to_string(),
-            number_of_subscribers: cv.counts.subscribers,
-            number_of_posts: cv.counts.posts,
-            number_of_comments: cv.counts.comments,
-            hot_rank: cv.counts.hot_rank,
-        }
-    }
-}
-
-#[derive(Deserialize)]
-pub struct CommunityList {
-    pub communities: Vec<CommunityView>,
-}
-
-impl CommunityList {
-    pub fn from_lemmy(cv: ListCommunitiesResponse) -> Self {
-        Self {
-            communities: cv
-                .communities
-                .into_iter()
-                .map(CommunityView::from_lemmy)
-                .collect::<Vec<_>>(),
+            id: lemmy.community.id.0,
+            name: lemmy.community.name,
+            title: lemmy.community.title,
+            description: lemmy.community.description,
+            number_of_subscribers: lemmy.counts.subscribers,
+            number_of_posts: lemmy.counts.posts,
+            number_of_comments: lemmy.counts.comments,
+            hot_rank: lemmy.counts.hot_rank,
         }
     }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct PostView {
+pub struct PostData {
     pub id: i32,
     pub name: String,
     pub url: Option<String>,
@@ -102,46 +79,29 @@ pub struct PostView {
     pub user_id: Option<i32>,
 }
 
-impl PostView {
-    pub fn from_lemmy(pv: lemmy_api_common::lemmy_db_views::structs::PostView) -> Self {
+impl PostData {
+    pub fn from_lemmy(lemmy: lemmy_api_common::lemmy_db_views::structs::PostView) -> Self {
         Self {
-            id: pv.post.id.0,
-            name: pv.post.name,
-            url: pv.post.url.map(|url| url.to_string()),
-            body: pv.post.body,
-            creator_id: pv.post.creator_id.0,
-            published: pv.post.published,
+            id: lemmy.post.id.0,
+            name: lemmy.post.name,
+            url: lemmy.post.url.map(|url| url.to_string()),
+            body: lemmy.post.body,
+            creator_id: lemmy.post.creator_id.0,
+            published: lemmy.post.published,
             stickied: false,
-            creator_name: pv.creator.name,
-            community_name: "Some Community Name".to_string(),
-            number_of_comments: pv.counts.comments,
-            score: pv.counts.score,
-            upvotes: pv.counts.upvotes,
-            downvotes: pv.counts.downvotes,
+            creator_name: lemmy.creator.name,
+            community_name: lemmy.community.name,
+            number_of_comments: lemmy.counts.comments,
+            score: lemmy.counts.score,
+            upvotes: lemmy.counts.upvotes,
+            downvotes: lemmy.counts.downvotes,
             user_id: None,
         }
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct PostList {
-    pub posts: Vec<PostView>,
-}
-
-impl PostList {
-    pub fn from(post: GetPostsResponse) -> Self {
-        Self {
-            posts: post
-                .posts
-                .into_iter()
-                .map(PostView::from_lemmy)
-                .collect::<Vec<_>>(),
-        }
-    }
-}
-
 #[derive(Deserialize, Clone)]
-pub struct CommentView {
+pub struct CommentData {
     pub id: i32,
     pub creator_id: i32,
     pub post_id: i32,
@@ -154,49 +114,47 @@ pub struct CommentView {
     pub downvotes: i64,
 }
 
-impl CommentView {
-    pub fn from_lemmy(cv: lemmy_api_common::lemmy_db_views::structs::CommentView) -> Self {
+impl CommentData {
+    pub fn from_lemmy(lemmy: lemmy_api_common::lemmy_db_views::structs::CommentView) -> Self {
         Self {
-            id: cv.comment.id.0,
-            creator_id: cv.creator.id.0,
-            post_id: cv.post.id.0,
+            id: lemmy.comment.id.0,
+            creator_id: lemmy.creator.id.0,
+            post_id: lemmy.post.id.0,
             parent_id: None,
-            content: cv.comment.content,
-            published: cv.comment.published,
-            creator_name: cv.creator.name,
-            score: cv.counts.score,
-            upvotes: cv.counts.upvotes,
-            downvotes: cv.counts.downvotes,
+            content: lemmy.comment.content,
+            published: lemmy.comment.published,
+            creator_name: lemmy.creator.name,
+            score: lemmy.counts.score,
+            upvotes: lemmy.counts.upvotes,
+            downvotes: lemmy.counts.downvotes,
         }
     }
 }
 
 #[derive(Deserialize)]
-pub struct PostDetail {
-    pub post: PostView,
-    pub comments: Vec<CommentView>,
+pub struct PostDetailData {
+    pub post: PostData,
+    pub comments: Vec<CommentData>,
 }
 
-impl PostDetail {
-    pub fn from_lemmy(resp: GetPostResponse, comments: GetCommentsResponse) -> Self {
+impl PostDetailData {
+    pub fn from_lemmy(
+        resp: lemmy_api_common::post::GetPostResponse,
+        comments: lemmy_api_common::comment::GetCommentsResponse,
+    ) -> Self {
         Self {
-            post: PostView::from_lemmy(resp.post_view),
+            post: PostData::from_lemmy(resp.post_view),
             comments: comments
                 .comments
                 .into_iter()
-                .map(CommentView::from_lemmy)
+                .map(CommentData::from_lemmy)
                 .collect(),
         }
     }
 }
 
 #[derive(Deserialize)]
-pub struct CommunityModeratorView {
-    pub user_name: String,
-}
-
-#[derive(Deserialize)]
-pub struct PersonView {
+pub struct PersonSummaryData {
     pub name: String,
     pub post_count: i64,
     pub post_score: i64,
@@ -204,7 +162,7 @@ pub struct PersonView {
     pub comment_score: i64,
 }
 
-impl PersonView {
+impl PersonSummaryData {
     pub fn from_lemmy(lemmy: lemmy_api_common::lemmy_db_views_actor::structs::PersonView) -> Self {
         Self {
             name: lemmy.person.name,
@@ -217,86 +175,129 @@ impl PersonView {
 }
 
 #[derive(Deserialize)]
-pub struct CommunityDetail {
-    pub community: CommunityView,
-    pub moderators: Vec<CommunityModeratorView>,
-    pub admins: Option<Vec<PersonView>>,
-    pub online: i32,
+pub struct CommunityDetailData {
+    pub community: CommunityData,
+    pub moderators: Vec<String>,
+    pub admins: Option<Vec<PersonSummaryData>>,
+    pub online: i64,
+}
+
+impl CommunityDetailData {
+    pub fn from_lemmy(lemmy: lemmy_api_common::community::GetCommunityResponse) -> Self {
+        let online_count = lemmy.community_view.counts.users_active_day;
+        Self {
+            community: CommunityData::from_lemmy(lemmy.community_view),
+            moderators: lemmy
+                .moderators
+                .into_iter()
+                .map(|m| m.moderator.name)
+                .collect::<Vec<_>>(),
+            admins: None,
+            online: online_count,
+        }
+    }
 }
 
 #[derive(Deserialize)]
 struct CommunityFollowerView {}
 
 #[derive(Deserialize)]
-pub struct UserDetail {
-    pub user: PersonView,
-    pub comments: Vec<CommentView>,
-    pub posts: Vec<PostView>,
+pub struct PersonPageData {
+    pub user: PersonSummaryData,
+    pub comments: Vec<CommentData>,
+    pub posts: Vec<PostData>,
 }
 
-#[derive(Deserialize)]
-pub struct SearchResponse {
-    pub type_: String,
-    pub comments: Vec<CommentView>,
-    pub posts: Vec<PostView>,
-    pub communities: Vec<CommunityView>,
-    pub users: Vec<PersonView>,
-}
-
-impl SearchResponse {
-    pub fn from_lemmy(s: lemmy_api_common::site::SearchResponse) -> Self {
+impl PersonPageData {
+    pub fn from_lemmy(lemmy: lemmy_api_common::person::GetPersonDetailsResponse) -> Self {
         Self {
-            type_: s.type_.to_string(),
-            comments: s
+            user: PersonSummaryData::from_lemmy(lemmy.person_view),
+            comments: lemmy
                 .comments
                 .into_iter()
-                .map(CommentView::from_lemmy)
+                .map(|l| CommentData::from_lemmy(l))
                 .collect::<Vec<_>>(),
-            posts: s
+            posts: lemmy
                 .posts
                 .into_iter()
-                .map(PostView::from_lemmy)
-                .collect::<Vec<_>>(),
-            communities: s
-                .communities
-                .into_iter()
-                .map(CommunityView::from_lemmy)
-                .collect::<Vec<_>>(),
-            users: s
-                .users
-                .into_iter()
-                .map(PersonView::from_lemmy)
+                .map(|p| PostData::from_lemmy(p))
                 .collect::<Vec<_>>(),
         }
     }
 }
 
-pub async fn get_community_list(client: &Client, instance: &str) -> Result<CommunityList> {
-    let url = build_url(instance, "community/list")
+#[derive(Deserialize)]
+pub struct SearchResponseData {
+    pub type_: String,
+    pub comments: Vec<CommentData>,
+    pub posts: Vec<PostData>,
+    pub communities: Vec<CommunityData>,
+    pub users: Vec<PersonSummaryData>,
+}
+
+impl SearchResponseData {
+    pub fn from_lemmy(lemmy: lemmy_api_common::site::SearchResponse) -> Self {
+        Self {
+            type_: lemmy.type_.to_string(),
+            comments: lemmy
+                .comments
+                .into_iter()
+                .map(CommentData::from_lemmy)
+                .collect::<Vec<_>>(),
+            posts: lemmy
+                .posts
+                .into_iter()
+                .map(PostData::from_lemmy)
+                .collect::<Vec<_>>(),
+            communities: lemmy
+                .communities
+                .into_iter()
+                .map(CommunityData::from_lemmy)
+                .collect::<Vec<_>>(),
+            users: lemmy
+                .users
+                .into_iter()
+                .map(PersonSummaryData::from_lemmy)
+                .collect::<Vec<_>>(),
+        }
+    }
+}
+
+pub async fn get_community_list(
+    client: &Client,
+    instance_name: &str,
+) -> Result<Vec<CommunityData>> {
+    let url = build_url(instance_name, "community/list")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap()
         .to_string();
 
     println!("getting communities from {}", url);
 
-    let result = client
+    let url_result = client
         .get(url)
         .send()
         .await
         .unwrap()
-        .json::<ListCommunitiesResponse>()
+        .json::<lemmy_api_common::community::ListCommunitiesResponse>()
         .limit(REQ_MAX_SIZE)
         .await
         .unwrap();
 
-    Ok(CommunityList::from_lemmy(result))
+    let result = url_result
+        .communities
+        .into_iter()
+        .map(CommunityData::from_lemmy)
+        .collect::<Vec<_>>();
+
+    Ok(result)
 }
 
-pub async fn get_community(
+pub async fn get_community_info(
     client: &Client,
     instance: &str,
     community: &str,
-) -> Result<CommunityDetail> {
+) -> Result<CommunityDetailData> {
     let mut base_url = build_url(instance, "community")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap();
@@ -306,45 +307,69 @@ pub async fn get_community(
         .finish()
         .to_string();
 
-    println!("getting community from {}", url);
-
-    Ok(client
-        .get(url)
-        .send()
-        .await
-        .unwrap()
-        .json::<CommunityDetail>()
-        .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap())
-}
-
-pub async fn get_post_list(client: &Client, instance: &str) -> Result<PostList> {
-    let base_url = build_url(instance, "post/list")
-        .map_err(|e| ErrorBadRequest(e.to_string()))
-        .unwrap();
-    let url = base_url.to_string();
-
-    println!("getting posts from {}", url);
+    println!("getting community info from {}", url);
 
     let result = client
         .get(url)
         .send()
         .await
         .unwrap()
-        .json::<GetPostsResponse>()
+        .json::<lemmy_api_common::community::GetCommunityResponse>()
+        .limit(REQ_MAX_SIZE)
         .await
         .unwrap();
 
-    Ok(PostList::from(result))
+    Ok(CommunityDetailData::from_lemmy(result))
 }
 
-pub async fn get_post(client: &Client, instance: &str, post_id: &str) -> Result<PostDetail> {
-    let post_url = build_url(instance, "post")
+pub async fn get_post_list(
+    client: &Client,
+    instance_name: &str,
+    community_name: Option<&str>,
+) -> Result<Vec<PostData>> {
+    let mut base_url = build_url(instance_name, "post/list")
+        .map_err(|e| ErrorBadRequest(e.to_string()))
+        .unwrap();
+
+    let mut base_url_builder = base_url.query_pairs_mut();
+
+    if let Some(community_name) = community_name {
+        base_url_builder.append_pair("community_name", community_name);
+    }
+
+    let base_url_str = base_url_builder.finish().to_string();
+
+    println!("getting posts from {}", base_url_str);
+
+    let url_result = client
+        .get(base_url_str)
+        .send()
+        .await
+        .unwrap()
+        .json::<lemmy_api_common::post::GetPostsResponse>()
+        .await
+        .unwrap();
+
+    let result = url_result
+        .posts
+        .into_iter()
+        .map(PostData::from_lemmy)
+        .collect::<Vec<_>>();
+
+    Ok(result)
+}
+
+pub async fn get_post(
+    client: &Client,
+    instance_name: &str,
+    community_name: Option<&str>,
+    post_id: u32,
+) -> Result<PostDetailData> {
+    let post_url = build_url(instance_name, "post")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap()
         .query_pairs_mut()
-        .append_pair("id", post_id)
+        .append_pair("id", post_id.to_string().as_str())
         .finish()
         .to_string();
 
@@ -355,35 +380,40 @@ pub async fn get_post(client: &Client, instance: &str, post_id: &str) -> Result<
         .send()
         .await
         .unwrap()
-        .json::<GetPostResponse>()
+        .json::<lemmy_api_common::post::GetPostResponse>()
         .limit(REQ_MAX_SIZE)
         .await
         .unwrap();
 
-    let comment_url = build_url(instance, "comment/list")
+    let mut comment_url = build_url(instance_name, "comment/list")
         .map_err(|e| ErrorBadRequest(e.to_string()))
-        .unwrap()
-        .query_pairs_mut()
-        .append_pair("post_id", post_id)
-        .finish()
-        .to_string();
+        .unwrap();
 
-    println!("getting comments from {}", comment_url);
+    let mut comment_url_builder = comment_url.query_pairs_mut();
+    comment_url_builder.append_pair("post_id", post_id.to_string().as_str());
+
+    if let Some(community_name) = community_name {
+        comment_url_builder.append_pair("community_name", community_name);
+    }
+
+    let comment_url_str = comment_url_builder.finish().to_string();
+
+    println!("getting comments from {}", comment_url_str);
 
     let comments = client
-        .get(comment_url)
+        .get(comment_url_str)
         .send()
         .await
         .unwrap()
-        .json::<GetCommentsResponse>()
+        .json::<lemmy_api_common::comment::GetCommentsResponse>()
         .limit(REQ_MAX_SIZE)
         .await
         .unwrap();
 
-    Ok(PostDetail::from_lemmy(post, comments))
+    Ok(PostDetailData::from_lemmy(post, comments))
 }
 
-pub async fn get_user(client: &Client, instance: &str, username: &str) -> Result<UserDetail> {
+pub async fn get_user(client: &Client, instance: &str, username: &str) -> Result<PersonPageData> {
     let url = build_url(instance, "user")
         .map_err(|e| ErrorBadRequest(e.to_string()))
         .unwrap()
@@ -395,24 +425,26 @@ pub async fn get_user(client: &Client, instance: &str, username: &str) -> Result
 
     println!("getting user from {}", url);
 
-    Ok(client
+    let post_info = client
         .get(url)
         .send()
         .await
         .unwrap()
-        .json::<UserDetail>()
+        .json::<lemmy_api_common::person::GetPersonDetailsResponse>()
         .limit(REQ_MAX_SIZE)
         .await
-        .unwrap())
+        .unwrap();
+
+    Ok(PersonPageData::from_lemmy(post_info))
 }
 
 pub async fn search(
     client: &Client,
     instance: &str,
     search_params: &SearchParams,
-) -> Result<SearchResponse> {
+) -> Result<SearchResponseData> {
     let query = search_params
-        .q
+        .query
         .as_ref()
         .ok_or(ErrorBadRequest("Query cannot be empty"))
         .unwrap();
@@ -424,13 +456,14 @@ pub async fn search(
     url_builder.append_pair("q", query.as_str());
     url_builder.append_pair(
         "type_",
-        search_params
-            .t
-            .as_deref()
-            .unwrap_or(SearchType::All.to_string().as_ref()),
+        search_params.content_type.as_deref().unwrap_or(
+            lemmy_api_common::lemmy_db_schema::SearchType::All
+                .to_string()
+                .as_ref(),
+        ),
     );
     search_params
-        .c
+        .community_name
         .as_ref()
         .map(|c| url_builder.append_pair("community_name", c.as_str()));
     let url = url_builder.finish().to_string();
@@ -447,7 +480,7 @@ pub async fn search(
         .await
         .unwrap();
 
-    let result = SearchResponse::from_lemmy(search_response);
+    let result = SearchResponseData::from_lemmy(search_response);
 
     Ok(result)
 }
