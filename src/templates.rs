@@ -22,30 +22,30 @@ DOM classes
 .b? = Border 0-5
 */
 
+use crate::lemmy_api::{
+    CommentView, CommunityDetail, CommunityList, CommunityModeratorView, CommunityView,
+    PagingParams, PostDetail, PostList, PostView, SearchParams, SearchResponse, UserDetail,
+    UserView,
+};
 use chrono::naive::NaiveDateTime;
-use maud::{html, DOCTYPE, Markup, PreEscaped};
-use pulldown_cmark::{Parser, CowStr, Event, Tag, html as pchtml};
-use crate::lemmy_api::{PostView, PostList, PostDetail, CommentView, CommunityView, CommunityModeratorView, CommunityList, UserView, UserDetail, PagingParams, SearchParams, SearchResponse, CommunityDetail};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
+use pulldown_cmark::{html as pchtml, CowStr, Event, Parser, Tag};
 
 const MEDIA_EXT: &[&str] = &[".png", "jpg", ".jpeg", ".gif", ".svg", ".webm", ".mp4"];
-const STYLESHEET: &str = "/s.css";
-const LINK_IMG: &str = "/l.svg";
-const MEDIA_IMG: &str = "/m.svg";
-const TEXT_IMG: &str = "/t.svg";
+const STYLESHEET: &str = "/static/static/s.css";
+const LINK_IMG: &str = "/static/static/l.svg";
+const MEDIA_IMG: &str = "/static/static/m.svg";
+const TEXT_IMG: &str = "/static/static/t.svg";
 
-// Pure HTML redirect
-pub fn redirect_page(instance: String) -> Markup {
-    html! {
-        (headers_markup())
-        meta content={"0;URL='/" (instance) "'"} http-equiv="refresh";
-    }
-}
-
-pub fn communities_page(instance: &String, community_list: CommunityList, paging_params: Option<&PagingParams>) -> Markup {
+pub fn communities_page(
+    instance: &String,
+    community_list: CommunityList,
+    paging_params: Option<&PagingParams>,
+) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.l href={"/" (instance) "/communities"} {"/communities"}
+            a.l href={"/i/" (instance) "/communities"} {"/communities"}
         }), None))
         #w {
             (pagebar_markup(paging_params))
@@ -69,14 +69,20 @@ pub fn communities_page(instance: &String, community_list: CommunityList, paging
     }
 }
 
-pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTime, community: Option<&String>, paging_params: Option<&PagingParams>) -> Markup {
+pub fn post_list_page(
+    instance: &String,
+    post_list: PostList,
+    now: &NaiveDateTime,
+    community: Option<&String>,
+    paging_params: Option<&PagingParams>,
+) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(
             instance,
             community.map(|c| html!{
                 a.l href=(c) {"/c/" (c)}
-            }), 
+            }),
             community.map(|c| SearchParams {
                 q: None,
                 t: None,
@@ -94,7 +100,7 @@ pub fn post_list_page(instance: &String, post_list: PostList, now: &NaiveDateTim
             }
             (pagebar_markup(paging_params))
             @if let Some(c) = community {
-                a#f href={"/" (instance) "/c/" (c) "/info"} {
+                #f href={"/i/" (instance) "/c/" (c) "/info"} {
                     "More info on /c/" (c)
                 }
             }
@@ -107,10 +113,10 @@ pub fn community_info_page(instance: &String, community_detail: CommunityDetail)
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html! {
-            a.l href={"/" (instance) "/c/" (community.name)} {
+            a.l href={"/i/" (instance) "/c/" (community.name)} {
                 "/c/" (community_detail.community.name)
             }
-            a href={"/" (instance) "/c/" (community.name) "/info"} {
+            a href={"/i/" (instance) "/c/" (community.name) "/info"} {
                 "/info"
             }
         }), None))
@@ -180,18 +186,23 @@ pub fn post_page(instance: &String, post_detail: PostDetail, now: &NaiveDateTime
                 p {(mdstr_to_html(body))}
             }
             hr;
-            
+
             (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None, now))
         }
     }
 }
 
-pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDetail, now: &NaiveDateTime) -> Markup {
+pub fn comment_page(
+    instance: &String,
+    comment: CommentView,
+    post_detail: PostDetail,
+    now: &NaiveDateTime,
+) -> Markup {
     let mut comments = post_detail.comments;
     let comment_id = comment.id;
-    comments.retain(|c| Some(c.id) == comment.parent_id ||
-        c.id == comment_id ||
-        c.parent_id == Some(comment.id));
+    comments.retain(|c| {
+        Some(c.id) == comment.parent_id || c.id == comment_id || c.parent_id == Some(comment.id)
+    });
     let parent = comments.iter().find(|c| Some(c.id) == comment.parent_id);
 
     html! {
@@ -204,7 +215,7 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
                 p {(mdstr_to_html(body))}
             }
             hr;
-            
+
             @match parent {
                 Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id), now)),
                 None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id), now))
@@ -213,11 +224,16 @@ pub fn comment_page(instance: &String, comment: CommentView, post_detail: PostDe
     }
 }
 
-pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, paging_params: Option<&PagingParams>) -> Markup {
-    html!{
+pub fn user_page(
+    instance: &String,
+    user: UserDetail,
+    now: &NaiveDateTime,
+    paging_params: Option<&PagingParams>,
+) -> Markup {
+    html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.u href={"/" (instance) "/u/" (user.user.name)} {"/u/" (user.user.name)}
+            a.u href={"/i/" (instance) "/u/" (user.user.name)} {"/u/" (user.user.name)}
         }), None))
         #w {
             div { (pagebar_markup(paging_params)) }
@@ -234,11 +250,16 @@ pub fn user_page(instance: &String, user: UserDetail, now: &NaiveDateTime, pagin
     }
 }
 
-pub fn search_page(instance: &String, now: &NaiveDateTime, search_res: Option<SearchResponse>, search_params: &SearchParams) -> Markup {
+pub fn search_page(
+    instance: &String,
+    now: &NaiveDateTime,
+    search_res: Option<SearchResponse>,
+    search_params: &SearchParams,
+) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.l href={"/" (instance) "/search"} {"/search"}
+            a.l href={"/i/" (instance) "/search"} {"/search"}
         }), Some(search_params)))
         #w {
             (searchbar_markup(search_params))
@@ -309,18 +330,22 @@ fn headers_markup() -> Markup {
     }
 }
 
-fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option<&SearchParams>) -> Markup {
+fn navbar_markup(
+    instance: &String,
+    embed: Option<Markup>,
+    search_params: Option<&SearchParams>,
+) -> Markup {
     let paging_params = search_params.map(|s| s.to_paging_params());
     html! {
         #n {
-            a href={"/" (instance) "/communities"} {"Communities"}
-        
+            a href={"/i/" (instance) "/communities"} {"Communities"}
+
             div {
                 a href={"/" (instance)} {(instance)}
                 @if let Some(e) = embed {(e)}
             }
-        
-            form action={"/" (instance) "/search"} {
+
+            form action={"/i/" (instance) "/search"} {
                 @if let Some(SearchParams {q: Some(query), ..}) = search_params {
                     input name="q" placeholder="Search" value=((query));
                     (default_sort_markup(paging_params.as_ref()))
@@ -339,7 +364,7 @@ fn navbar_markup(instance: &String, embed: Option<Markup>, search_params: Option
 fn community_markup(instance: &String, community: &CommunityView) -> Markup {
     html! {
         tr {
-            td {a.l href= {"/" (instance) "/c/" (community.name)} {
+            td {a.l href= {"/i/" (instance) "/c/" (community.name)} {
                 (community.name)
             }}
             td {(community.title)}
@@ -354,7 +379,7 @@ fn community_markup(instance: &String, community: &CommunityView) -> Markup {
 fn user_markup(instance: &String, user: &UserView) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/" (instance) "/u/" (user.name)} {
+            td {a.u href= {"/i/" (instance) "/u/" (user.name)} {
                 (user.name)
             }}
             td.e {(user.post_score)}
@@ -368,7 +393,7 @@ fn user_markup(instance: &String, user: &UserView) -> Markup {
 fn moderator_markup(instance: &String, moderator: &CommunityModeratorView) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/" (instance) "/u/" (moderator.user_name)} {
+            td {a.u href= {"/i/" (instance) "/u/" (moderator.user_name)} {
                 (moderator.user_name)
             }}
         }
@@ -376,7 +401,7 @@ fn moderator_markup(instance: &String, moderator: &CommunityModeratorView) -> Ma
 }
 
 fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Markup {
-    html!{
+    html! {
         .r {
             p.s {(post.score)}
             @match &post.url {
@@ -391,27 +416,27 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
                         };
                     }
                 }, None => {
-                    a href={"/" (instance) "/post/" (post.id)} {
+                    a href={"/i/" (instance) "/post/" (post.id)} {
                         img.p src=(TEXT_IMG);
                     }
                 }
             }
             div {
-                a.s[post.stickied] href={"/" (instance) "/post/" (post.id)} {
+                a.s[post.stickied] href={"/i/" (instance) "/post/" (post.id)} {
                     @if post.stickied {"📌 "} (post.name)
                 }
                 .m{
                     "by "
-                    a.u href={"/" (instance) "/u/" (post.creator_name) " " } {
+                    a.u href={"/i/" (instance) "/u/" (post.creator_name) " " } {
                         (post.creator_name)
                     }
                     " to "
-                    a.l href= {"/" (instance) "/c/" (post.community_name)} {
+                    a.l href= {"/i/" (instance) "/c/" (post.community_name)} {
                         (post.community_name)
                     }
                     div {
                         "˄ " (post.upvotes) " ˅ " (post.downvotes)
-                        a href={"/" (instance) "/post/" (post.id )} {
+                        a href={"/i/" (instance) "/post/" (post.id )} {
                             " • ✉ " (post.number_of_comments)
                         }
                         " • " (simple_duration(now, post.published))
@@ -422,10 +447,16 @@ fn post_markup(instance: &String, post: &PostView, now: &NaiveDateTime) -> Marku
     }
 }
 
-fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
+fn comment_header_markup(
+    instance: &String,
+    comment: &CommentView,
+    post_creator_id: Option<i32>,
+    highlight_id: Option<i32>,
+    now: &NaiveDateTime,
+) -> Markup {
     return html! {
         p.ch.h[Some(comment.id) == highlight_id] {
-            a.u href={"/" (instance) "/u/" (comment.creator_name)} {
+            a.u href={"/i/" (instance) "/u/" (comment.creator_name)} {
                 (comment.creator_name)
             }
             @if let Some(pcid) = post_creator_id {
@@ -434,24 +465,31 @@ fn comment_header_markup(instance: &String, comment: &CommentView, post_creator_
                 }
             }
 
-            " ϟ" (comment.score) 
-            a href={"/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
+            " ϟ" (comment.score)
+            a href={"/i/" (instance) "/post/" (comment.post_id) "/comment/" (comment.id)} {
                 " ⚓ "
             }
-            
+
             (simple_duration(now, comment.published))
         }
-    }
+    };
 }
 
-fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Option<i32>, highlight_id: Option<i32>, now: &NaiveDateTime, children: Option<Markup>) -> Markup {
+fn comment_markup(
+    instance: &String,
+    comment: &CommentView,
+    post_creator_id: Option<i32>,
+    highlight_id: Option<i32>,
+    now: &NaiveDateTime,
+    children: Option<Markup>,
+) -> Markup {
     html! {
         (comment_header_markup(instance, comment, post_creator_id, highlight_id, now))
-        
+
         @if children.is_some() {
             input.c type="checkbox";
         }
-        
+
         div {
             (mdstr_to_html(comment.content.as_str()))
             @if let Some(c) = children {
@@ -462,9 +500,15 @@ fn comment_markup(instance: &String, comment: &CommentView, post_creator_id: Opt
 }
 
 // zstewart#2487@discord.rust-community-server
-fn comment_tree_markup(instance: &String, comments: &[CommentView],
-    post_creator_id: i32, comment_parent_id: Option<i32>, depth: i32, highlight_id: Option<i32>, now: &NaiveDateTime) -> Markup {
-
+fn comment_tree_markup(
+    instance: &String,
+    comments: &[CommentView],
+    post_creator_id: i32,
+    comment_parent_id: Option<i32>,
+    depth: i32,
+    highlight_id: Option<i32>,
+    now: &NaiveDateTime,
+) -> Markup {
     html! {
         @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
             .{"b" (
@@ -648,14 +692,6 @@ fn default_sort_markup(paging_params: Option<&PagingParams>) -> Markup {
     }
 }
 
-fn default_page_markup(paging_params: Option<&PagingParams>) -> Markup {
-    html! {
-        @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-            input type="hidden" name="p" value=((page));
-        }
-    }
-}
-
 fn default_limit_markup(paging_params: Option<&PagingParams>) -> Markup {
     html! {
         @if let Some(PagingParams {l: Some(limit), ..}) = paging_params {
@@ -689,7 +725,9 @@ fn default_community_markup(search_params: Option<&SearchParams>) -> Markup {
 }
 
 fn ends_with_any(s: String, suffixes: &'static [&'static str]) -> bool {
-    return suffixes.iter().any(|&suffix| s.to_lowercase().ends_with(suffix));
+    return suffixes
+        .iter()
+        .any(|&suffix| s.to_lowercase().ends_with(suffix));
 }
 
 fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
@@ -697,20 +735,15 @@ fn simple_duration(now: &NaiveDateTime, record: NaiveDateTime) -> String {
     if seconds < 60 {
         format!("{}s", seconds)
     } else if seconds < 3600 {
-        format!("{}m",
-            now.signed_duration_since(record).num_minutes())
+        format!("{}m", now.signed_duration_since(record).num_minutes())
     } else if seconds < 86400 {
-        format!("{}h",
-            now.signed_duration_since(record).num_hours())
+        format!("{}h", now.signed_duration_since(record).num_hours())
     } else if seconds < 2629746 {
-        format!("{}d",
-            now.signed_duration_since(record).num_days())
+        format!("{}d", now.signed_duration_since(record).num_days())
     } else if seconds < 31556952 {
-        format!("{}M",
-            now.signed_duration_since(record).num_weeks() / 4)
+        format!("{}M", now.signed_duration_since(record).num_weeks() / 4)
     } else {
-        format!("{}Y",
-            now.signed_duration_since(record).num_weeks() / 52)
+        format!("{}Y", now.signed_duration_since(record).num_weeks() / 52)
     }
 }
 
@@ -734,7 +767,8 @@ impl<'a, I> ImageSwapper<'a, I> {
     }
 }
 impl<'a, I> Iterator for ImageSwapper<'a, I>
-    where I: ::std::iter::Iterator<Item = Event<'a>>
+where
+    I: ::std::iter::Iterator<Item = Event<'a>>,
 {
     type Item = Event<'a>;
 
@@ -752,8 +786,9 @@ impl<'a, I> Iterator for ImageSwapper<'a, I>
                     self.image_title = Some(title.clone());
                     Event::Start(Tag::Link(linktype, url, title))
                 }
-                Event::End(Tag::Image(linktype, url, title)) =>
-                    Event::End(Tag::Link(linktype, url, title)),
+                Event::End(Tag::Image(linktype, url, title)) => {
+                    Event::End(Tag::Link(linktype, url, title))
+                }
                 _ => event,
             }),
             Some(title) => {
