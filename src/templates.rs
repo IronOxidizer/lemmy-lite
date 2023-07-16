@@ -24,8 +24,8 @@ DOM classes
 
 use crate::lemmy_api::{
     CommentView, CommunityDetail, CommunityList, CommunityModeratorView, CommunityView,
-    PagingParams, PostDetail, PostList, PostView, SearchParams, SearchResponse, UserDetail,
-    UserView,
+    PagingParams, PersonView, PostDetail, PostList, PostView, SearchParams, SearchResponse,
+    UserDetail,
 };
 use chrono::naive::NaiveDateTime;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
@@ -341,7 +341,7 @@ fn navbar_markup(
             a href={"/i/" (instance) "/communities"} {"Communities"}
 
             div {
-                a href={"/" (instance)} {(instance)}
+                a href={"/i/" (instance)} {(instance)}
                 @if let Some(e) = embed {(e)}
             }
 
@@ -376,16 +376,16 @@ fn community_markup(instance: &String, community: &CommunityView) -> Markup {
     }
 }
 
-fn user_markup(instance: &String, user: &UserView) -> Markup {
+fn user_markup(instance: &String, user: &PersonView) -> Markup {
     html! {
         tr {
             td {a.u href= {"/i/" (instance) "/u/" (user.name)} {
                 (user.name)
             }}
             td.e {(user.post_score)}
-            td.e {(user.number_of_posts)}
+            td.e {(user.post_count)}
             td.e {(user.comment_score)}
-            td.e {(user.number_of_comments)}
+            td.e {(user.comment_count)}
         }
     }
 }
@@ -754,10 +754,12 @@ fn mdstr_to_html(text: &str) -> Markup {
     pchtml::push_html(&mut html_output, parser);
     PreEscaped(html_output)
 }
+
 struct ImageSwapper<'a, I> {
     iter: I,
     image_title: Option<CowStr<'a>>,
 }
+
 impl<'a, I> ImageSwapper<'a, I> {
     fn new(iter: I) -> Self {
         ImageSwapper {
@@ -766,6 +768,7 @@ impl<'a, I> ImageSwapper<'a, I> {
         }
     }
 }
+
 impl<'a, I> Iterator for ImageSwapper<'a, I>
 where
     I: ::std::iter::Iterator<Item = Event<'a>>,
