@@ -1,9 +1,10 @@
 use actix_web::{client::Client, http::StatusCode, web, App, HttpResponse, HttpServer, Result};
 use chrono::offset::Utc;
-use lemmy_api::get_community_info;
+use lemmy_api::{get_community_info, RedirectToInstanceParam};
 use maud::Markup;
 use serde::Deserialize;
-use templates::community_info_page;
+use templates::{community_info_page, index_page, redirect_page};
+
 mod lemmy_api;
 mod templates;
 
@@ -22,6 +23,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .data(Client::default())
+            .route("/", web::get().to(get_index_page))
+            .route("/goto", web::get().to(redirect_to_instance_page))
             .route("/i/{inst}", web::get().to(get_instance_page))
             .route("/i/{inst}/search", web::get().to(get_search_page))
             .route(
@@ -40,6 +43,17 @@ async fn main() -> std::io::Result<()> {
     .bind("127.0.0.1:1131")?
     .run()
     .await
+}
+
+async fn get_index_page() -> Result<HttpResponse> {
+    html_res(index_page())
+}
+
+async fn redirect_to_instance_page(
+    query: web::Query<RedirectToInstanceParam>,
+) -> Result<HttpResponse> {
+    let query = query.into_inner();
+    html_res(redirect_page(&query.domain))
 }
 
 async fn get_instance_page(

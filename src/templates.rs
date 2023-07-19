@@ -36,6 +36,27 @@ const LINK_IMG: &str = "/l.svg";
 const MEDIA_IMG: &str = "/m.svg";
 const TEXT_IMG: &str = "/t.svg";
 
+// Pure HTML redirect
+pub fn redirect_page(instance: &str) -> Markup {
+    html! {
+        (headers_markup())
+        meta content={"0;URL='/i/" (instance) "'"} http-equiv="refresh";
+    }
+}
+
+pub fn index_page() -> Markup {
+    html! {
+        (headers_markup())
+        #w  {
+                form action="/goto" method="GET" {
+                label { "Enter a lemmy domain or URL" };
+                input type="text" name="domain";
+                input type="submit" value="GO";
+            }
+        }
+    }
+}
+
 pub fn communities_page(
     instance: &str,
     community_list: &[CommunityData],
