@@ -48,8 +48,8 @@ pub fn index_page() -> Markup {
     html! {
         (headers_markup())
         #w  {
-                form action="/goto" method="GET" {
-                label { "Enter a lemmy domain or URL" };
+                h2 { "Enter a lemmy domain or URL" };
+                form id="w" action="/goto" method="GET" {
                 input type="text" name="domain";
                 input type="submit" value="GO";
             }
