@@ -27,6 +27,7 @@ use crate::lemmy_api::{
     PersonSummaryData, PostData, PostDetailData, SearchParams, SearchResponseData,
 };
 use chrono::naive::NaiveDateTime;
+use lemmy_api_common::lemmy_db_schema::SortType;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use pulldown_cmark::{html as pchtml, CowStr, Event, Parser, Tag};
 
@@ -64,7 +65,7 @@ pub fn create_link(
     username: Option<&str>,
     limit: Option<i32>,
     page: Option<i32>,
-    sort: Option<&str>,
+    sort: Option<SortType>,
 ) -> String {
     let mut result = String::default();
 
@@ -110,7 +111,7 @@ pub fn communities_page(
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.l href=(create_link(Some(instance),None,None,None,None,None,None));
+            a.l href=(create_link(Some(instance),None,None,None,Some(25),Some(1),Some(SortType::Active)));
         }), None))
         #w {
             (pagebar_markup(paging_params))
@@ -146,7 +147,7 @@ pub fn post_list_page(
         (navbar_markup(
             instance,
             community.map(|c| html!{
-                a.l href=(create_link(Some(instance),Some(c),None,None,None,None,None));
+                a.l href=(create_link(Some(instance),Some(c),None,None, Some(25), Some(1), Some(SortType::Active)));
             }),
             community.map(|c| SearchParams {
                 query: None,
@@ -165,7 +166,7 @@ pub fn post_list_page(
             }
             (pagebar_markup(paging_params))
             @if let Some(c) = community {
-                #f href={(create_link(Some(instance),Some(c),None,None,None,None,None)) "/info"} {
+                #f href={(create_link(Some(instance),Some(c),None,None,Some(25),Some(1),Some(SortType::Active))) "/info"} {
                     "More info on /c/" (c)
                 }
             }
@@ -178,10 +179,10 @@ pub fn community_info_page(instance: &str, community_detail: CommunityDetailData
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html! {
-            a.l href={(create_link(Some(instance),Some(&community.name),None,None,None,None,None))} {
+            a.l href={(create_link(Some(instance),Some(&community.name),None,None,Some(25),Some(1),Some(SortType::Active)))} {
                 "/c/" (community_detail.community.name)
             }
-            a href={(create_link(Some(instance),Some(&community.name),None,None,None,None,None)) "/info"} {
+            a href={(create_link(Some(instance),Some(&community.name),None,None,Some(25),Some(1),Some(SortType::Active))) "/info"} {
                 "/info"
             }
         }), None))
@@ -265,7 +266,7 @@ pub fn user_page(
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.u href=(create_link(Some(instance),None,None,Some(&user.user.name),None,None,None)) {"/u/" (user.user.name)}
+            a.u href=(create_link(Some(instance),None,None,Some(&user.user.name),Some(25),Some(1),Some(SortType::Active))) {"/u/" (user.user.name)}
         }), None))
         #w {
             div { (pagebar_markup(paging_params)) }
@@ -291,7 +292,7 @@ pub fn search_page(
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.l href={(create_link(Some(instance),None,None,None,None,None,None)) "/search"} {"/search"}
+            a.l href={(create_link(Some(instance),None,None,None,Some(25),Some(1),Some(SortType::Active))) "/search"} {"/search"}
         }), Some(search_params)))
         #w {
             (searchbar_markup(search_params))
@@ -395,7 +396,7 @@ fn navbar_markup(
 fn community_markup(instance: &str, community: &CommunityData) -> Markup {
     html! {
         tr {
-            td {a.l href= {(create_link(Some(instance),None,None,None,None,None,None)) "/c/" (community.name)} {
+            td {a.l href=(create_link(Some(instance),Some(&community.name),None,None,Some(25),Some(1),Some(SortType::Active))) {
                 (community.name)
             }}
             td {(community.title)}
@@ -409,7 +410,7 @@ fn community_markup(instance: &str, community: &CommunityData) -> Markup {
 fn user_markup(instance: &str, user: &PersonSummaryData) -> Markup {
     html! {
         tr {
-            td {a.u href=(create_link(Some(instance),None,None,Some(&user.name),None,None,None)) {
+            td {a.u href=(create_link(Some(instance),None,None,Some(&user.name),Some(25),Some(1),Some(SortType::Active))) {
                 (user.name)
             }}
             td.e {(user.post_score)}
@@ -492,13 +493,13 @@ fn post_markup(instance: &str, post: &PostData, now: &NaiveDateTime) -> Markup {
                         (post.community_name)
                     }
                     div {
-                        "up " 
-                        (post.upvotes) 
-                        " down " 
+                        "up "
+                        (post.upvotes)
+                        " down "
                         (post.downvotes)
-                        " " 
+                        " "
                         a href={(post_link) " ✉ " (post.number_of_comments)}
-                        {" "} 
+                        {" "}
                         (simple_duration(now, post.published))
                     }
                 }
@@ -587,7 +588,7 @@ fn pagebar_markup(paging_params: Option<&InstancePageParam>) -> Markup {
             form {
                 (sort_markup(paging_params))
                 // @if let Some(PagingParams {p: Some(page), ..}) = paging_params {
-                //     input type="hidden" name="p" value=(page);
+                //     input type="hidden" name="page" value=(page);
                 // }
                 (limit_size_markup(paging_params))
                 input type="submit" value="Apply";
@@ -598,7 +599,7 @@ fn pagebar_markup(paging_params: Option<&InstancePageParam>) -> Markup {
                     @if page > &1 {
                         form {
                             (default_sort_markup(paging_params))
-                            input type="hidden" name="p" value=((page-1));
+                            input type="hidden" name="page" value=((page-1));
                             (default_limit_markup(paging_params))
                             input type="submit" value="Prev";
                         }
@@ -606,14 +607,14 @@ fn pagebar_markup(paging_params: Option<&InstancePageParam>) -> Markup {
                     }
                     form {
                         (default_sort_markup(paging_params))
-                        input type="hidden" name="p" value=((page+1));
+                        input type="hidden" name="page" value=((page+1));
                         (default_limit_markup(paging_params))
                         input type="submit" value="Next";
                     }
                 } @else {
                     form {
                         (default_sort_markup(paging_params))
-                        input type="hidden" name="p" value=(2);
+                        input type="hidden" name="page" value=(2);
                         (default_limit_markup(paging_params))
                         input type="submit" value="Next";
                     }
@@ -667,7 +668,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                         form {
                             (default_query_markup(Some(search_params)))
                             (default_sort_markup(paging_params))
-                            input type="hidden" name="p" value=((page-1));
+                            input type="hidden" name="page" value=((page-1));
                             (default_limit_markup(paging_params))
                             (default_type_markup(Some(search_params)))
                             (default_community_markup(Some(search_params)))
@@ -678,7 +679,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                     form {
                         (default_query_markup(Some(search_params)))
                         (default_sort_markup(paging_params))
-                        input type="hidden" name="p" value=((page+1));
+                        input type="hidden" name="page" value=((page+1));
                         (default_limit_markup(paging_params))
                         (default_type_markup(Some(search_params)))
                         (default_community_markup(Some(search_params)))
@@ -688,7 +689,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                     form {
                         (default_query_markup(Some(search_params)))
                         (default_sort_markup(paging_params))
-                        input type="hidden" name="p" value=(2);
+                        input type="hidden" name="page" value=(2);
                         (default_limit_markup(paging_params))
                         (default_type_markup(Some(search_params)))
                         (default_community_markup(Some(search_params)))

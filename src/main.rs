@@ -1,6 +1,7 @@
 use actix_web::{client::Client, http::StatusCode, web, App, HttpResponse, HttpServer, Result};
 use chrono::offset::Utc;
 use lemmy_api::{get_community_info, RedirectToInstanceParam};
+use lemmy_api_common::lemmy_db_schema::SortType;
 use maud::Markup;
 use serde::Deserialize;
 use templates::{community_info_page, index_page, redirect_page};
@@ -85,10 +86,7 @@ async fn get_instance_community_page(
     let client = &client.into_inner();
 
     let paging_params = &InstancePageParam {
-        sort: search_params
-            .sort
-            .clone()
-            .or(Some(lemmy_api_common::lemmy_db_schema::SortType::TopAll)),
+        sort: search_params.sort.clone().or(Some(SortType::TopAll)),
         page: search_params.page,
         limit: search_params.limit,
     };

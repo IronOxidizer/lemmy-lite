@@ -1,8 +1,17 @@
 use actix_web::{client::Client, error::ErrorBadRequest, Result as ActixResult};
 use chrono::naive::NaiveDateTime;
-use lemmy_api_common::lemmy_db_schema::SortType;
+use lemmy_api_common::{
+    comment::GetCommentsResponse,
+    community::{GetCommunityResponse, ListCommunitiesResponse},
+    lemmy_db_schema::{SearchType, SortType},
+    person::GetPersonDetailsResponse,
+    post::{GetPostResponse, GetPostsResponse},
+    site::SearchResponse,
+};
 use serde::Deserialize;
 use url::{ParseError, Url};
+
+const REQ_MAX_SIZE: usize = 80 * 1024 * 1024; // 80MB limit
 
 #[derive(Deserialize, Clone)]
 pub struct RedirectToInstanceParam {
@@ -282,7 +291,8 @@ pub async fn get_community_list(
         .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
-        .json::<lemmy_api_common::community::ListCommunitiesResponse>()
+        .json::<ListCommunitiesResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     let result = url_result
@@ -314,7 +324,8 @@ pub async fn get_community_info(
         .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
-        .json::<lemmy_api_common::community::GetCommunityResponse>()
+        .json::<GetCommunityResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     Ok(CommunityDetailData::from_lemmy(result))
@@ -358,7 +369,8 @@ pub async fn get_post_list(
         .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
-        .json::<lemmy_api_common::post::GetPostsResponse>()
+        .json::<GetPostsResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     let result = url_result
@@ -389,7 +401,8 @@ pub async fn get_post(
         .get(post_url)
         .send()
         .await?
-        .json::<lemmy_api_common::post::GetPostResponse>()
+        .json::<GetPostResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     let mut comment_url =
@@ -411,7 +424,8 @@ pub async fn get_post(
         .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
-        .json::<lemmy_api_common::comment::GetCommentsResponse>()
+        .json::<GetCommentsResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     Ok(PostDetailData::from_lemmy(post, comments))
@@ -437,7 +451,8 @@ pub async fn get_user(
         .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
-        .json::<lemmy_api_common::person::GetPersonDetailsResponse>()
+        .json::<GetPersonDetailsResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     Ok(PersonPageData::from_lemmy(post_info))
@@ -458,11 +473,10 @@ pub async fn search(
     url_builder.append_pair("q", query.as_str());
     url_builder.append_pair(
         "type_",
-        search_params.content_type.as_deref().unwrap_or(
-            lemmy_api_common::lemmy_db_schema::SearchType::All
-                .to_string()
-                .as_ref(),
-        ),
+        search_params
+            .content_type
+            .as_deref()
+            .unwrap_or(SearchType::All.to_string().as_ref()),
     );
     search_params
         .community_name
@@ -477,7 +491,7 @@ pub async fn search(
         .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
-        .json::<lemmy_api_common::site::SearchResponse>()
+        .json::<SearchResponse>()
         .await?;
 
     let result = SearchResponseData::from_lemmy(search_response);
