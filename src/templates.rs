@@ -57,6 +57,51 @@ pub fn index_page() -> Markup {
     }
 }
 
+pub fn create_link(
+    instance: Option<&str>,
+    community: Option<&str>,
+    post: Option<i32>,
+    username: Option<&str>,
+    limit: Option<i32>,
+    page: Option<i32>,
+    sort: Option<&str>,
+) -> String {
+    let mut result = String::default();
+
+    if let Some(instance) = instance {
+        result.push_str(&format!("/i/{}", instance));
+    }
+
+    if let Some(community) = community {
+        result.push_str(&format!("/c/{}", community));
+    }
+
+    if let Some(post) = post {
+        result.push_str(&format!("/p/{}", post));
+    }
+
+    if let Some(username) = username {
+        result.push_str(&format!("/u/{}", username));
+    }
+
+    let to_add = match (limit, page, sort) {
+        (None, None, Some(sort)) => format!("?sort={}", sort),
+        (None, Some(page), None) => format!("?page={}", page),
+        (None, Some(page), Some(sort)) => format!("?page={}&sort={}", page, sort),
+        (Some(limit), None, None) => format!("?limit={}", limit),
+        (Some(limit), None, Some(sort)) => todo!("?limit={}&sort={}", limit, sort),
+        (Some(limit), Some(page), None) => format!("?limit={}&page={}", limit, page),
+        (Some(limit), Some(page), Some(sort)) => {
+            format!("?limit={}&page={}&sort={}", limit, page, sort)
+        }
+        _ => String::default(),
+    };
+
+    result.push_str(&to_add);
+
+    return result;
+}
+
 pub fn communities_page(
     instance: &str,
     community_list: &[CommunityData],
@@ -65,7 +110,7 @@ pub fn communities_page(
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.l href={"/i/" (instance) "/communities"} {"/communities"}
+            a.l href=(create_link(Some(instance),None,None,None,None,None,None));
         }), None))
         #w {
             (pagebar_markup(paging_params))
@@ -101,7 +146,7 @@ pub fn post_list_page(
         (navbar_markup(
             instance,
             community.map(|c| html!{
-                a.l href=(c) {"/c/" (c)}
+                a.l href=(create_link(Some(instance),Some(c),None,None,None,None,None));
             }),
             community.map(|c| SearchParams {
                 query: None,
@@ -120,7 +165,7 @@ pub fn post_list_page(
             }
             (pagebar_markup(paging_params))
             @if let Some(c) = community {
-                #f href={"/i/" (instance) "/c/" (c) "/info"} {
+                #f href={(create_link(Some(instance),Some(c),None,None,None,None,None)) "/info"} {
                     "More info on /c/" (c)
                 }
             }
@@ -133,10 +178,10 @@ pub fn community_info_page(instance: &str, community_detail: CommunityDetailData
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html! {
-            a.l href={"/i/" (instance) "/c/" (community.name)} {
+            a.l href={(create_link(Some(instance),Some(&community.name),None,None,None,None,None))} {
                 "/c/" (community_detail.community.name)
             }
-            a href={"/i/" (instance) "/c/" (community.name) "/info"} {
+            a href={(create_link(Some(instance),Some(&community.name),None,None,None,None,None)) "/info"} {
                 "/info"
             }
         }), None))
@@ -211,38 +256,6 @@ pub fn post_page(instance: &str, post_detail: PostDetailData, now: &NaiveDateTim
     }
 }
 
-pub fn comment_page(
-    instance: &str,
-    comment: CommentData,
-    post_detail: PostDetailData,
-    now: &NaiveDateTime,
-) -> Markup {
-    let mut comments = post_detail.comments;
-    let comment_id = comment.id;
-    comments.retain(|c| {
-        Some(c.id) == comment.parent_id || c.id == comment_id || c.parent_id == Some(comment.id)
-    });
-    let parent = comments.iter().find(|c| Some(c.id) == comment.parent_id);
-
-    html! {
-        (headers_markup())
-        (navbar_markup(instance, None, None))
-        #w {
-            (post_markup(instance, &post_detail.post, now))
-
-            @if let Some(body) = &post_detail.post.body {
-                p {(mdstr_to_html(body))}
-            }
-            hr;
-
-            @match parent {
-                Some(p) => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, p.parent_id, 0, Some(comment_id), now)),
-                None => (comment_tree_markup(instance, &comments, post_detail.post.creator_id, None, 0, Some(comment_id), now))
-            }
-        }
-    }
-}
-
 pub fn user_page(
     instance: &str,
     user: PersonPageData,
@@ -252,7 +265,7 @@ pub fn user_page(
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.u href={"/i/" (instance) "/u/" (user.user.name)} {"/u/" (user.user.name)}
+            a.u href=(create_link(Some(instance),None,None,Some(&user.user.name),None,None,None)) {"/u/" (user.user.name)}
         }), None))
         #w {
             div { (pagebar_markup(paging_params)) }
@@ -278,7 +291,7 @@ pub fn search_page(
     html! {
         (headers_markup())
         (navbar_markup(instance, Some(html!{
-            a.l href={"/i/" (instance) "/search"} {"/search"}
+            a.l href={(create_link(Some(instance),None,None,None,None,None,None)) "/search"} {"/search"}
         }), Some(search_params)))
         #w {
             (searchbar_markup(search_params))
@@ -356,7 +369,7 @@ fn navbar_markup(
     let paging_params = search_params.map(|s| s.to_paging_params());
     html! {
         #n {
-            a href={"/i/" (instance) "/communities"} {"Communities"}
+            a href={"/i/" (instance) "/c"} {"Communities"}
 
             div {
                 a href={"/i/" (instance)} {(instance)}
@@ -382,7 +395,7 @@ fn navbar_markup(
 fn community_markup(instance: &str, community: &CommunityData) -> Markup {
     html! {
         tr {
-            td {a.l href= {"/i/" (instance) "/c/" (community.name)} {
+            td {a.l href= {(create_link(Some(instance),None,None,None,None,None,None)) "/c/" (community.name)} {
                 (community.name)
             }}
             td {(community.title)}
@@ -396,7 +409,7 @@ fn community_markup(instance: &str, community: &CommunityData) -> Markup {
 fn user_markup(instance: &str, user: &PersonSummaryData) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/i/" (instance) "/u/" (user.name)} {
+            td {a.u href=(create_link(Some(instance),None,None,Some(&user.name),None,None,None)) {
                 (user.name)
             }}
             td.e {(user.post_score)}
@@ -410,7 +423,7 @@ fn user_markup(instance: &str, user: &PersonSummaryData) -> Markup {
 fn moderator_markup(instance: &str, moderator: &str) -> Markup {
     html! {
         tr {
-            td {a.u href= {"/i/" (instance) "/u/" (moderator)} {
+            td {a.u href=(create_link(Some(instance),None,None,Some(moderator),None,None,None)) {
                 (moderator)
             }}
         }
@@ -418,6 +431,33 @@ fn moderator_markup(instance: &str, moderator: &str) -> Markup {
 }
 
 fn post_markup(instance: &str, post: &PostData, now: &NaiveDateTime) -> Markup {
+    let post_link = create_link(
+        Some(instance),
+        Some(&post.community_name),
+        Some(post.id),
+        None,
+        None,
+        None,
+        None,
+    );
+    let creator_link = create_link(
+        Some(instance),
+        None,
+        None,
+        Some(&post.creator_name),
+        None,
+        None,
+        None,
+    );
+    let community_link = create_link(
+        Some(instance),
+        Some(&post.community_name),
+        None,
+        None,
+        None,
+        None,
+        None,
+    );
     html! {
         .r {
             p.s {(post.score)}
@@ -433,30 +473,33 @@ fn post_markup(instance: &str, post: &PostData, now: &NaiveDateTime) -> Markup {
                         };
                     }
                 }, None => {
-                    a href={"/i/" (instance) "/c/" (post.community_name) "/p/" (post.id)} {
+                    a href=(post_link) {
                         img.p src=(TEXT_IMG);
                     }
                 }
             }
             div {
-                a.s[post.stickied] href={"/i/" (instance) "/c/" (post.community_name) "/p/" (post.id)} {
+                a.s[post.stickied] href=(post_link) {
                     @if post.stickied {"📌 "} (post.name)
                 }
                 .m{
                     "by "
-                    a.u href={"/i/" (instance) "/u/" (post.creator_name) " " } {
+                    a.u href=(creator_link) {
                         (post.creator_name)
                     }
                     " to "
-                    a.l href= {"/i/" (instance) "/c/" (post.community_name)} {
+                    a.l href=(community_link) {
                         (post.community_name)
                     }
                     div {
-                        "˄ " (post.upvotes) " ˅ " (post.downvotes)
-                        a href={"/i/" (instance) "/c/" (post.community_name) "/p/" (post.id )} {
-                            " • ✉ " (post.number_of_comments)
-                        }
-                        " • " (simple_duration(now, post.published))
+                        "up " 
+                        (post.upvotes) 
+                        " down " 
+                        (post.downvotes)
+                        " " 
+                        a href={(post_link) " ✉ " (post.number_of_comments)}
+                        {" "} 
+                        (simple_duration(now, post.published))
                     }
                 }
             }
@@ -659,7 +702,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
 
 fn sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
-        select name="s" {
+        select name="sort" {
             @if let Some(InstancePageParam {sort: Some(sort), ..}) = paging_params {
                 option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::Hot] value="Hot" {"Hot"}
                 option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::Active] value="Active" {"Active"}
@@ -685,7 +728,7 @@ fn sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
 
 fn limit_size_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
-        select name="l" {
+        select name="limit" {
             @if let Some(InstancePageParam {limit: Some(limit), ..}) = paging_params {
                 option selected?[limit==&10] value="10" {"10"}
                 option selected?[limit==&25] value="25" {"25"}
@@ -704,7 +747,7 @@ fn limit_size_markup(paging_params: Option<&InstancePageParam>) -> Markup {
 fn default_sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
         @if let Some(InstancePageParam {sort: Some(sort), ..}) = paging_params {
-            input type="hidden" name="s" value=((sort));
+            input type="hidden" name="sort" value=((sort));
         }
     }
 }
@@ -712,7 +755,7 @@ fn default_sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
 fn default_limit_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     html! {
         @if let Some(InstancePageParam {limit: Some(limit), ..}) = paging_params {
-            input type="hidden" name="l" value=((limit));
+            input type="hidden" name="limit" value=((limit));
         }
     }
 }

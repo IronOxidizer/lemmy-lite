@@ -1,9 +1,8 @@
-use actix_web::{client::Client, error::ErrorBadRequest, Result};
+use actix_web::{client::Client, error::ErrorBadRequest, Result as ActixResult};
 use chrono::naive::NaiveDateTime;
+use lemmy_api_common::lemmy_db_schema::SortType;
 use serde::Deserialize;
 use url::{ParseError, Url};
-
-const REQ_MAX_SIZE: usize = 8388608; // 8MB limit
 
 #[derive(Deserialize, Clone)]
 pub struct RedirectToInstanceParam {
@@ -12,19 +11,19 @@ pub struct RedirectToInstanceParam {
 
 #[derive(Deserialize, Clone)]
 pub struct InstancePageParam {
-    pub sort: Option<lemmy_api_common::lemmy_db_schema::SortType>,
+    pub sort: Option<SortType>,
     pub page: Option<i32>,
     pub limit: Option<i32>,
 }
 
 #[derive(Deserialize, Clone)]
 pub struct SearchParams {
-    pub query: Option<String>,                                     // Query
-    pub content_type: Option<String>,                              // Content type
-    pub community_name: Option<String>,                            // Community name
-    pub sort: Option<lemmy_api_common::lemmy_db_schema::SortType>, // Sort
-    pub page: Option<i32>,                                         // Page
-    pub limit: Option<i32>,                                        // Limit size
+    pub query: Option<String>,          // Query
+    pub content_type: Option<String>,   // Content type
+    pub community_name: Option<String>, // Community name
+    pub sort: Option<SortType>,         // Sort
+    pub page: Option<i32>,              // Page
+    pub limit: Option<i32>,             // Limit size
 }
 
 impl SearchParams {
@@ -271,7 +270,7 @@ impl SearchResponseData {
 pub async fn get_community_list(
     client: &Client,
     instance_name: &str,
-) -> Result<Vec<CommunityData>> {
+) -> ActixResult<Vec<CommunityData>> {
     let url = build_url(instance_name, "community/list")
         .map_err(|e| ErrorBadRequest(e.to_string()))?
         .to_string();
@@ -284,7 +283,6 @@ pub async fn get_community_list(
         .send()
         .await?
         .json::<lemmy_api_common::community::ListCommunitiesResponse>()
-        .limit(REQ_MAX_SIZE)
         .await?;
 
     let result = url_result
@@ -300,7 +298,7 @@ pub async fn get_community_info(
     client: &Client,
     instance: &str,
     community: &str,
-) -> Result<CommunityDetailData> {
+) -> ActixResult<CommunityDetailData> {
     let mut base_url =
         build_url(instance, "community").map_err(|e| ErrorBadRequest(e.to_string()))?;
     let mut url_builder = base_url.query_pairs_mut();
@@ -317,7 +315,6 @@ pub async fn get_community_info(
         .send()
         .await?
         .json::<lemmy_api_common::community::GetCommunityResponse>()
-        .limit(REQ_MAX_SIZE)
         .await?;
 
     Ok(CommunityDetailData::from_lemmy(result))
@@ -327,7 +324,8 @@ pub async fn get_post_list(
     client: &Client,
     instance_name: &str,
     community_name: Option<&str>,
-) -> Result<Vec<PostData>> {
+    paging_params: Option<&InstancePageParam>,
+) -> ActixResult<Vec<PostData>> {
     let mut base_url =
         build_url(instance_name, "post/list").map_err(|e| ErrorBadRequest(e.to_string()))?;
 
@@ -335,6 +333,20 @@ pub async fn get_post_list(
 
     if let Some(community_name) = community_name {
         base_url_builder.append_pair("community_name", community_name);
+    }
+
+    if let Some(paging_params) = paging_params {
+        if let Some(sort) = paging_params.sort {
+            base_url_builder.append_pair("sort", from_sort_type_to_str(sort));
+        }
+
+        if let Some(limit) = paging_params.limit {
+            base_url_builder.append_pair("limit", &format!("{}", limit));
+        }
+
+        if let Some(page) = paging_params.page {
+            base_url_builder.append_pair("page", &format!("{}", page));
+        }
     }
 
     let base_url_str = base_url_builder.finish().to_string();
@@ -363,7 +375,7 @@ pub async fn get_post(
     instance_name: &str,
     community_name: Option<&str>,
     post_id: u32,
-) -> Result<PostDetailData> {
+) -> ActixResult<PostDetailData> {
     let post_url = build_url(instance_name, "post")
         .map_err(|e| ErrorBadRequest(e.to_string()))?
         .query_pairs_mut()
@@ -378,7 +390,6 @@ pub async fn get_post(
         .send()
         .await?
         .json::<lemmy_api_common::post::GetPostResponse>()
-        .limit(REQ_MAX_SIZE)
         .await?;
 
     let mut comment_url =
@@ -401,13 +412,16 @@ pub async fn get_post(
         .send()
         .await?
         .json::<lemmy_api_common::comment::GetCommentsResponse>()
-        .limit(REQ_MAX_SIZE)
         .await?;
 
     Ok(PostDetailData::from_lemmy(post, comments))
 }
 
-pub async fn get_user(client: &Client, instance: &str, username: &str) -> Result<PersonPageData> {
+pub async fn get_user(
+    client: &Client,
+    instance: &str,
+    username: &str,
+) -> ActixResult<PersonPageData> {
     let url = build_url(instance, "user")
         .map_err(|e| ErrorBadRequest(e.to_string()))?
         .query_pairs_mut()
@@ -424,7 +438,6 @@ pub async fn get_user(client: &Client, instance: &str, username: &str) -> Result
         .send()
         .await?
         .json::<lemmy_api_common::person::GetPersonDetailsResponse>()
-        .limit(REQ_MAX_SIZE)
         .await?;
 
     Ok(PersonPageData::from_lemmy(post_info))
@@ -434,7 +447,7 @@ pub async fn search(
     client: &Client,
     instance: &str,
     search_params: &SearchParams,
-) -> Result<SearchResponseData> {
+) -> ActixResult<SearchResponseData> {
     let query = search_params
         .query
         .as_ref()
@@ -465,7 +478,6 @@ pub async fn search(
         .send()
         .await?
         .json::<lemmy_api_common::site::SearchResponse>()
-        .limit(REQ_MAX_SIZE)
         .await?;
 
     let result = SearchResponseData::from_lemmy(search_response);
@@ -473,7 +485,29 @@ pub async fn search(
     Ok(result)
 }
 
-fn build_url(instance: &str, endpoint: &str) -> Result<Url, ParseError> {
+fn build_url(instance: &str, endpoint: &str) -> ActixResult<Url, ParseError> {
     let url = Url::parse(format!("https://{}/api/v3/{}", instance, endpoint).as_str())?;
     Ok(url)
+}
+
+fn from_sort_type_to_str(sort: SortType) -> &'static str {
+    match sort {
+        SortType::Active => "Active",
+        SortType::Hot => "Hot",
+        SortType::New => "New",
+        SortType::Old => "Old",
+        SortType::TopDay => "TopDay",
+        SortType::TopWeek => "TopWeek",
+        SortType::TopMonth => "TopMonth",
+        SortType::TopYear => "TopYear",
+        SortType::TopAll => "TopAll",
+        SortType::MostComments => "MostComments",
+        SortType::NewComments => "NewComments",
+        SortType::TopHour => "TopHour",
+        SortType::TopSixHour => "TopSixHour",
+        SortType::TopTwelveHour => "TopTwelveHour",
+        SortType::TopThreeMonths => "TopThreeMonths",
+        SortType::TopSixMonths => "TopSixMonths",
+        SortType::TopNineMonths => "TopNineMonths",
+    }
 }

@@ -27,10 +27,7 @@ async fn main() -> std::io::Result<()> {
             .route("/goto", web::get().to(redirect_to_instance_page))
             .route("/i/{inst}", web::get().to(get_instance_page))
             .route("/i/{inst}/search", web::get().to(get_search_page))
-            .route(
-                "/i/{inst}/communities",
-                web::get().to(get_instance_community_page),
-            )
+            .route("/i/{inst}/c", web::get().to(get_instance_community_page))
             .route("/i/{inst}/c/{community}", web::get().to(get_community_page))
             .route(
                 "/i/{inst}/c/{community}/info",
@@ -67,7 +64,7 @@ async fn get_instance_page(
     let now = &Utc::now().naive_utc();
     let paging_params = &query.into_inner();
 
-    let post_list = get_post_list(client, inst, None).await?;
+    let post_list = get_post_list(client, inst, None, Some(paging_params)).await?;
 
     html_res(post_list_page(
         inst,
@@ -115,7 +112,13 @@ async fn get_community_page(
     let now = &Utc::now().naive_utc();
     let paging_params = &query.into_inner();
 
-    let post_list = get_post_list(client, &instance_name, Some(&community_name)).await?;
+    let post_list = get_post_list(
+        client,
+        &instance_name,
+        Some(&community_name),
+        Some(paging_params),
+    )
+    .await?;
 
     html_res(post_list_page(
         &instance_name,
