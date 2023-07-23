@@ -146,10 +146,7 @@ async fn get_search_page(
     let search_params = &query.into_inner();
 
     let now = &Utc::now().naive_utc();
-    let search_res = match search_params.query {
-        Some(ref query) if !query.is_empty() => Some(search(client, &p.inst, search_params).await?),
-        _ => None,
-    };
+    let search_res = Some(search(client, &p.inst, search_params).await?);
 
     html_res(search_page(&p.inst, now, search_res, search_params))
 }
@@ -161,8 +158,8 @@ async fn get_post_page(
     let (instance_name, community_name, post_id) = path.into_inner();
     let client = &data_client.into_inner();
     let now = &Utc::now().naive_utc();
-    let post_detail = get_post(client, &instance_name, Some(&community_name), post_id).await?;
-    html_res(post_page(&instance_name, post_detail, now))
+    let post_detail_data = get_post(client, &instance_name, Some(&community_name), post_id).await?;
+    html_res(post_page(&instance_name, post_detail_data, now))
 }
 
 async fn get_user_page(

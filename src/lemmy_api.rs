@@ -4,6 +4,8 @@ use lemmy_api_common::{
     comment::GetCommentsResponse,
     community::{GetCommunityResponse, ListCommunitiesResponse},
     lemmy_db_schema::{SearchType, SortType},
+    lemmy_db_views::structs::CommentView,
+    lemmy_db_views_actor::structs::PersonView,
     person::GetPersonDetailsResponse,
     post::{GetPostResponse, GetPostsResponse},
     site::SearchResponse,
@@ -27,12 +29,12 @@ pub struct InstancePageParam {
 
 #[derive(Deserialize, Clone)]
 pub struct SearchParams {
-    pub query: Option<String>,          // Query
-    pub content_type: Option<String>,   // Content type
-    pub community_name: Option<String>, // Community name
-    pub sort: Option<SortType>,         // Sort
-    pub page: Option<i32>,              // Page
-    pub limit: Option<i32>,             // Limit size
+    pub query: Option<String>,            // Query
+    pub content_type: Option<SearchType>, // Content type
+    pub community_name: Option<String>,   // Community name
+    pub sort: Option<SortType>,           // Sort
+    pub page: Option<i32>,                // Page
+    pub limit: Option<i32>,               // Limit size
 }
 
 impl SearchParams {
@@ -118,28 +120,36 @@ pub struct CommentData {
     pub id: i32,
     pub creator_id: i32,
     pub post_id: i32,
-    pub parent_id: Option<i32>,
     pub content: String,
     pub published: NaiveDateTime,
     pub creator_name: String,
     pub score: i64,
     pub upvotes: i64,
     pub downvotes: i64,
+    pub chain: Vec<i32>,
 }
 
 impl CommentData {
-    pub fn from_lemmy(lemmy: lemmy_api_common::lemmy_db_views::structs::CommentView) -> Self {
+    pub fn from_lemmy(lemmy: CommentView) -> Self {
         Self {
             id: lemmy.comment.id.0,
             creator_id: lemmy.creator.id.0,
             post_id: lemmy.post.id.0,
-            parent_id: None,
             content: lemmy.comment.content,
             published: lemmy.comment.published,
             creator_name: lemmy.creator.name,
             score: lemmy.counts.score,
             upvotes: lemmy.counts.upvotes,
             downvotes: lemmy.counts.downvotes,
+            chain: lemmy
+                .comment
+                .path
+                .split(".")
+                .skip(1)
+                .map(|s| {
+                    i32::from_str_radix(s, 10).expect("should only contain valid integer strings")
+                })
+                .collect::<Vec<_>>(),
         }
     }
 }
@@ -151,10 +161,7 @@ pub struct PostDetailData {
 }
 
 impl PostDetailData {
-    pub fn from_lemmy(
-        resp: lemmy_api_common::post::GetPostResponse,
-        comments: lemmy_api_common::comment::GetCommentsResponse,
-    ) -> Self {
+    pub fn from_lemmy(resp: GetPostResponse, comments: GetCommentsResponse) -> Self {
         Self {
             post: PostData::from_lemmy(resp.post_view),
             comments: comments
@@ -176,7 +183,7 @@ pub struct PersonSummaryData {
 }
 
 impl PersonSummaryData {
-    pub fn from_lemmy(lemmy: lemmy_api_common::lemmy_db_views_actor::structs::PersonView) -> Self {
+    pub fn from_lemmy(lemmy: PersonView) -> Self {
         Self {
             name: lemmy.person.name,
             post_count: lemmy.counts.post_count,
@@ -196,7 +203,7 @@ pub struct CommunityDetailData {
 }
 
 impl CommunityDetailData {
-    pub fn from_lemmy(lemmy: lemmy_api_common::community::GetCommunityResponse) -> Self {
+    pub fn from_lemmy(lemmy: GetCommunityResponse) -> Self {
         let online_count = lemmy.community_view.counts.users_active_day;
         Self {
             community: CommunityData::from_lemmy(lemmy.community_view),
@@ -222,7 +229,7 @@ pub struct PersonPageData {
 }
 
 impl PersonPageData {
-    pub fn from_lemmy(lemmy: lemmy_api_common::person::GetPersonDetailsResponse) -> Self {
+    pub fn from_lemmy(lemmy: GetPersonDetailsResponse) -> Self {
         Self {
             user: PersonSummaryData::from_lemmy(lemmy.person_view),
             comments: lemmy
@@ -249,7 +256,7 @@ pub struct SearchResponseData {
 }
 
 impl SearchResponseData {
-    pub fn from_lemmy(lemmy: lemmy_api_common::site::SearchResponse) -> Self {
+    pub fn from_lemmy(lemmy: SearchResponse) -> Self {
         Self {
             type_: lemmy.type_.to_string(),
             comments: lemmy
@@ -399,6 +406,7 @@ pub async fn get_post(
 
     let post = client
         .get(post_url)
+        .set_header("User-Agent", "lemmy-lite")
         .send()
         .await?
         .json::<GetPostResponse>()
@@ -414,6 +422,8 @@ pub async fn get_post(
     if let Some(community_name) = community_name {
         comment_url_builder.append_pair("community_name", community_name);
     }
+
+    comment_url_builder.append_pair("limit", "50");
 
     let comment_url_str = comment_url_builder.finish().to_string();
 
@@ -463,25 +473,31 @@ pub async fn search(
     instance: &str,
     search_params: &SearchParams,
 ) -> ActixResult<SearchResponseData> {
-    let query = search_params
-        .query
-        .as_ref()
-        .ok_or(ErrorBadRequest("Query cannot be empty"))?;
-
     let mut base_url = build_url(instance, "search").map_err(|e| ErrorBadRequest(e.to_string()))?;
     let mut url_builder = base_url.query_pairs_mut();
-    url_builder.append_pair("q", query.as_str());
-    url_builder.append_pair(
-        "type_",
-        search_params
-            .content_type
-            .as_deref()
-            .unwrap_or(SearchType::All.to_string().as_ref()),
-    );
-    search_params
-        .community_name
-        .as_ref()
-        .map(|c| url_builder.append_pair("community_name", c.as_str()));
+
+    if let Some(query) = &search_params.query {
+        url_builder.append_pair("q", query.as_str());
+    } else {
+        url_builder.append_pair("q", "");
+    }
+    if let Some(content_type) = &search_params.content_type {
+        url_builder.append_pair("type_", from_search_type_to_str(*content_type));
+    } else {
+        url_builder.append_pair("type_", from_search_type_to_str(SearchType::All));
+    }
+    if let Some(community_name) = &search_params.community_name {
+        url_builder.append_pair("community_name", community_name.as_str());
+    }
+    if let Some(sort) = &search_params.sort {
+        url_builder.append_pair("sort", from_sort_type_to_str(*sort));
+    }
+    if let Some(page) = &search_params.page {
+        url_builder.append_pair("page", &format!("{}", page));
+    }
+    if let Some(limit) = &search_params.limit {
+        url_builder.append_pair("limit", &format!("{}", limit));
+    }
     let url = url_builder.finish().to_string();
 
     println!("getting search from {}", url);
@@ -489,9 +505,11 @@ pub async fn search(
     let search_response = client
         .get(url)
         .set_header("User-Agent", "lemmy-lite")
+        // .set_header("Accept-Encoding", "gzip, deflate, br")
         .send()
         .await?
         .json::<SearchResponse>()
+        .limit(REQ_MAX_SIZE)
         .await?;
 
     let result = SearchResponseData::from_lemmy(search_response);
@@ -523,5 +541,16 @@ fn from_sort_type_to_str(sort: SortType) -> &'static str {
         SortType::TopThreeMonths => "TopThreeMonths",
         SortType::TopSixMonths => "TopSixMonths",
         SortType::TopNineMonths => "TopNineMonths",
+    }
+}
+
+pub fn from_search_type_to_str(search_type: SearchType) -> &'static str {
+    match search_type {
+        SearchType::All => "All",
+        SearchType::Comments => "Comments",
+        SearchType::Posts => "Posts",
+        SearchType::Communities => "Communities",
+        SearchType::Users => "Users",
+        SearchType::Url => "Url",
     }
 }

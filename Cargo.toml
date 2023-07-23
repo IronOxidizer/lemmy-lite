@@ -14,3 +14,4 @@ pulldown-cmark = { version = "0.8", default-features = false }
 serde_json = "1.0.102"
 lemmy_api_common = "0.18.2"
 actix-files = "0.4.1"
+awc = "2.0.3"

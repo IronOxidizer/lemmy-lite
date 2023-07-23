@@ -22,9 +22,11 @@ DOM classes
 .b? = Border 0-5
 */
 
+use std::iter::once;
+
 use crate::lemmy_api::{
-    CommentData, CommunityData, CommunityDetailData, InstancePageParam, PersonPageData,
-    PersonSummaryData, PostData, PostDetailData, SearchParams, SearchResponseData,
+    from_search_type_to_str, CommentData, CommunityData, CommunityDetailData, InstancePageParam,
+    PersonPageData, PersonSummaryData, PostData, PostDetailData, SearchParams, SearchResponseData,
 };
 use chrono::naive::NaiveDateTime;
 use lemmy_api_common::lemmy_db_schema::SortType;
@@ -240,19 +242,20 @@ pub fn community_info_page(instance: &str, community_detail: CommunityDetailData
     }
 }
 
-pub fn post_page(instance: &str, post_detail: PostDetailData, now: &NaiveDateTime) -> Markup {
+pub fn post_page(instance: &str, post_detail_data: PostDetailData, now: &NaiveDateTime) -> Markup {
     html! {
         (headers_markup())
         (navbar_markup(instance, None, None))
         #w {
-            (post_markup(instance, &post_detail.post, now))
+            (pagebar_markup(None))
+            (post_markup(instance, &post_detail_data.post, now))
 
-            @if let Some(body) = &post_detail.post.body {
+            @if let Some(body) = &post_detail_data.post.body {
                 p {(mdstr_to_html(body))}
             }
             hr;
 
-            (comment_tree_markup(instance, &post_detail.comments, post_detail.post.creator_id, None, 0, None, now))
+            (comment_tree_markup(instance, &post_detail_data.comments, post_detail_data.post.creator_id, &vec![], None, now))
         }
     }
 }
@@ -384,7 +387,7 @@ fn navbar_markup(
                     (default_limit_markup(paging_params.as_ref()))
                     (default_type_markup(search_params))
                 } @else {
-                    input name="q" placeholder="Search";
+                    input name="query" placeholder="Search";
                 }
                 (default_community_markup(search_params))
                 input type="submit" value="Go";
@@ -493,11 +496,10 @@ fn post_markup(instance: &str, post: &PostData, now: &NaiveDateTime) -> Markup {
                         (post.community_name)
                     }
                     div {
-                        "up "
                         (post.upvotes)
-                        " down "
+                        " up "
                         (post.downvotes)
-                        " "
+                        " down "
                         a href={(post_link) " ✉ " (post.number_of_comments)}
                         {" "}
                         (simple_duration(now, post.published))
@@ -565,18 +567,37 @@ fn comment_tree_markup(
     instance: &str,
     comments: &[CommentData],
     post_creator_id: i32,
-    comment_parent_id: Option<i32>,
-    depth: i32,
+    chain: &Vec<i32>,
     highlight_id: Option<i32>,
     now: &NaiveDateTime,
 ) -> Markup {
     html! {
-        @for comment in comments.iter().filter(|c| c.parent_id == comment_parent_id) {
-            .{"b" (
-                if depth == 0 {"r".to_string()} else {((depth - 1)%6).to_string()}
-                )} {
-                (comment_markup(instance, comment, Some(post_creator_id), highlight_id, now,
-                    Some(comment_tree_markup(instance, comments, post_creator_id, Some(comment.id), depth+1, highlight_id, now))))
+        @for comment in comments.iter()
+        .filter(|s| s.chain == chain.iter().copied().chain(once(s.id)).collect::<Vec<_>>()) {
+            .{
+                "b" (
+                    if chain.len() == 0 {
+                        "r".to_string()
+                    } else {
+                        ((chain.len() - 1)%6).to_string()
+                    }
+                )
+            }
+            {
+                (comment_markup(
+                    instance,
+                    comment,
+                    Some(post_creator_id),
+                    highlight_id,
+                    now,
+                    Some(
+                        comment_tree_markup(
+                            instance,
+                            comments,
+                            post_creator_id,
+                            &comment.chain,
+                            highlight_id,
+                            now))))
             }
         }
     }
@@ -634,14 +655,14 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                 (sort_markup(paging_params))
                 (limit_size_markup(paging_params))
 
-                select name="t" {
+                select name="content_type" {
                     @if let Some(ref type_) = search_params.content_type {
-                        option selected?[type_==&"All".to_string()] value="All" {"All"}
-                        option selected?[type_==&"Comments".to_string()] value="Comments" {"Comments"}
-                        option selected?[type_==&"Posts".to_string()] value="Posts" {"Posts"}
-                        option selected?[type_==&"Communities".to_string()] value="Communities" {"Communities"}
-                        option selected?[type_==&"Users".to_string()] value="Users" {"Users"}
-                        option selected?[type_==&"Url".to_string()] value="Url" {"URLs"}
+                        option selected?[from_search_type_to_str(*type_)=="All"] value="All" {"All"}
+                        option selected?[from_search_type_to_str(*type_)=="Comments"] value="Comments" {"Comments"}
+                        option selected?[from_search_type_to_str(*type_)=="Posts"] value="Posts" {"Posts"}
+                        option selected?[from_search_type_to_str(*type_)=="Communities"] value="Communities" {"Communities"}
+                        option selected?[from_search_type_to_str(*type_)=="Users"] value="Users" {"Users"}
+                        option selected?[from_search_type_to_str(*type_)=="Url"] value="Url" {"URLs"}
 
                     } @else {
                         option value="All" {"All"}
@@ -654,9 +675,9 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
                 }
 
                 @if let Some(ref community) = search_params.community_name {
-                    input type="text" name="c" placeholder="Community" value=((community));
+                    input type="text" name="community_name" placeholder="Community" value=((community));
                 } @else {
-                    input type="text" name="c" placeholder="Community";
+                    input type="text" name="community_name" placeholder="Community";
                 }
 
                 input type="submit" value="Apply";
@@ -780,7 +801,7 @@ fn default_type_markup(search_params: Option<&SearchParams>) -> Markup {
 fn default_community_markup(search_params: Option<&SearchParams>) -> Markup {
     html! {
         @if let Some(SearchParams {community_name: Some(community), ..}) = search_params {
-            input type="hidden" name="c" value=((community));
+            input type="hidden" name="community_name" value=((community));
         }
     }
 }
