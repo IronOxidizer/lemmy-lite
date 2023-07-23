@@ -1,4 +1,7 @@
-use actix_web::{client::Client, http::StatusCode, web, App, HttpResponse, HttpServer, Result};
+use actix_web::{
+    http::StatusCode, web, web::Data, App, HttpResponse, HttpServer, Result as ActixResult,
+};
+use awc::Client as AwcClient;
 use chrono::offset::Utc;
 use lemmy_api::{get_community_info, RedirectToInstanceParam};
 use lemmy_api_common::lemmy_db_schema::SortType;
@@ -21,9 +24,11 @@ struct SearchPageParam {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+
     HttpServer::new(|| {
         App::new()
-            .data(Client::default())
+            .app_data(Data::new(AwcClient::default()))
             .route("/", web::get().to(get_index_page))
             .route("/goto", web::get().to(redirect_to_instance_page))
             .route("/i/{inst}", web::get().to(get_instance_page))
@@ -43,13 +48,13 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn get_index_page() -> Result<HttpResponse> {
+async fn get_index_page() -> ActixResult<HttpResponse> {
     html_res(index_page())
 }
 
 async fn redirect_to_instance_page(
     query: web::Query<RedirectToInstanceParam>,
-) -> Result<HttpResponse> {
+) -> ActixResult<HttpResponse> {
     let query = query.into_inner();
     html_res(redirect_page(&query.domain))
 }
@@ -57,8 +62,8 @@ async fn redirect_to_instance_page(
 async fn get_instance_page(
     path: web::Path<String>,
     query: web::Query<InstancePageParam>,
-    data_client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    data_client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let inst = &path.to_string();
     let client = &data_client.into_inner();
 
@@ -79,8 +84,8 @@ async fn get_instance_page(
 async fn get_instance_community_page(
     path: web::Path<String>,
     query: web::Query<SearchParams>,
-    client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let instance_name = path.into_inner();
     let search_params = &query.into_inner();
     let client = &client.into_inner();
@@ -102,8 +107,8 @@ async fn get_instance_community_page(
 async fn get_community_page(
     path: web::Path<(String, String)>,
     query: web::Query<InstancePageParam>,
-    data_client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    data_client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let (instance_name, community_name) = path.into_inner();
     let client = &data_client.into_inner();
 
@@ -129,8 +134,8 @@ async fn get_community_page(
 
 async fn get_community_info_page(
     path: web::Path<(String, String)>,
-    data_client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    data_client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let (instance_name, community_name) = path.into_inner();
     let client = &data_client.into_inner();
     let community_info = get_community_info(client, &instance_name, &community_name).await?;
@@ -140,8 +145,8 @@ async fn get_community_info_page(
 async fn get_search_page(
     p: web::Path<SearchPageParam>,
     query: web::Query<SearchParams>,
-    data_client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    data_client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let client = &data_client.into_inner();
     let search_params = &query.into_inner();
 
@@ -153,8 +158,8 @@ async fn get_search_page(
 
 async fn get_post_page(
     path: web::Path<(String, String, u32)>,
-    data_client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    data_client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let (instance_name, community_name, post_id) = path.into_inner();
     let client = &data_client.into_inner();
     let now = &Utc::now().naive_utc();
@@ -165,8 +170,8 @@ async fn get_post_page(
 async fn get_user_page(
     path: web::Path<(String, String)>,
     query: web::Query<InstancePageParam>,
-    data_client: web::Data<Client>,
-) -> Result<HttpResponse> {
+    data_client: web::Data<AwcClient>,
+) -> ActixResult<HttpResponse> {
     let (instance_name, user_name) = path.into_inner();
     let client = &data_client.into_inner();
     let now = &Utc::now().naive_utc();
@@ -175,7 +180,7 @@ async fn get_user_page(
     html_res(user_page(&instance_name, user, now, Some(paging_params)))
 }
 
-fn html_res(markup: Markup) -> Result<HttpResponse> {
+fn html_res(markup: Markup) -> ActixResult<HttpResponse> {
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(markup.into_string()))

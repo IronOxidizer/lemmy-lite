@@ -1,4 +1,5 @@
-use actix_web::{client::Client, error::ErrorBadRequest, Result as ActixResult};
+use actix_web::{error::ErrorBadRequest, Result as ActixResult};
+use awc::Client as AwcClient;
 use chrono::naive::NaiveDateTime;
 use lemmy_api_common::{
     comment::GetCommentsResponse,
@@ -284,7 +285,7 @@ impl SearchResponseData {
 }
 
 pub async fn get_community_list(
-    client: &Client,
+    client: &AwcClient,
     instance_name: &str,
 ) -> ActixResult<Vec<CommunityData>> {
     let url = build_url(instance_name, "community/list")
@@ -295,12 +296,14 @@ pub async fn get_community_list(
 
     let url_result = client
         .get(url)
-        .set_header("User-Agent", "lemmy-lite")
+        .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<ListCommunitiesResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     let result = url_result
         .communities
@@ -312,7 +315,7 @@ pub async fn get_community_list(
 }
 
 pub async fn get_community_info(
-    client: &Client,
+    client: &AwcClient,
     instance: &str,
     community: &str,
 ) -> ActixResult<CommunityDetailData> {
@@ -328,18 +331,20 @@ pub async fn get_community_info(
 
     let result = client
         .get(url)
-        .set_header("User-Agent", "lemmy-lite")
+        .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<GetCommunityResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     Ok(CommunityDetailData::from_lemmy(result))
 }
 
 pub async fn get_post_list(
-    client: &Client,
+    client: &AwcClient,
     instance_name: &str,
     community_name: Option<&str>,
     paging_params: Option<&InstancePageParam>,
@@ -373,12 +378,14 @@ pub async fn get_post_list(
 
     let url_result = client
         .get(base_url_str)
-        .set_header("User-Agent", "lemmy-lite")
+        .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<GetPostsResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     let result = url_result
         .posts
@@ -390,7 +397,7 @@ pub async fn get_post_list(
 }
 
 pub async fn get_post(
-    client: &Client,
+    client: &AwcClient,
     instance_name: &str,
     community_name: Option<&str>,
     post_id: u32,
@@ -406,12 +413,14 @@ pub async fn get_post(
 
     let post = client
         .get(post_url)
-        .set_header("User-Agent", "lemmy-lite")
+        .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<GetPostResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     let mut comment_url =
         build_url(instance_name, "comment/list").map_err(|e| ErrorBadRequest(e.to_string()))?;
@@ -431,18 +440,20 @@ pub async fn get_post(
 
     let comments = client
         .get(comment_url_str)
-        .set_header("User-Agent", "lemmy-lite")
+        .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<GetCommentsResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     Ok(PostDetailData::from_lemmy(post, comments))
 }
 
 pub async fn get_user(
-    client: &Client,
+    client: &AwcClient,
     instance: &str,
     username: &str,
 ) -> ActixResult<PersonPageData> {
@@ -458,18 +469,20 @@ pub async fn get_user(
 
     let post_info = client
         .get(url)
-        .set_header("User-Agent", "lemmy-lite")
+        .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<GetPersonDetailsResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     Ok(PersonPageData::from_lemmy(post_info))
 }
 
 pub async fn search(
-    client: &Client,
+    client: &AwcClient,
     instance: &str,
     search_params: &SearchParams,
 ) -> ActixResult<SearchResponseData> {
@@ -504,13 +517,15 @@ pub async fn search(
 
     let search_response = client
         .get(url)
-        .set_header("User-Agent", "lemmy-lite")
-        // .set_header("Accept-Encoding", "gzip, deflate, br")
+        .insert_header(("User-Agent", "lemmy-lite"))
+        // .insert_header("Accept-Encoding", "gzip, deflate, br")
         .send()
-        .await?
+        .await
+        .unwrap()
         .json::<SearchResponse>()
         .limit(REQ_MAX_SIZE)
-        .await?;
+        .await
+        .unwrap();
 
     let result = SearchResponseData::from_lemmy(search_response);
 

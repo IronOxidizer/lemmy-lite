@@ -8,10 +8,11 @@ edition = "2018"
 chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
 serde = { version = "1.0", default-features = false }
 url = { version = "2.1", default-features = false }
-actix-web = { version = "3.0", default-features = false, features = ["rustls"] }
+actix-web = { version = "4.3.1", default-features = false, features = ["rustls", "compress-gzip"] }
 maud = { version = "0.22", default-features = false }
 pulldown-cmark = { version = "0.8", default-features = false }
 serde_json = "1.0.102"
 lemmy_api_common = "0.18.2"
-actix-files = "0.4.1"
-awc = "2.0.3"
+actix-files = "0.6.2"
+awc = { version = "3.1.1", features = ["rustls"] }
+env_logger = "0.10.0"
