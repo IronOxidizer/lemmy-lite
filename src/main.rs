@@ -9,11 +9,12 @@ use maud::Markup;
 use serde::Deserialize;
 use templates::{community_info_page, index_page, redirect_page};
 
+mod error;
 mod lemmy_api;
 mod templates;
 
 use crate::lemmy_api::{
-    get_community_list, get_post, get_post_list, get_user, search, InstancePageParam, SearchParams,
+    get_community_list, get_post, get_post_list, get_user, search, PaginationParams, SearchParams,
 };
 use crate::templates::{communities_page, post_list_page, post_page, search_page, user_page};
 
@@ -61,7 +62,7 @@ async fn redirect_to_instance_page(
 
 async fn get_instance_page(
     path: web::Path<String>,
-    query: web::Query<InstancePageParam>,
+    query: web::Query<PaginationParams>,
     data_client: web::Data<AwcClient>,
 ) -> ActixResult<HttpResponse> {
     let inst = &path.to_string();
@@ -90,7 +91,7 @@ async fn get_instance_community_page(
     let search_params = &query.into_inner();
     let client = &client.into_inner();
 
-    let paging_params = &InstancePageParam {
+    let paging_params = &PaginationParams {
         sort: search_params.sort.clone().or(Some(SortType::TopAll)),
         page: search_params.page,
         limit: search_params.limit,
@@ -106,7 +107,7 @@ async fn get_instance_community_page(
 
 async fn get_community_page(
     path: web::Path<(String, String)>,
-    query: web::Query<InstancePageParam>,
+    query: web::Query<PaginationParams>,
     data_client: web::Data<AwcClient>,
 ) -> ActixResult<HttpResponse> {
     let (instance_name, community_name) = path.into_inner();
@@ -158,18 +159,27 @@ async fn get_search_page(
 
 async fn get_post_page(
     path: web::Path<(String, String, u32)>,
+    query: web::Query<PaginationParams>,
     data_client: web::Data<AwcClient>,
 ) -> ActixResult<HttpResponse> {
     let (instance_name, community_name, post_id) = path.into_inner();
+    let query = query.into_inner();
     let client = &data_client.into_inner();
     let now = &Utc::now().naive_utc();
-    let post_detail_data = get_post(client, &instance_name, Some(&community_name), post_id).await?;
+    let post_detail_data = get_post(
+        client,
+        &instance_name,
+        Some(&community_name),
+        post_id,
+        Some(&query),
+    )
+    .await?;
     html_res(post_page(&instance_name, post_detail_data, now))
 }
 
 async fn get_user_page(
     path: web::Path<(String, String)>,
-    query: web::Query<InstancePageParam>,
+    query: web::Query<PaginationParams>,
     data_client: web::Data<AwcClient>,
 ) -> ActixResult<HttpResponse> {
     let (instance_name, user_name) = path.into_inner();

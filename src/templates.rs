@@ -25,7 +25,7 @@ DOM classes
 use std::iter::once;
 
 use crate::lemmy_api::{
-    from_search_type_to_str, CommentData, CommunityData, CommunityDetailData, InstancePageParam,
+    from_search_type_to_str, CommentData, CommunityData, CommunityDetailData, PaginationParams,
     PersonPageData, PersonSummaryData, PostData, PostDetailData, SearchParams, SearchResponseData,
 };
 use chrono::naive::NaiveDateTime;
@@ -108,7 +108,7 @@ pub fn create_link(
 pub fn communities_page(
     instance: &str,
     community_list: &[CommunityData],
-    paging_params: Option<&InstancePageParam>,
+    paging_params: Option<&PaginationParams>,
 ) -> Markup {
     html! {
         (headers_markup())
@@ -142,7 +142,7 @@ pub fn post_list_page(
     post_list: &[PostData],
     now: &NaiveDateTime,
     community: Option<&str>,
-    paging_params: Option<&InstancePageParam>,
+    paging_params: Option<&PaginationParams>,
 ) -> Markup {
     html! {
         (headers_markup())
@@ -264,7 +264,7 @@ pub fn user_page(
     instance: &str,
     user: PersonPageData,
     now: &NaiveDateTime,
-    paging_params: Option<&InstancePageParam>,
+    paging_params: Option<&PaginationParams>,
 ) -> Markup {
     html! {
         (headers_markup())
@@ -603,7 +603,7 @@ fn comment_tree_markup(
     }
 }
 
-fn pagebar_markup(paging_params: Option<&InstancePageParam>) -> Markup {
+fn pagebar_markup(paging_params: Option<&PaginationParams>) -> Markup {
     html! {
         .pb {
             form {
@@ -616,7 +616,7 @@ fn pagebar_markup(paging_params: Option<&InstancePageParam>) -> Markup {
             }
 
             div {
-                @if let Some(InstancePageParam {page: Some(page), ..}) = paging_params {
+                @if let Some(PaginationParams {page: Some(page), ..}) = paging_params {
                     @if page > &1 {
                         form {
                             (default_sort_markup(paging_params))
@@ -684,7 +684,7 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
             }
 
             div {
-                @if let Some(InstancePageParam {page: Some(page), ..}) = paging_params {
+                @if let Some(PaginationParams {page: Some(page), ..}) = paging_params {
                     @if page > &1 {
                         form {
                             (default_query_markup(Some(search_params)))
@@ -722,10 +722,10 @@ fn searchbar_markup(search_params: &SearchParams) -> Markup {
     }
 }
 
-fn sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
+fn sort_markup(paging_params: Option<&PaginationParams>) -> Markup {
     html! {
         select name="sort" {
-            @if let Some(InstancePageParam {sort: Some(sort), ..}) = paging_params {
+            @if let Some(PaginationParams {sort: Some(sort), ..}) = paging_params {
                 option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::Hot] value="Hot" {"Hot"}
                 option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::Active] value="Active" {"Active"}
                 option selected?[sort==&lemmy_api_common::lemmy_db_schema::SortType::New] value="New" {"New"}
@@ -748,10 +748,10 @@ fn sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     }
 }
 
-fn limit_size_markup(paging_params: Option<&InstancePageParam>) -> Markup {
+fn limit_size_markup(paging_params: Option<&PaginationParams>) -> Markup {
     html! {
         select name="limit" {
-            @if let Some(InstancePageParam {limit: Some(limit), ..}) = paging_params {
+            @if let Some(PaginationParams {limit: Some(limit), ..}) = paging_params {
                 option selected?[limit==&10] value="10" {"10"}
                 option selected?[limit==&25] value="25" {"25"}
                 option selected?[limit==&50] value="50" {"50"}
@@ -766,17 +766,17 @@ fn limit_size_markup(paging_params: Option<&InstancePageParam>) -> Markup {
     }
 }
 
-fn default_sort_markup(paging_params: Option<&InstancePageParam>) -> Markup {
+fn default_sort_markup(paging_params: Option<&PaginationParams>) -> Markup {
     html! {
-        @if let Some(InstancePageParam {sort: Some(sort), ..}) = paging_params {
+        @if let Some(PaginationParams {sort: Some(sort), ..}) = paging_params {
             input type="hidden" name="sort" value=((sort));
         }
     }
 }
 
-fn default_limit_markup(paging_params: Option<&InstancePageParam>) -> Markup {
+fn default_limit_markup(paging_params: Option<&PaginationParams>) -> Markup {
     html! {
-        @if let Some(InstancePageParam {limit: Some(limit), ..}) = paging_params {
+        @if let Some(PaginationParams {limit: Some(limit), ..}) = paging_params {
             input type="hidden" name="limit" value=((limit));
         }
     }

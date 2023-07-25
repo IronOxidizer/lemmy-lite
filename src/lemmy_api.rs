@@ -1,4 +1,4 @@
-use actix_web::{error::ErrorBadRequest, Result as ActixResult};
+use actix_web::error::ErrorBadRequest;
 use awc::Client as AwcClient;
 use chrono::naive::NaiveDateTime;
 use lemmy_api_common::{
@@ -12,7 +12,9 @@ use lemmy_api_common::{
     site::SearchResponse,
 };
 use serde::Deserialize;
-use url::{ParseError, Url};
+use url::Url;
+
+use crate::error::LemmyLiteResult;
 
 const REQ_MAX_SIZE: usize = 80 * 1024 * 1024; // 80MB limit
 
@@ -22,7 +24,7 @@ pub struct RedirectToInstanceParam {
 }
 
 #[derive(Deserialize, Clone)]
-pub struct InstancePageParam {
+pub struct PaginationParams {
     pub sort: Option<SortType>,
     pub page: Option<i32>,
     pub limit: Option<i32>,
@@ -39,8 +41,8 @@ pub struct SearchParams {
 }
 
 impl SearchParams {
-    pub fn to_paging_params(&self) -> InstancePageParam {
-        InstancePageParam {
+    pub fn to_paging_params(&self) -> PaginationParams {
+        PaginationParams {
             sort: self.sort,
             page: self.page,
             limit: self.limit,
@@ -287,7 +289,7 @@ impl SearchResponseData {
 pub async fn get_community_list(
     client: &AwcClient,
     instance_name: &str,
-) -> ActixResult<Vec<CommunityData>> {
+) -> LemmyLiteResult<Vec<CommunityData>> {
     let url = build_url(instance_name, "community/list")
         .map_err(|e| ErrorBadRequest(e.to_string()))?
         .to_string();
@@ -298,12 +300,10 @@ pub async fn get_community_list(
         .get(url)
         .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<ListCommunitiesResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     let result = url_result
         .communities
@@ -318,7 +318,7 @@ pub async fn get_community_info(
     client: &AwcClient,
     instance: &str,
     community: &str,
-) -> ActixResult<CommunityDetailData> {
+) -> LemmyLiteResult<CommunityDetailData> {
     let mut base_url =
         build_url(instance, "community").map_err(|e| ErrorBadRequest(e.to_string()))?;
     let mut url_builder = base_url.query_pairs_mut();
@@ -333,12 +333,10 @@ pub async fn get_community_info(
         .get(url)
         .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<GetCommunityResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     Ok(CommunityDetailData::from_lemmy(result))
 }
@@ -347,8 +345,8 @@ pub async fn get_post_list(
     client: &AwcClient,
     instance_name: &str,
     community_name: Option<&str>,
-    paging_params: Option<&InstancePageParam>,
-) -> ActixResult<Vec<PostData>> {
+    paging_params: Option<&PaginationParams>,
+) -> LemmyLiteResult<Vec<PostData>> {
     let mut base_url =
         build_url(instance_name, "post/list").map_err(|e| ErrorBadRequest(e.to_string()))?;
 
@@ -380,12 +378,10 @@ pub async fn get_post_list(
         .get(base_url_str)
         .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<GetPostsResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     let result = url_result
         .posts
@@ -401,7 +397,8 @@ pub async fn get_post(
     instance_name: &str,
     community_name: Option<&str>,
     post_id: u32,
-) -> ActixResult<PostDetailData> {
+    pagination_params: Option<&PaginationParams>,
+) -> LemmyLiteResult<PostDetailData> {
     let post_url = build_url(instance_name, "post")
         .map_err(|e| ErrorBadRequest(e.to_string()))?
         .query_pairs_mut()
@@ -415,12 +412,10 @@ pub async fn get_post(
         .get(post_url)
         .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<GetPostResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     let mut comment_url =
         build_url(instance_name, "comment/list").map_err(|e| ErrorBadRequest(e.to_string()))?;
@@ -432,7 +427,19 @@ pub async fn get_post(
         comment_url_builder.append_pair("community_name", community_name);
     }
 
-    comment_url_builder.append_pair("limit", "50");
+    if let Some(pagination_params) = pagination_params {
+        if let Some(page) = pagination_params.page {
+            comment_url_builder.append_pair("page", page.to_string().as_ref());
+        }
+
+        if let Some(limit) = pagination_params.limit {
+            comment_url_builder.append_pair("limit", limit.to_string().as_ref());
+        }
+
+        if let Some(sort) = pagination_params.sort {
+            comment_url_builder.append_pair("sort", from_sort_type_to_str(sort));
+        }
+    }
 
     let comment_url_str = comment_url_builder.finish().to_string();
 
@@ -442,12 +449,10 @@ pub async fn get_post(
         .get(comment_url_str)
         .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<GetCommentsResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     Ok(PostDetailData::from_lemmy(post, comments))
 }
@@ -456,7 +461,7 @@ pub async fn get_user(
     client: &AwcClient,
     instance: &str,
     username: &str,
-) -> ActixResult<PersonPageData> {
+) -> LemmyLiteResult<PersonPageData> {
     let url = build_url(instance, "user")
         .map_err(|e| ErrorBadRequest(e.to_string()))?
         .query_pairs_mut()
@@ -471,12 +476,10 @@ pub async fn get_user(
         .get(url)
         .insert_header(("User-Agent", "lemmy-lite"))
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<GetPersonDetailsResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     Ok(PersonPageData::from_lemmy(post_info))
 }
@@ -485,7 +488,7 @@ pub async fn search(
     client: &AwcClient,
     instance: &str,
     search_params: &SearchParams,
-) -> ActixResult<SearchResponseData> {
+) -> LemmyLiteResult<SearchResponseData> {
     let mut base_url = build_url(instance, "search").map_err(|e| ErrorBadRequest(e.to_string()))?;
     let mut url_builder = base_url.query_pairs_mut();
 
@@ -520,19 +523,17 @@ pub async fn search(
         .insert_header(("User-Agent", "lemmy-lite"))
         // .insert_header("Accept-Encoding", "gzip, deflate, br")
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<SearchResponse>()
         .limit(REQ_MAX_SIZE)
-        .await
-        .unwrap();
+        .await?;
 
     let result = SearchResponseData::from_lemmy(search_response);
 
     Ok(result)
 }
 
-fn build_url(instance: &str, endpoint: &str) -> ActixResult<Url, ParseError> {
+fn build_url(instance: &str, endpoint: &str) -> LemmyLiteResult<Url> {
     let url = Url::parse(format!("https://{}/api/v3/{}", instance, endpoint).as_str())?;
     Ok(url)
 }
