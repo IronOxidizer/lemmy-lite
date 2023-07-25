@@ -1,1 +1,244 @@
-body{background-color:#222;text-decoration:none;color:#dedede;font-family:sans-serif;overflow-x:hidden;word-break:break-word;word-wrap:break-word;overflow-wrap:break-word}a{text-decoration:inherit;color:#00bc8c}a:hover{text-decoration:underline}p{margin:6px 0}ol,ul{margin-top:6px;margin-bottom:6px}blockquote{border-left:2px solid #333;padding-left:4px;margin:4px;color:#aaa}table{width:100%;min-width:704px;border-collapse:collapse}td{border-top:1px solid #333}td,th{padding:6px}.o{word-break:keep-all;overflow-x:auto}.ar{text-align:right}#w{min-width:304px;max-width:1012px;padding-top:4px;margin:auto}.r>*{display:table-cell;vertical-align:middle}.r a{color:inherit}.r a:visited{color:#888}.r a.s{color:#3498db!important}.r a.s:visited{color:#284b90!important}.p{width:64px;height:64px;padding:0 8px}.s{width:32px;text-align:right}.u{color:#3498db!important}.l{color:#00bc8c!important}.b{background-color:#444;color:#dedede;padding:0 3px;border-radius:3px;margin-left:4px}#n{text-align:center}#n a{color:inherit}#n>*{display:inline-block;width:32%;min-width:300px;word-break:keep-all;word-wrap:normal;overflow-wrap:normal;border-radius:6px;text-align:center;padding:6px 0;background-color:#333;margin:2px}#n>form>input{border:0;border-radius:3px;background-color:#222;color:#dedede;margin:0 2px}#n>form>input:first-child{cursor:text}#n>form>input:last-child{cursor:pointer}.pb::after{content:"";display:table;clear:both}.pb>form{float:left}.pb>div{float:right;margin-bottom:4px}.pb input,.pb select{border:0;border-radius:3px;background-color:#333;color:#dedede;margin:2px;cursor:pointer}.pb form{display:inline-block;margin:0}.pb input[type=text]{width:89px;cursor:text}.h{background-color:#333;display:inline-block;padding:4px;border-radius:3px}.ch,.m{color:#999;margin-bottom:0;font-size:.75em}.m>*{display:inline-block}.m>.l{margin-right:4px}.ch{display:inline-block;word-spacing:1em;margin:4 0}.c{cursor:pointer;-webkit-appearance:none;appearance:none;background:#3c3836;box-sizing:content-box;width:14px;height:14px;margin-left:17px;vertical-align:middle}.c:checked{background-color:#000}.c:checked+div{display:none}.br{border-top:1px solid #333;padding-top:5px}.b0,.b1,.b2,.b3,.b4,.b5{padding:5px 0 0 4px;border-top:1px solid #333}.b0{border-left:2px solid #ac5353}.b1{border-left:2px solid #8eac53}.b2{border-left:2px solid #53ac80}.b3{border-left:2px solid #538eac}.b4{border-left:2px solid #6253ac}.b5{border-left:2px solid #ac53ac}#f{display:block;text-align:center}
+body {
+  background-color: #222;
+  text-decoration: none;
+  color: #dedede;
+  font-family: sans-serif;
+  overflow-x: hidden;
+  word-break: break-word;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+a {
+  text-decoration: inherit;
+  color: #00bc8c;
+}
+a:hover {
+  text-decoration: underline;
+}
+p {
+  margin: 6px 0;
+}
+ol,
+ul {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+blockquote {
+  border-left: 2px solid #333;
+  padding-left: 4px;
+  margin: 4px;
+  color: #aaa;
+}
+table {
+  width: 100%;
+  min-width: 704px;
+  border-collapse: collapse;
+}
+td {
+  border-top: 1px solid #333;
+}
+td,
+th {
+  padding: 6px;
+}
+.o {
+  word-break: keep-all;
+  overflow-x: auto;
+}
+.ar {
+  text-align: right;
+}
+#w {
+  width: 100%;
+  min-width: 304px;
+  max-width: 1012px;
+  padding-top: 4px;
+  margin: auto;
+}
+.r > * {
+  display: table-cell;
+  vertical-align: middle;
+}
+.r a {
+  color: inherit;
+}
+.r a:visited {
+  color: #888;
+}
+.r a.s {
+  color: #3498db !important;
+}
+.r a.s:visited {
+  color: #284b90 !important;
+}
+.p {
+  width: 64px;
+  height: 64px;
+  padding: 0 8px;
+}
+.s {
+  width: 32px;
+  text-align: right;
+}
+.u {
+  color: #3498db !important;
+}
+.l {
+  color: #00bc8c !important;
+}
+.b {
+  background-color: #444;
+  color: #dedede;
+  padding: 0 3px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+#n {
+  text-align: center;
+}
+#n a {
+  color: inherit;
+}
+#n > * {
+  display: inline-block;
+  width: 32%;
+  min-width: 300px;
+  word-break: keep-all;
+  word-wrap: normal;
+  overflow-wrap: normal;
+  border-radius: 6px;
+  text-align: center;
+  padding: 6px 0;
+  background-color: #333;
+  margin: 2px;
+}
+#n > form > input {
+  border: 0;
+  border-radius: 3px;
+  background-color: #222;
+  color: #dedede;
+  margin: 0 2px;
+}
+#n > form > input:first-child {
+  cursor: text;
+}
+#n > form > input:last-child {
+  cursor: pointer;
+}
+.pb::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.pb > form {
+  float: left;
+}
+.pb > div {
+  float: right;
+  margin-bottom: 4px;
+}
+.pb input,
+.pb select {
+  border: 0;
+  border-radius: 3px;
+  background-color: #333;
+  color: #dedede;
+  margin: 2px;
+  cursor: pointer;
+}
+.pb form {
+  display: inline-block;
+  margin: 0;
+}
+.pb input[type="text"] {
+  width: 89px;
+  cursor: text;
+}
+.h {
+  background-color: #333;
+  display: inline-block;
+  padding: 4px;
+  border-radius: 3px;
+}
+.ch,
+.m {
+  color: #999;
+  margin-bottom: 0;
+  font-size: 0.75em;
+}
+.m > * {
+  display: inline-block;
+}
+.m > .l {
+  margin-right: 4px;
+}
+.ch {
+  display: inline-block;
+  word-spacing: 1em;
+  margin: 4 0;
+}
+.c {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #3c3836;
+  box-sizing: content-box;
+  width: 14px;
+  height: 14px;
+  margin-left: 17px;
+  vertical-align: middle;
+}
+.c:checked {
+  background-color: #000;
+}
+.c:checked + div {
+  display: none;
+}
+.br {
+  border-top: 1px solid #333;
+  padding-top: 5px;
+}
+.b0,
+.b1,
+.b2,
+.b3,
+.b4,
+.b5 {
+  padding: 5px 0 0 4px;
+  border-top: 1px solid #333;
+}
+.b0 {
+  border-left: 2px solid #ac5353;
+}
+.b1 {
+  border-left: 2px solid #8eac53;
+}
+.b2 {
+  border-left: 2px solid #53ac80;
+}
+.b3 {
+  border-left: 2px solid #538eac;
+}
+.b4 {
+  border-left: 2px solid #6253ac;
+}
+.b5 {
+  border-left: 2px solid #ac53ac;
+}
+#f {
+  display: block;
+  text-align: center;
+}
+input[type="submit"] {
+  /* width: 100%; */
+  background-color: #4caf50;
+  color: white;
+  /* padding: 14px 20px; */
+  margin: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+input[type="submit"]:hover {
+  background-color: #45a049;
+}
